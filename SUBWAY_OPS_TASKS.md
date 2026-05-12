@@ -93,12 +93,12 @@ calendar weeks.
 
 ## Phase 1 — Fresh Connect Client
 
-### `[ ]` 1.1 — FreshConnect HTTP client (auth, retry, rate-limit)
+### `[~]` 1.1 — FreshConnect HTTP client (auth, retry, rate-limit)
 - **Accomplishes:** Single class for every HTTP call to Fresh Connect. Auth headers, exponential backoff on 5xx, specific exception types for each documented failure code, per-endpoint limit validation.
 - **Branch:** `task-1.1-client`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** `FreshConnectClient` (httpx + tenacity) with `api-client`/`api-key`/`Accept` headers, structured request logging, context-manager support, and tunable retry knobs (`max_retries`, `retry_initial_wait`, `retry_max_wait`) so tests don't sleep. Exception hierarchy: `FreshConnectError` → `AuthError` (401) / `ForbiddenError` (403) / `BadRequestError` (400) / `NotFoundError` (404) / `RateLimitError` (429, no retry) / `ServerError` (5xx after retries). Pre-call limit validation per endpoint (stores + day-span); `get_transaction_details` / `get_tips_details` additionally reject comma-joined single-store args. `list_restaurants` unwraps the real live shape `[{"restaurantNumber": "..."}, …]` returned by the API on 2026-05-12 (15 stores, smoke-tested). 19 client tests using `httpx.MockTransport` (no respx/responses dep needed) — full suite 64 passed + 4 db-gated skips, ruff + mypy green.
 
 ### `[ ]` 1.2 — Pydantic models for all 13 endpoints
 - **Accomplishes:** Every Fresh Connect response shape becomes a statically-typed Pydantic model. Schema drift fails loudly with `extra="forbid"`.
