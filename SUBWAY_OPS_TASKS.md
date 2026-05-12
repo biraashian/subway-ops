@@ -75,12 +75,12 @@ calendar weeks.
 - **Time:** 45 min
 - **Notes:** Migration `001_ref_tables.sql` + idempotent `scripts/seed_reference.py` + 18 tests. Currently 14 stores in CSV (15th coming); `stores.csv.field_manager_name` is the **in-store** manager (stored as `ref_stores.store_manager_name`); FM↔store assignment derived from `field_managers.csv` and written to `ref_stores.field_manager_name` (FK). Lauren's store 10393 referenced but not yet in stores.csv (warned at seed-time, lands May-end). Added `seed/users.csv` with 5 dashboard users (Bir + Taran as owners; Sokhavy/Ekta/Lauren as field_manager). Added `bcrypt` dep. DB integration tests skip when `DATABASE_URL` unset — need to wire Supabase URL into `.env` to run end-to-end.
 
-### `[ ]` 0.4 — Business calendar helpers + tests
+### `[~]` 0.4 — Business calendar helpers + tests
 - **Accomplishes:** One module owns every date and week calculation. 02:00 day cutoff and Wed–Tue week as trustworthy primitives.
 - **Branch:** `task-0.4-calendar`
 - **PR:**
 - **Time:** 30 min
-- **Notes:**
+- **Notes:** Five functions: `business_date_now`, `dt_to_business_date`, `business_week_of`, `previous_business_week`, `is_business_week_end`. Stdlib only (datetime + zoneinfo). 22 tests, 100% coverage on the module. DST cases covered: 2025-03-09 spring-forward (skipped 02:00) and 2025-11-02 fall-back (both `fold=0`/`fold=1` 01:30 occurrences still map to the prior business date).
 
 ### `[ ]` 0.5 — Database connection, migration runner, ops_job_runs
 - **Accomplishes:** Idempotent SQL migrations from Python. First operational metadata table. Every job logs its outcome.
