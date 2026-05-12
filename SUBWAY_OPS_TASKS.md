@@ -68,12 +68,12 @@ calendar weeks.
 - **Time:** 20 min
 - **Notes:** CLAUDE.md populated verbatim from Appendix A. decisions.md has three foundational entries dated 2026-05-11 (stack, calendar, recon model). Open PR when remote is wired.
 
-### `[ ]` 0.3 — Reference data: stores, field managers, users
+### `[~]` 0.3 — Reference data: stores, field managers, users
 - **Accomplishes:** DB knows your 15 stores, who manages each, and who has dashboard access. Seed script reads from CSVs.
 - **Branch:** `task-0.3-ref-tables`
 - **PR:**
 - **Time:** 45 min
-- **Notes:**
+- **Notes:** Migration `001_ref_tables.sql` + idempotent `scripts/seed_reference.py` + 18 tests. Currently 14 stores in CSV (15th coming); `stores.csv.field_manager_name` is the **in-store** manager (stored as `ref_stores.store_manager_name`); FM↔store assignment derived from `field_managers.csv` and written to `ref_stores.field_manager_name` (FK). Lauren's store 10393 referenced but not yet in stores.csv (warned at seed-time, lands May-end). Added `seed/users.csv` with 5 dashboard users (Bir + Taran as owners; Sokhavy/Ekta/Lauren as field_manager). Added `bcrypt` dep. DB integration tests skip when `DATABASE_URL` unset — need to wire Supabase URL into `.env` to run end-to-end.
 
 ### `[ ]` 0.4 — Business calendar helpers + tests
 - **Accomplishes:** One module owns every date and week calculation. 02:00 day cutoff and Wed–Tue week as trustworthy primitives.

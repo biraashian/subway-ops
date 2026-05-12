@@ -84,6 +84,16 @@ Booleans: is_*.
 3. Add to `scripts/refresh_marts.py`.
 4. Add a synthetic-fixture test.
 
+## How to add a new store
+
+1. Append a row to `seed/stores.csv` (store_number, store_name, city,
+   state, in-store manager name, timezone, opening date).
+2. If the new store is in a new field manager's cluster, add the
+   store_number to that FM's `store_numbers_csv` in
+   `seed/field_managers.csv`.
+3. Re-run `uv run python scripts/seed_reference.py`. Upserts are
+   idempotent; existing rows update, the new one inserts.
+
 ## How to add a new dashboard page
 
 1. New file `dashboard/pages/<N>_<name>.py`.
