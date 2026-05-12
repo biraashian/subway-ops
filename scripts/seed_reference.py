@@ -12,9 +12,8 @@ CLI:
     uv run python scripts/seed_reference.py --reset-password user@example.com
     uv run python scripts/seed_reference.py --no-users    # skip user seeding
 
-Migrations: Task 0.5 builds the real migration runner. For now, this
-script applies any *.sql files in src/subway_ops/db/migrations/ that
-haven't been recorded in the _schema_migrations tracking table.
+Migrations: this script delegates to `scripts/migrate.py`, which records
+applied migrations in `ops_migrations` with a SHA-256 checksum.
 """
 
 from __future__ import annotations
@@ -34,9 +33,10 @@ import structlog
 from dateutil import parser as dateparser
 from dotenv import load_dotenv
 
+from subway_ops.db.migrate import apply_migrations as _runner_apply_migrations
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SEED_DIR = REPO_ROOT / "seed"
-MIGRATIONS_DIR = REPO_ROOT / "src" / "subway_ops" / "db" / "migrations"
 
 TIMEZONE_ALIASES = {
     "PST": "America/Los_Angeles",
@@ -65,45 +65,21 @@ def connect() -> psycopg.Connection:
 
 
 # ---------------------------------------------------------------------------
-# Migration runner (inline; Task 0.5 will formalize this)
+# Migration runner — delegates to scripts/migrate.py
 # ---------------------------------------------------------------------------
 
 
-def apply_migrations(conn: psycopg.Connection) -> list[str]:
-    """Apply any *.sql files in MIGRATIONS_DIR not yet in _schema_migrations.
+def apply_migrations(conn: psycopg.Connection | None = None) -> list[str]:
+    """Apply any pending migrations via the canonical runner.
+
+    The `conn` argument is accepted (and ignored) for backward compatibility
+    with callers that already hold a psycopg connection: the runner opens its
+    own SQLAlchemy engine from `DATABASE_URL`.
 
     Returns the list of filenames newly applied this run.
     """
-    with conn.cursor() as cur:
-        cur.execute(
-            """
-            CREATE TABLE IF NOT EXISTS _schema_migrations (
-                filename   TEXT PRIMARY KEY,
-                applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
-            )
-            """
-        )
-        cur.execute("SELECT filename FROM _schema_migrations")
-        applied = {row[0] for row in cur.fetchall()}
-
-    files = sorted(p for p in MIGRATIONS_DIR.glob("*.sql"))
-    newly_applied: list[str] = []
-
-    for path in files:
-        if path.name in applied:
-            continue
-        sql_text = path.read_text(encoding="utf-8")
-        log.info("applying_migration", filename=path.name)
-        with conn.cursor() as cur:
-            cur.execute(sql_text)  # type: ignore[arg-type]
-            cur.execute(
-                "INSERT INTO _schema_migrations (filename) VALUES (%s)",
-                (path.name,),
-            )
-        newly_applied.append(path.name)
-
-    conn.commit()
-    return newly_applied
+    del conn  # accepted for compatibility; runner uses its own engine
+    return _runner_apply_migrations()
 
 
 # ---------------------------------------------------------------------------

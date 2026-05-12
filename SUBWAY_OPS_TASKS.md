@@ -82,12 +82,12 @@ calendar weeks.
 - **Time:** 30 min
 - **Notes:** Five functions: `business_date_now`, `dt_to_business_date`, `business_week_of`, `previous_business_week`, `is_business_week_end`. Stdlib only (datetime + zoneinfo). 22 tests, 100% coverage on the module. DST cases covered: 2025-03-09 spring-forward (skipped 02:00) and 2025-11-02 fall-back (both `fold=0`/`fold=1` 01:30 occurrences still map to the prior business date).
 
-### `[ ]` 0.5 — Database connection, migration runner, ops_job_runs
+### `[~]` 0.5 — Database connection, migration runner, ops_job_runs
 - **Accomplishes:** Idempotent SQL migrations from Python. First operational metadata table. Every job logs its outcome.
 - **Branch:** `task-0.5-db-connection`
 - **PR:**
 - **Time:** 45 min
-- **Notes:**
+- **Notes:** SQLAlchemy engine in `subway_ops.db.connection` (lazy, `pool_pre_ping`, psycopg v3 via URL rewrite); raw-SQL workhorse `execute_sql(sql, params)`. Migration runner in `subway_ops.db.migrate` with checksum-tracked `ops_migrations`; `scripts/migrate.py` is a thin CLI. `subway_ops.db.job_runs.track_job(name)` context manager wraps every scheduled job — sets `meta["rows_written"]`, captures exceptions as `failed`, lands everything else in `metadata` JSONB. Migration `002_ops_tables.sql` creates `ops_migrations` + `ops_job_runs`. 8 db-integration tests + 2 unit tests; all 48 tests + ruff + mypy green against live Supabase. Decision recorded in `decisions.md`. Open PR when remote is wired.
 
 ---
 

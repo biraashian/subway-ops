@@ -65,7 +65,13 @@ Booleans: is_*.
 - Every ingest UPSERTs on a natural composite key. Re-running ingest never
   duplicates data. This is the default recovery path for any failure.
 - Every long-running job records itself in `ops_job_runs` via the
-  `track_job(name)` context manager.
+  `track_job(name)` context manager from `subway_ops.db.job_runs`. This is
+  non-negotiable: ingests, mart refreshes, the daily orchestrator, the
+  weekly digest sender, the uOS ingest — anything launched on a schedule
+  or by a CLI script — MUST wrap its work in `with track_job(...) as meta`.
+  Set `meta["rows_written"]` for ingests; everything else useful for
+  debugging goes elsewhere in `meta` and lands in the `metadata` JSONB
+  column. Exceptions are caught, recorded as failures, and re-raised.
 - Backfill uses `ops_backfill_progress` so partial runs are resumable.
 
 ## How to add a new ingest endpoint

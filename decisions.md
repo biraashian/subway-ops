@@ -51,3 +51,34 @@ amounts only when they differ from the POS-recorded amount.
 automation. Acceptable for v1; revisit if variance frequency grows or if
 we onboard a single banking partner that makes automated reconciliation
 cheap.
+
+---
+
+## 2026-05-12 — Database layer: SQLAlchemy engine + psycopg v3 driver
+
+**Context:** Task 0.5 needed a single canonical way to talk to Postgres
+from Python. The existing `seed_reference.py` used psycopg directly; the
+playbook prescribes a SQLAlchemy engine with raw SQL via `text()`. Two
+small choices fall out of that prescription.
+
+**Decision:**
+- One process-wide SQLAlchemy engine, built lazily by `get_engine()`,
+  with `pool_pre_ping=True` to survive Supabase idle disconnects. Most
+  queries go through `execute_sql(sql, params)` (eager fetch, parameter-
+  bound `text()`); ORM `Session` is offered but not required.
+- `get_engine()` rewrites `postgresql://` and `postgres://` URLs to
+  `postgresql+psycopg://` so SQLAlchemy uses psycopg v3 (the binary we
+  pin) instead of psycopg2 (not installed). Supabase hands us the bare
+  scheme by default, so without this rewrite every fresh checkout would
+  break on the first DB call.
+- Migration runner lives at `src/subway_ops/db/migrate.py` with a thin
+  CLI wrapper in `scripts/migrate.py`. Migrations are recorded with a
+  SHA-256 checksum in `ops_migrations`; a mismatched checksum aborts the
+  run loudly.
+
+**Consequences:** All future ingest / mart / dashboard code uses the
+same engine and `execute_sql` helper — no ad-hoc psycopg connections.
+The old `_schema_migrations` table from the bootstrap seed script is
+abandoned; we never query it again, and migration 001 is idempotent so
+the first run of the new runner re-records it under `ops_migrations`
+without side effects.
