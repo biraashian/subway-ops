@@ -54,19 +54,19 @@ calendar weeks.
 
 ## Phase 0 — Foundation
 
-### `[ ]` 0.1 — Initialize repo, project structure, pyproject
+### `[~]` 0.1 — Initialize repo, project structure, pyproject
 - **Accomplishes:** Scaffolded Python project. After this, `uv sync`, `ruff`, `mypy`, `pytest` all run clean on a skeleton.
 - **Branch:** `task-0.1-init`
 - **PR:**
 - **Time:** 30 min
-- **Notes:**
+- **Notes:** Local commit `84c85ed` on `task-0.1-init`. Installed `uv` via official installer (Day-Zero pre-flight gap). Added `.claude/settings.local.json` to `.gitignore`. Open PR when GitHub remote is wired.
 
-### `[ ]` 0.2 — Write CLAUDE.md and decisions.md
+### `[~]` 0.2 — Write CLAUDE.md and decisions.md
 - **Accomplishes:** Conventions, stack, and rules encoded so every future Claude Code session starts informed.
 - **Branch:** `task-0.2-claude-md`
 - **PR:**
 - **Time:** 20 min
-- **Notes:**
+- **Notes:** CLAUDE.md populated verbatim from Appendix A. decisions.md has three foundational entries dated 2026-05-11 (stack, calendar, recon model). Open PR when remote is wired.
 
 ### `[ ]` 0.3 — Reference data: stores, field managers, users
 - **Accomplishes:** DB knows your 15 stores, who manages each, and who has dashboard access. Seed script reads from CSVs.
