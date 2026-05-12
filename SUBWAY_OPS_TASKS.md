@@ -100,12 +100,12 @@ calendar weeks.
 - **Time:** 60 min
 - **Notes:** `FreshConnectClient` (httpx + tenacity) with `api-client`/`api-key`/`Accept` headers, structured request logging, context-manager support, and tunable retry knobs (`max_retries`, `retry_initial_wait`, `retry_max_wait`) so tests don't sleep. Exception hierarchy: `FreshConnectError` → `AuthError` (401) / `ForbiddenError` (403) / `BadRequestError` (400) / `NotFoundError` (404) / `RateLimitError` (429, no retry) / `ServerError` (5xx after retries). Pre-call limit validation per endpoint (stores + day-span); `get_transaction_details` / `get_tips_details` additionally reject comma-joined single-store args. `list_restaurants` unwraps the real live shape `[{"restaurantNumber": "..."}, …]` returned by the API on 2026-05-12 (15 stores, smoke-tested). 19 client tests using `httpx.MockTransport` (no respx/responses dep needed) — full suite 64 passed + 4 db-gated skips, ruff + mypy green.
 
-### `[ ]` 1.2 — Pydantic models for all 13 endpoints
+### `[~]` 1.2 — Pydantic models for all 13 endpoints
 - **Accomplishes:** Every Fresh Connect response shape becomes a statically-typed Pydantic model. Schema drift fails loudly with `extra="forbid"`.
 - **Branch:** `task-1.2-models`
 - **PR:**
 - **Time:** 90 min
-- **Notes:**
+- **Notes:** Pulled `APIDocumentation.pdf` + `APIUrlsDocumentation.pdf` into `docs/freshconnect/` and built models for all 15 endpoints (the playbook listed 13; SalesSummary and TransactionSummary are also documented). Every model inherits `_FCModel` (`populate_by_name=True`, `extra="forbid"`). One `DaysOfWeek` covers all 7-day variants (total / average / percentage all Optional); `DaysOfWeekLong` handles Wisr's full-name day keys. Restaurant numbers accept both `restaurantNumber` and the documented typo `resturantNumber` via `AliasChoices`. All money/percentage fields are `Decimal`; datetimes are naive (storage layer attaches LA tz). 16 model tests (one per envelope) parse the doc samples; full suite 80 passed + 4 db-gated skips, ruff + mypy green. Task 1.3 will replace inline samples with recorded fixtures.
 
 ### `[ ]` 1.3 — Discovery script + recorded fixtures
 - **Accomplishes:** Hits every endpoint with your real credentials, saves response bodies as test fixtures, produces a field-coverage report. First real-world confirmation the API behaves as documented.
