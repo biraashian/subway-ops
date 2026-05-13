@@ -256,12 +256,12 @@ calendar weeks.
 
 ## Phase 5 — Reconciliation & Weekly Digest
 
-### `[ ]` 5.1 — `mart_recon_weekly` + `ops_variance` table
+### `[~]` 5.1 — `mart_recon_weekly` + `ops_variance` table
 - **Accomplishes:** Reconciliation mart with auto-computed status (clean/flagged/escalated/unverified) from POS deposit vs operator-entered actual deposit.
 - **Branch:** `task-5.1-mart-recon`
 - **PR:**
 - **Time:** 75 min
-- **Notes:**
+- **Notes:** Migration `014_recon.sql` creates `ops_variance_entries` (PK `(restaurant_number, week_end_date)`, `entered_by` FK on `ref_users.email`, audit `entered_at`) and `mart_recon_weekly` with two GENERATED ALWAYS STORED columns: `variance = pos - actual` (NULL when no entry) and a four-way `status` CASE bucketed by `|variance|` against $5 / $50 thresholds. Postgres owns the math; Python never recomputes status. The $5 / $50 thresholds in the DDL duplicate `subway_ops.config.VARIANCE_FLAGGED_USD / VARIANCE_ESCALATED_USD` (GENERATED columns can't reference Python) — module docstring + migration header call out the sync rule. `subway_ops.transform.mart_recon_weekly.refresh(weeks_back=8)` rebuilds the last N weeks from `stg_controlsheet_weekly.cash_control_deposit_in_bank_total` LEFT JOIN `ops_variance_entries` via a `keys` union so weeks with only a variance entry (no controlsheet yet) still surface as `unverified`. Convenience `refresh_for_week(week_end)` for the recon page's save-and-recompute flow in Task 5.2. Wired into `scripts/refresh_marts.py` with `RECON_LOOKBACK_WEEKS=8` (wider than the 2-week weekly mart window because operators reconcile late). 9 unit/integration tests covering all four status buckets, exact-threshold boundaries ($5 and $50), negative-variance (|abs| bucketing), idempotency, and the zero-weeks-back guard. Live refresh wrote **26 rows** across all 14 stores for the last 8 closed weeks — all `unverified` until Task 5.2's entry form is wired up. Full suite 226 passed + 6 db-gated skips.
 
 ### `[ ]` 5.2 — Reconciliation review page (variance entry)
 - **Accomplishes:** Page where operator reviews each store/week and enters actual bank deposit only when it differs from POS-recorded. Audit-logged.

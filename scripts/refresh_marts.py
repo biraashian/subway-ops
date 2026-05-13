@@ -31,6 +31,7 @@ from subway_ops.calendar import business_date_now, previous_business_week
 from subway_ops.db.job_runs import track_job
 from subway_ops.transform import (
     mart_field_manager_portfolio,
+    mart_recon_weekly,
     mart_store_daily,
     mart_store_weekly,
 )
@@ -39,6 +40,10 @@ JOB_NAME = "refresh_marts"
 DAILY_LOOKBACK_DAYS = 14
 # Number of recent closed weeks to refresh weekly + FM rollups for.
 WEEKLY_LOOKBACK_WEEKS = 2
+# How many weeks of the reconciliation mart to rebuild on each cron tick.
+# Wider than WEEKLY_LOOKBACK_WEEKS because operators sometimes enter
+# variances days or weeks late.
+RECON_LOOKBACK_WEEKS = 8
 
 log = structlog.get_logger(__name__)
 
@@ -55,6 +60,7 @@ def run_refresh(
     refresh_daily: Callable[..., int] = mart_store_daily.refresh,
     refresh_weekly: Callable[[date], int] = mart_store_weekly.refresh,
     refresh_fm: Callable[[date], int] = mart_field_manager_portfolio.refresh,
+    refresh_recon: Callable[..., int] = mart_recon_weekly.refresh,
 ) -> dict[str, int]:
     """Refresh every mart. Mockable callables make this unit-testable."""
     start = today - timedelta(days=DAILY_LOOKBACK_DAYS)
@@ -72,10 +78,13 @@ def run_refresh(
         weekly_total += refresh_weekly(wk)
         fm_total += refresh_fm(wk)
 
+    recon_rows = refresh_recon(weeks_back=RECON_LOOKBACK_WEEKS)
+
     return {
         "mart_store_daily": daily_rows,
         "mart_store_weekly": weekly_total,
         "mart_field_manager_portfolio": fm_total,
+        "mart_recon_weekly": recon_rows,
     }
 
 

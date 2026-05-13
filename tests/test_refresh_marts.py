@@ -11,6 +11,7 @@ from datetime import date, timedelta
 
 from scripts.refresh_marts import (
     DAILY_LOOKBACK_DAYS,
+    RECON_LOOKBACK_WEEKS,
     WEEKLY_LOOKBACK_WEEKS,
     _recent_week_ends,
     run_refresh,
@@ -45,7 +46,12 @@ def test_run_refresh_calls_daily_with_14_day_window() -> None:
     fm, _ = _spy()
 
     today = date(2026, 5, 13)
-    run_refresh(today=today, refresh_daily=daily, refresh_weekly=weekly, refresh_fm=fm)
+    recon, _ = _spy()
+    run_refresh(
+        today=today,
+        refresh_daily=daily, refresh_weekly=weekly, refresh_fm=fm,
+        refresh_recon=recon,
+    )
 
     assert len(daily_log) == 1
     _, kwargs = daily_log[0]
@@ -59,7 +65,12 @@ def test_run_refresh_calls_weekly_and_fm_for_each_recent_week() -> None:
     fm, fm_log = _spy()
 
     today = date(2026, 5, 13)
-    run_refresh(today=today, refresh_daily=daily, refresh_weekly=weekly, refresh_fm=fm)
+    recon, _ = _spy()
+    run_refresh(
+        today=today,
+        refresh_daily=daily, refresh_weekly=weekly, refresh_fm=fm,
+        refresh_recon=recon,
+    )
 
     expected_week_ends = _recent_week_ends(today, WEEKLY_LOOKBACK_WEEKS)
     weekly_args = [call[0][0] for call in weekly_log]
@@ -72,16 +83,35 @@ def test_run_refresh_returns_per_mart_counts() -> None:
     daily, _ = _spy()
     weekly, _ = _spy()
     fm, _ = _spy()
+    recon, _ = _spy()
 
     result = run_refresh(
         today=date(2026, 5, 13),
         refresh_daily=daily,
         refresh_weekly=weekly,
         refresh_fm=fm,
+        refresh_recon=recon,
     )
-    # Each spy returns 1 per call. Two weekly + two FM + one daily.
+    # Each spy returns 1 per call. Two weekly + two FM + one daily + one recon.
     assert result == {
         "mart_store_daily": 1,
         "mart_store_weekly": 2,
         "mart_field_manager_portfolio": 2,
+        "mart_recon_weekly": 1,
     }
+
+
+def test_run_refresh_calls_recon_with_lookback_weeks_kwarg() -> None:
+    daily, _ = _spy()
+    weekly, _ = _spy()
+    fm, _ = _spy()
+    recon, recon_log = _spy()
+
+    run_refresh(
+        today=date(2026, 5, 13),
+        refresh_daily=daily, refresh_weekly=weekly,
+        refresh_fm=fm, refresh_recon=recon,
+    )
+    assert len(recon_log) == 1
+    _, kwargs = recon_log[0]
+    assert kwargs["weeks_back"] == RECON_LOOKBACK_WEEKS
