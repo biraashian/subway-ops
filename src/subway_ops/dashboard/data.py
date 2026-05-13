@@ -155,6 +155,127 @@ def current_and_last_week_ends(today: date | None = None) -> tuple[date, date]:
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
+def store_weekly_history(store_number: str, weeks: int) -> pd.DataFrame:
+    """The last ``weeks`` weekly rows for a single store, chronological order."""
+    if weeks <= 0:
+        return pd.DataFrame()
+    engine = cached_engine()
+    with engine.connect() as conn:
+        df = pd.read_sql_query(
+            text(
+                """
+                SELECT
+                    week_end_date,
+                    net_sales_total,
+                    transactions_total,
+                    units_total,
+                    hours_worked_total,
+                    customer_count,
+                    average_ticket,
+                    productivity,
+                    food_cost_actual_pct,
+                    food_cost_expected_pct,
+                    labor_cost_pct,
+                    cash_overshort_total,
+                    bread_overshort_total,
+                    deposit_in_bank_total
+                FROM mart_store_weekly
+                WHERE restaurant_number = :s
+                ORDER BY week_end_date DESC
+                LIMIT :weeks
+                """
+            ),
+            conn,
+            params={"s": store_number, "weeks": weeks},
+        )
+    return df.iloc[::-1].reset_index(drop=True)
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def wisr_inventory_items(store_number: str, week_end: date) -> pd.DataFrame:
+    """Per-item WISR rows for a single store + week, ordered by largest
+    negative ``value_difference`` first so worst variances surface."""
+    engine = cached_engine()
+    with engine.connect() as conn:
+        return pd.read_sql_query(
+            text(
+                """
+                SELECT
+                    item_name,
+                    open_qty, delivered_qty, left_qty, used_qty,
+                    pos_difference, recorded_waste, cost,
+                    value_used, value_difference,
+                    actual_percentage, expected_percentage, diff_percentage
+                FROM stg_wisr_inventory_items
+                WHERE restaurant_number = :s AND week_end_date = :w
+                ORDER BY value_difference NULLS LAST
+                """
+            ),
+            conn,
+            params={"s": store_number, "w": week_end},
+        )
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def cash_drops_with_deposits(
+    store_number: str, start: date, end: date
+) -> pd.DataFrame:
+    """Cash-drop events alongside the per-day ``deposit_in_bank`` they
+    relate to.
+
+    The cash-drop table is event-level; the deposit comes from
+    ``stg_controlsheet_weekly``'s seven per-day columns. We unpivot
+    those columns via a ``VALUES`` join so the result is one row per
+    cash drop with the same-day deposit attached.
+    """
+    if end < start:
+        raise ValueError(f"end ({end}) precedes start ({start})")
+    engine = cached_engine()
+    with engine.connect() as conn:
+        return pd.read_sql_query(
+            text(
+                """
+                WITH deposits AS (
+                    SELECT
+                        cs.restaurant_number,
+                        cs.week_end_date - d.offset_back AS business_date,
+                        CASE d.day_name
+                            WHEN 'wed' THEN cs.cash_control_deposit_in_bank_wed
+                            WHEN 'thu' THEN cs.cash_control_deposit_in_bank_thu
+                            WHEN 'fri' THEN cs.cash_control_deposit_in_bank_fri
+                            WHEN 'sat' THEN cs.cash_control_deposit_in_bank_sat
+                            WHEN 'sun' THEN cs.cash_control_deposit_in_bank_sun
+                            WHEN 'mon' THEN cs.cash_control_deposit_in_bank_mon
+                            WHEN 'tue' THEN cs.cash_control_deposit_in_bank_tue
+                        END AS deposit_in_bank
+                    FROM stg_controlsheet_weekly cs
+                    CROSS JOIN (
+                        VALUES (6, 'wed'), (5, 'thu'), (4, 'fri'), (3, 'sat'),
+                               (2, 'sun'), (1, 'mon'), (0, 'tue')
+                    ) AS d(offset_back, day_name)
+                    WHERE cs.restaurant_number = :s
+                )
+                SELECT
+                    cd.business_date,
+                    cd.event_time AS drop_time,
+                    cd.clerk_id,
+                    cd.clerk_name,
+                    d.deposit_in_bank
+                FROM stg_cash_drops cd
+                LEFT JOIN deposits d
+                       ON d.restaurant_number = cd.restaurant_number
+                      AND d.business_date     = cd.business_date
+                WHERE cd.restaurant_number = :s
+                  AND cd.business_date BETWEEN :start AND :end
+                ORDER BY cd.event_time
+                """
+            ),
+            conn,
+            params={"s": store_number, "start": start, "end": end},
+        )
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
 def fm_portfolio(week_end: date) -> pd.DataFrame:
     engine = cached_engine()
     with engine.connect() as conn:
