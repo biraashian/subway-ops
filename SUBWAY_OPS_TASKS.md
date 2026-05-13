@@ -153,12 +153,12 @@ calendar weeks.
 - **Time:** 90 min
 - **Notes:** Generated DDL like ControlSheet — `subway_ops.ingest.wisr.column_definitions()` drives `python -m subway_ops.ingest.wisr --print-ddl` → `007_wisr.sql`. Short section prefixes (`acg_` / `ics_` / `ssi_` / `usi_` / `csi_` / `dc_` / `cbost_`) prevent name clashes between subfields that share names across sections (e.g. `costOfGoods` appears in both salesSummaryItems and inventoryCategoriesSummary). `stg_wisr_weekly` is ~187 cols wide on PK `(restaurant_number, week_end_date)`; `stg_wisr_inventory_items` is the per-item table on PK `(restaurant_number, week_end_date, item_name)`. `ingest(week_end, store_numbers=None, *, client=None)` chunks 25 stores/call (per the documented cap), persists raw, parses, flattens, dedupes items per-batch, wrapped in `track_job("ingest_wisr")`. 5 tests (3 unit: DDL/flatten coverage + migration round-trip; 2 db integration). Live verified against store 4092 week ending 2026-05-05: 1 weekly row (428 customers, factor 9.90, avg ticket $15.34, net Subway sales $6,566.89) + 121 inventory items. Re-run unchanged. Full suite 125 passed + 4 db-gated skips.
 
-### `[ ]` 2.6 — Schema + ingest: DailyTimeclock + ThirdPartyDailySalesSummary
+### `[~]` 2.6 — Schema + ingest: DailyTimeclock + ThirdPartyDailySalesSummary
 - **Accomplishes:** Last two daily-grain endpoints. Timeclock fills labor detail; third-party fills delivery channel breakdown.
 - **Branch:** `task-2.6-timeclock-3p`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** Migration `008_timeclock.sql`: `raw_timeclock` + `stg_timeclock` (PK on (restaurant_number, clerk_id, clock_in); `business_date` computed via 02:00 cutoff; stores `hours_before_adj` and `hours_after_adj` directly — playbook's `hours_total` collapsed to the explicit pair to keep both signals). Migration `009_third_party_daily.sql`: `raw_third_party_daily` + `stg_3p_daily` (PK on (restaurant_number, business_date)) + `stg_3p_daily_provider` (PK adds provider). Ingest modules `subway_ops.ingest.timeclock` (10-store × 30-day caps) and `subway_ops.ingest.third_party_daily` (20-store × 30-day caps), both wrapped in their respective `track_job(...)`s. Heavy transactional-grain endpoints (TransactionDetails, TipsDetails, TransactionSummary, ThirdPartyTransactionSummary, WasteBreadCredits) deferred to Phase 7 per playbook. 10 tests (6 unit batching + 4 db integration). Live verified store 4092 for 2026-05-05..05-11: 13 timeclock shifts (96.5 hours); 7 days of 3P sales totaling $800.61 across doordash ($572.79 / 25 txns) / uber ($182.11 / 10 txns) / grubhub ($45.71 / 2 txns). Idempotent. Full suite 135 passed + 4 db-gated skips.
 
 ### `[ ]` 2.7 — Daily orchestrator + GitHub Actions cron
 - **Accomplishes:** Single `daily_pull.py` runs all six ingests with right windows. GitHub Actions fires it every morning at 03:00 PT. System is now ingesting automatically.
