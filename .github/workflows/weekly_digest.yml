@@ -1,0 +1,51 @@
+name: Weekly digest
+
+on:
+  schedule:
+    # 14:00 UTC every Wednesday. Lands at 07:00 PT during PST and
+    # 06:00 PT during PDT — DST drift is accepted (see decisions.md).
+    - cron: "0 14 * * 3"
+  workflow_dispatch: {}
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Apply migrations
+        run: uv run python scripts/migrate.py
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          APP_ENV: prod
+
+      - name: Send weekly digest
+        run: uv run python scripts/send_weekly_digest.py
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          FRESHCONNECT_API_CLIENT: ${{ secrets.FRESHCONNECT_API_CLIENT }}
+          FRESHCONNECT_API_KEY: ${{ secrets.FRESHCONNECT_API_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          DASHBOARD_URL: ${{ secrets.DASHBOARD_URL }}
+          APP_ENV: prod
+
+      - name: Notify on failure
+        if: failure()
+        run: uv run python scripts/notify_failure.py weekly_digest
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}

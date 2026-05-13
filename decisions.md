@@ -145,3 +145,26 @@ per Streamlit's nav-order convention; ruff's `N999` is silenced for
 that directory via `per-file-ignores`. If we ever swap auth (SSO,
 SAML, etc.) the surface is small: replace `make_authenticator()` and
 the session-state shape in `_bootstrap_session`.
+
+## 2026-05-13 — Weekly digest cron: DST drift is accepted
+
+**Context:** The weekly digest fires from a GitHub Actions cron at
+`0 14 * * 3` (14:00 UTC every Wednesday). GHA crons are pinned to UTC
+with no built-in calendar awareness, so the wall-clock arrival time
+in America/Los_Angeles shifts between **07:00 PT during PST** and
+**06:00 PT during PDT**.
+
+**Decision:** Accept the one-hour drift. The digest is a leisurely
+weekly read, not a time-critical alert; operators don't care whether
+it lands at 06:00 or 07:00 local. The Wednesday placement (right after
+the Subway business week closes Tuesday night at 01:59 local) is the
+load-bearing part of the schedule.
+
+**Consequences:** No worker-based self-scheduler today. If exact
+local-time delivery ever becomes important (e.g., the digest gets
+tied to a specific opening-shift handoff window), replace the GHA
+cron with a worker that wakes daily and self-schedules via
+`subway_ops.calendar`. The idempotency guard in
+`scripts/send_weekly_digest.py` (`ops_digest_log` PK on `week_end`)
+already protects against double-sends if a worker and the cron ever
+run concurrently during a migration.
