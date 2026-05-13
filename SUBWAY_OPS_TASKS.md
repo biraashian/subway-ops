@@ -146,12 +146,12 @@ calendar weeks.
 - **Time:** 60 min
 - **Notes:** Migration `006_inventory_movement.sql`: `raw_inventory_movement` JSONB log; `stg_inventory_movement` PK on `(restaurant_number, business_date, inventory_item)`; `stg_inventory_movement_totals` PK on `(restaurant_number, business_date, metric_name)`. `subway_ops.ingest.inventory_movement.ingest(start, end, store_numbers=None, *, client=None)` chunks 20-store × 50-day windows, persists raw + parses + flattens day's `items[]` and `totals[]` into their tables, dedupes by PK, wrapped in `track_job("ingest_inventory_movement")`. Recorded fixture refreshed to a 7-day window since single days return empty (`inventory_movement.json`: 1 reporting day, 20 items + 3 totals). 5 tests (3 batching unit + 2 db integration). Live verified against store 4092 for 2026-05-05..05-11: 20 inventory items + 3 totals (UNITS / DRINKS / COST OF GOODS) → 23 rows; rerun unchanged. Full suite 120 passed + 4 db-gated skips.
 
-### `[ ]` 2.5 — Schema + ingest: Wisr (weekly WISR)
+### `[~]` 2.5 — Schema + ingest: Wisr (weekly WISR)
 - **Accomplishes:** Subway's gold-standard weekly food-cost analysis lands in staging. Drives food-cost variance KPIs in `mart_store_weekly`.
 - **Branch:** `task-2.5-wisr`
 - **PR:**
 - **Time:** 90 min
-- **Notes:**
+- **Notes:** Generated DDL like ControlSheet — `subway_ops.ingest.wisr.column_definitions()` drives `python -m subway_ops.ingest.wisr --print-ddl` → `007_wisr.sql`. Short section prefixes (`acg_` / `ics_` / `ssi_` / `usi_` / `csi_` / `dc_` / `cbost_`) prevent name clashes between subfields that share names across sections (e.g. `costOfGoods` appears in both salesSummaryItems and inventoryCategoriesSummary). `stg_wisr_weekly` is ~187 cols wide on PK `(restaurant_number, week_end_date)`; `stg_wisr_inventory_items` is the per-item table on PK `(restaurant_number, week_end_date, item_name)`. `ingest(week_end, store_numbers=None, *, client=None)` chunks 25 stores/call (per the documented cap), persists raw, parses, flattens, dedupes items per-batch, wrapped in `track_job("ingest_wisr")`. 5 tests (3 unit: DDL/flatten coverage + migration round-trip; 2 db integration). Live verified against store 4092 week ending 2026-05-05: 1 weekly row (428 customers, factor 9.90, avg ticket $15.34, net Subway sales $6,566.89) + 121 inventory items. Re-run unchanged. Full suite 125 passed + 4 db-gated skips.
 
 ### `[ ]` 2.6 — Schema + ingest: DailyTimeclock + ThirdPartyDailySalesSummary
 - **Accomplishes:** Last two daily-grain endpoints. Timeclock fills labor detail; third-party fills delivery channel breakdown.
