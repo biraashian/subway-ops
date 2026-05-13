@@ -188,7 +188,11 @@ def test_refresh_is_idempotent(seeded_fm_and_stores: None) -> None:
     _seed_weekly_row("T1", Decimal("5000"), Decimal("0.20"))
     first = refresh(week_end=WEEK_END)
     second = refresh(week_end=WEEK_END)
-    assert first == second == 1
+    # refresh rewrites every FM with a row for this week — other live
+    # FMs may exist alongside our synthetic one. We only care that the
+    # call is repeatable AND that our test FM lands exactly one row.
+    assert first == second
+    assert first >= 1
 
     rows = execute_sql(
         "SELECT count(*) FROM mart_field_manager_portfolio "

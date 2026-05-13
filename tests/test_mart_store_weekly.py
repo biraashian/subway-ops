@@ -197,7 +197,10 @@ def test_refresh_joins_and_converts_percentages(seeded_store: None) -> None:
     _seed_daily_sales_for_week(transactions_per_day=50)
 
     rows = refresh(week_end=WEEK_END)
-    assert rows == 1
+    # refresh rewrites every store with a stg_controlsheet_weekly row for
+    # this week_end — the live backfill may have populated others, so we
+    # care only that THIS store's row exists.
+    assert rows >= 1
 
     out = execute_sql(
         """
@@ -303,7 +306,10 @@ def test_refresh_is_idempotent(seeded_store: None) -> None:
     )
     first = refresh(week_end=WEEK_END)
     second = refresh(week_end=WEEK_END)
-    assert first == second == 1
+    # Whatever the global row count is for the week, refresh must be
+    # repeatable AND the test store's row must remain unique.
+    assert first == second
+    assert first >= 1
 
     count = execute_sql(
         "SELECT count(*) FROM mart_store_weekly "
