@@ -34,7 +34,9 @@ from subway_ops.dashboard.components import (
     food_cost_emoji,
     labor_cost_emoji,
 )
+from subway_ops.dashboard.components.helpers import csv_download_button
 from subway_ops.dashboard.components.kpi_card import kpi_card
+from subway_ops.dashboard.components.sidebar import render_sidebar
 from subway_ops.dashboard.data import (
     fm_name_for_email,
     fm_portfolio_history,
@@ -199,6 +201,9 @@ def _store_grid(fm: str, week_end: pd.Timestamp | None) -> None:
         use_container_width=True,
         hide_index=True,
     )
+    csv_download_button(
+        df, filename=f"fm_{fm}_stores.csv", key="fm_stores_csv"
+    )
 
 
 def _trend(df: pd.DataFrame, *, y: str, title: str, target: float) -> alt.Chart:
@@ -265,6 +270,7 @@ def main() -> None:
         st.warning("Please log in via the main page.")
         return
 
+    render_sidebar()
     st.title("Field manager portfolio")
 
     fm = _pick_fm(
@@ -294,6 +300,12 @@ def main() -> None:
     st.divider()
     st.subheader(f"Portfolio trends — last {TREND_WEEKS} weeks")
     _trend_section(history)
+    if not history.empty:
+        csv_download_button(
+            history,
+            filename=f"fm_{fm}_history.csv",
+            key="fm_history_csv",
+        )
 
 
 main()

@@ -77,3 +77,16 @@ def labor_cost_emoji(value: Decimal | float | None, *, portfolio: bool = False) 
     """Traffic-light emoji for a fractional labor-cost percentage."""
     target = TARGET_LABOR_COST_PORTFOLIO if portfolio else TARGET_LABOR_COST_STORE
     return status_emoji(status_bucket(value, target))
+
+
+# ---------------------------------------------------------------------------
+# Session-state keys for cross-page filter persistence.
+# ---------------------------------------------------------------------------
+
+# Streamlit session_state survives page navigation as long as keys are
+# stable. Centralising the filter keys here means the same week-end and
+# store filters appear pre-selected when the operator jumps between
+# owner overview, store detail, and FM portfolio.
+KEY_FILTER_WEEK_CHOICE = "filter_week_choice"
+KEY_FILTER_STORE = "selected_store"
+KEY_FILTER_STATUS = "filter_status"

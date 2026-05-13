@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import streamlit as st
 
+from subway_ops.dashboard.components.sidebar import render_sidebar
+
 
 def main() -> None:
     if not st.session_state.get("user_email"):
         st.warning("Please log in via the main page.")
         return
 
+    render_sidebar()
     st.title("Reconciliation review")
     st.write(
         f"Welcome **{st.session_state['display_name']}** "

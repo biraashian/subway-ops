@@ -25,6 +25,15 @@ TARGET_LABOR_COST_STORE: Decimal = Decimal("0.28")
 TARGET_FOOD_COST_PORTFOLIO: Decimal = Decimal("0.20")
 TARGET_LABOR_COST_PORTFOLIO: Decimal = Decimal("0.25")
 
+# Reconciliation variance thresholds (dollars). A weekly POS-vs-actual
+# variance at or above ``FLAGGED`` shows up on the recon page; at or
+# above ``ESCALATED`` it bubbles into the weekly digest's "needs owner
+# attention" block. Tighter values are safe (more flags); the
+# escalated tier should stay punchy enough that humans actually act on
+# the alert.
+VARIANCE_FLAGGED_USD: Decimal = Decimal("5")
+VARIANCE_ESCALATED_USD: Decimal = Decimal("50")
+
 
 class Settings(BaseSettings):
     """Typed access to environment configuration.

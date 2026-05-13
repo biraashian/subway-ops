@@ -20,16 +20,25 @@ import pandas as pd
 import streamlit as st
 
 from subway_ops.dashboard.components import (
+    EMOJI_IN_TARGET,
+    EMOJI_NEAR_TARGET,
+    EMOJI_OFF_TARGET,
     EMOJI_UNKNOWN,
+    KEY_FILTER_STATUS,
+    KEY_FILTER_WEEK_CHOICE,
     food_cost_emoji,
     labor_cost_emoji,
 )
+from subway_ops.dashboard.components.helpers import csv_download_button
 from subway_ops.dashboard.components.kpi_card import kpi_card
+from subway_ops.dashboard.components.sidebar import render_sidebar
 from subway_ops.dashboard.data import (
     current_and_last_week_ends,
     portfolio_trend,
     weekly_overview,
 )
+
+STATUS_OPTIONS = [EMOJI_IN_TARGET, EMOJI_NEAR_TARGET, EMOJI_OFF_TARGET, EMOJI_UNKNOWN]
 
 TREND_WEEKS = 13
 
@@ -145,14 +154,29 @@ def _render_kpi_row(df: pd.DataFrame) -> None:
         )
 
 
-def _render_grid(df: pd.DataFrame) -> None:
+def _render_grid(df: pd.DataFrame, week_end_label: str) -> None:
     if df.empty:
         st.info(
             "No mart_store_weekly rows yet for the selected week. "
             "Run the backfill or wait for the 4-hour mart refresh cron."
         )
         return
+
+    selected_status = st.multiselect(
+        "Food-cost status filter",
+        options=STATUS_OPTIONS,
+        default=st.session_state.get(KEY_FILTER_STATUS, STATUS_OPTIONS),
+        key=KEY_FILTER_STATUS,
+        help="Pick one or more food-cost buckets to narrow the grid.",
+    )
+
     display = _build_display_df(df)
+    if selected_status:
+        display = display[display["food_cost_status"].isin(selected_status)]
+    if display.empty:
+        st.info("No stores match the current status filter.")
+        return
+
     event = st.dataframe(
         display,
         use_container_width=True,
@@ -175,6 +199,11 @@ def _render_grid(df: pd.DataFrame) -> None:
         },
         key="owner_overview_grid",
     )
+    csv_download_button(
+        display, filename=f"owner_overview_{week_end_label}.csv",
+        key="owner_overview_grid_csv",
+    )
+
     selection_rows = getattr(event, "selection", {}).get("rows") if event else None
     if selection_rows:
         idx = selection_rows[0]
@@ -192,12 +221,19 @@ def _render_trend(stores: tuple[str, ...]) -> None:
         .mark_line(point=True)
         .encode(
             x=alt.X("week_end_date:T", title="Week ending"),
-            y=alt.Y("net_sales:Q", title="Net sales ($)"),
-            tooltip=["week_end_date:T", alt.Tooltip("net_sales:Q", format="$,.0f")],
+            y=alt.Y("net_sales:Q", title="Net sales ($)", axis=alt.Axis(format="$,.0f")),
+            tooltip=[
+                alt.Tooltip("week_end_date:T", title="Week ending"),
+                alt.Tooltip("net_sales:Q", title="Net sales", format="$,.0f"),
+            ],
         )
         .properties(height=260)
     )
     st.altair_chart(chart, use_container_width=True)
+    csv_download_button(
+        trend, filename=f"portfolio_trend_{TREND_WEEKS}w.csv",
+        key="owner_overview_trend_csv",
+    )
 
 
 def main() -> None:
@@ -205,6 +241,7 @@ def main() -> None:
         st.warning("Please log in via the main page.")
         return
 
+    render_sidebar()
     st.title("Owner overview")
 
     visible = tuple(st.session_state.get("assigned_stores", []))
@@ -213,12 +250,18 @@ def main() -> None:
         return
 
     current_we, last_closed_we = current_and_last_week_ends()
+    week_options = ("Last closed week", "Current week (in progress)")
+    default_index = (
+        week_options.index(st.session_state[KEY_FILTER_WEEK_CHOICE])
+        if st.session_state.get(KEY_FILTER_WEEK_CHOICE) in week_options
+        else 0
+    )
     week_choice = st.radio(
         "Week",
-        options=("Last closed week", "Current week (in progress)"),
-        index=0,
+        options=week_options,
+        index=default_index,
         horizontal=True,
-        key="owner_overview_week_choice",
+        key=KEY_FILTER_WEEK_CHOICE,
     )
     week_end = last_closed_we if week_choice.startswith("Last") else current_we
     st.caption(f"Showing data for week ending **{week_end:%Y-%m-%d}** (Tuesday).")
@@ -226,7 +269,7 @@ def main() -> None:
     df = weekly_overview(week_end, visible)
     _render_kpi_row(df)
     st.divider()
-    _render_grid(df)
+    _render_grid(df, week_end_label=week_end.isoformat())
     st.divider()
     st.subheader(f"Portfolio net sales — last {TREND_WEEKS} weeks")
     _render_trend(visible)

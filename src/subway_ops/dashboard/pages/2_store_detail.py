@@ -36,6 +36,8 @@ from subway_ops.dashboard.components import (
     COLOR_IN_TARGET,
     COLOR_OFF_TARGET,
 )
+from subway_ops.dashboard.components.helpers import csv_download_button
+from subway_ops.dashboard.components.sidebar import render_sidebar
 from subway_ops.dashboard.data import (
     cash_drops_with_deposits,
     store_daily,
@@ -108,6 +110,10 @@ def _daily_trend_tab(store: str) -> None:
         st.info("No mart_store_daily rows for this store yet in the lookback window.")
         return
 
+    csv_download_button(
+        df, filename=f"{store}_daily_{start}_{end}.csv", key="store_detail_daily_csv"
+    )
+
     c1, c2 = st.columns(2)
     with c1:
         chart = _line_chart(
@@ -141,6 +147,11 @@ def _weekly_history_tab(store: str) -> None:
     if df.empty:
         st.info("No mart_store_weekly rows for this store yet.")
         return
+    csv_download_button(
+        df,
+        filename=f"{store}_weekly_history.csv",
+        key="store_detail_weekly_csv",
+    )
     st.caption(
         f"Showing the last {len(df)} closed weeks (target food cost "
         f"{float(TARGET_FOOD_COST_STORE):.0%}, target labor cost "
@@ -208,6 +219,11 @@ def _inventory_tab(store: str) -> None:
         return
     styled = df.style.map(_style_value_difference, subset=["value_difference"])
     st.dataframe(styled, use_container_width=True, hide_index=True)
+    csv_download_button(
+        df,
+        filename=f"{store}_wisr_{week_end}.csv",
+        key="store_detail_wisr_csv",
+    )
 
 
 def _cash_drops_tab(store: str) -> None:
@@ -236,6 +252,11 @@ def _cash_drops_tab(store: str) -> None:
         use_container_width=True,
         hide_index=True,
     )
+    csv_download_button(
+        df,
+        filename=f"{store}_cash_drops_{start}_{end}.csv",
+        key="store_detail_cashdrops_csv",
+    )
 
 
 def main() -> None:
@@ -243,6 +264,7 @@ def main() -> None:
         st.warning("Please log in via the main page.")
         return
 
+    render_sidebar()
     visible = list(st.session_state.get("assigned_stores", []))
     if not visible:
         st.error("No stores visible for your role.")

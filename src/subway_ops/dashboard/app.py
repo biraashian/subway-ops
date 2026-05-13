@@ -15,8 +15,6 @@ Run locally:
 
 from __future__ import annotations
 
-from typing import Any
-
 import streamlit as st
 
 from subway_ops.dashboard.auth import (
@@ -25,7 +23,7 @@ from subway_ops.dashboard.auth import (
     make_authenticator,
     visible_stores,
 )
-from subway_ops.dashboard.data import last_data_refresh
+from subway_ops.dashboard.components.sidebar import render_sidebar
 
 
 def _bootstrap_session(name: str | None, username: str | None) -> None:
@@ -41,22 +39,6 @@ def _bootstrap_session(name: str | None, username: str | None) -> None:
     st.session_state["display_name"] = name or user.display_name
     st.session_state["user_role"] = user.role
     st.session_state["assigned_stores"] = visible
-
-
-def _sidebar(authenticator: Any) -> None:
-    st.sidebar.markdown(f"**{st.session_state['display_name']}**")
-    st.sidebar.caption(
-        f"role: `{st.session_state['user_role']}` · "
-        f"{len(st.session_state['assigned_stores'])} stores"
-    )
-
-    refresh_ts = last_data_refresh()
-    if refresh_ts is not None:
-        st.sidebar.caption(f"Last data refresh: {refresh_ts:%Y-%m-%d %H:%M %Z}")
-    else:
-        st.sidebar.caption("Last data refresh: (no mart data yet)")
-
-    authenticator.logout("Sign out", "sidebar")
 
 
 def main() -> None:
@@ -81,7 +63,7 @@ def main() -> None:
         st.session_state.get("name"),
         st.session_state.get("username"),
     )
-    _sidebar(authenticator)
+    render_sidebar()
 
     st.title("Subway Operations")
     st.write(
@@ -92,9 +74,7 @@ def main() -> None:
         f"You can see **{len(st.session_state['assigned_stores'])}** stores: "
         + ", ".join(st.session_state["assigned_stores"])
     )
-    st.write(
-        "Use the sidebar to navigate. Each page will fill in over Tasks 4.2-4.6."
-    )
+    st.write("Use the sidebar to navigate between pages.")
 
 
 if __name__ == "__main__":
