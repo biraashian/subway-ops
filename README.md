@@ -20,3 +20,20 @@ uv run ruff check .      # lint
 uv run mypy src/         # type-check
 uv run pytest            # tests
 ```
+
+## Deployment
+
+The Streamlit dashboard ships from `streamlit_app.py` at the repo root.
+Two supported targets:
+
+- **Streamlit Community Cloud** (default, free, public URL with in-app
+  auth): see [`docs/deployment_streamlit_cloud.md`](docs/deployment_streamlit_cloud.md).
+- **Fly.io** (private URL, ~$5/month): see
+  [`docs/deployment_flyio.md`](docs/deployment_flyio.md).
+
+After any `pyproject.toml` change, regenerate the pinned dependency list
+the deployment reads:
+
+```bash
+uv export --frozen --no-dev --no-emit-project --no-hashes > requirements.txt
+```

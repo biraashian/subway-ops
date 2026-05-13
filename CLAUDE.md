@@ -130,6 +130,10 @@ they need.
 - Money: `Decimal`, not `float`.
 - No new dependencies without updating `pyproject.toml` AND `decisions.md`
   explaining why.
+- After any `pyproject.toml` change, regenerate the deployment lock so
+  Streamlit Cloud / Fly.io see the new deps:
+  `uv export --frozen --no-dev --no-emit-project --no-hashes > requirements.txt`.
+  Commit `requirements.txt` alongside `pyproject.toml` / `uv.lock`.
 
 ## Secrets and environment
 
