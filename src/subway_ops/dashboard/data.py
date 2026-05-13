@@ -371,6 +371,140 @@ def fm_stores_for_week(fm_name: str, week_end: date) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
+def recon_review_table(
+    week_ends: tuple[date, ...],
+    store_filter: tuple[str, ...],
+    statuses: tuple[str, ...],
+) -> pd.DataFrame:
+    """Rows for the reconciliation review page.
+
+    Joins ``mart_recon_weekly`` (POS / actual / variance / status) to
+    ``ref_stores`` (name) and to ``ops_variance_entries`` (note +
+    last-edited-by audit). Empty filters return an empty frame so the
+    page doesn't accidentally query the whole history.
+    """
+    if not week_ends or not store_filter or not statuses:
+        return pd.DataFrame()
+    engine = cached_engine()
+    with engine.connect() as conn:
+        return pd.read_sql_query(
+            text(
+                """
+                SELECT
+                    r.restaurant_number,
+                    s.store_name,
+                    r.week_end_date,
+                    r.pos_deposit_in_bank,
+                    r.actual_bank_deposit,
+                    r.variance,
+                    r.status,
+                    v.note,
+                    v.entered_by,
+                    v.entered_at
+                FROM mart_recon_weekly r
+                JOIN ref_stores s ON s.store_number = r.restaurant_number
+                LEFT JOIN ops_variance_entries v
+                       ON v.restaurant_number = r.restaurant_number
+                      AND v.week_end_date     = r.week_end_date
+                WHERE r.week_end_date    = ANY(:weeks)
+                  AND r.restaurant_number = ANY(:stores)
+                  AND r.status            = ANY(:statuses)
+                ORDER BY r.week_end_date DESC, r.restaurant_number
+                """
+            ),
+            conn,
+            params={
+                "weeks": list(week_ends),
+                "stores": list(store_filter),
+                "statuses": list(statuses),
+            },
+        )
+
+
+def save_variance_entries(
+    rows: list[dict[str, object]], *, entered_by: str
+) -> int:
+    """UPSERT a batch of variance entries on (restaurant_number, week_end_date).
+
+    Each ``rows`` dict must carry ``restaurant_number``, ``week_end_date``,
+    ``actual_bank_deposit``, and optionally ``note``. ``entered_by`` is
+    stamped on every row from the calling page's session — never trust a
+    payload to set it.
+
+    Returns the number of rows passed in (every one was either inserted
+    or updated). Empty input is a no-op.
+    """
+    if not rows:
+        return 0
+    if not entered_by:
+        raise ValueError("entered_by is required (audit log)")
+    payload = [
+        {
+            "store": r["restaurant_number"],
+            "week": r["week_end_date"],
+            "actual": r["actual_bank_deposit"],
+            "note": r.get("note"),
+            "user": entered_by,
+        }
+        for r in rows
+    ]
+    engine = cached_engine()
+    with engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO ops_variance_entries
+                    (restaurant_number, week_end_date, actual_bank_deposit,
+                     entered_by, note)
+                VALUES (:store, :week, :actual, :user, :note)
+                ON CONFLICT (restaurant_number, week_end_date) DO UPDATE SET
+                    actual_bank_deposit = EXCLUDED.actual_bank_deposit,
+                    entered_by          = EXCLUDED.entered_by,
+                    entered_at          = now(),
+                    note                = EXCLUDED.note
+                """
+            ),
+            payload,
+        )
+    return len(payload)
+
+
+def delete_variance_entries(keys: list[tuple[str, date]]) -> int:
+    """Delete the operator-entered rows for the given ``(store, week)`` keys.
+
+    SQLAlchemy's ``text()`` doesn't natively bind tuple IN-lists, so we
+    build the placeholders ourselves and bind the values one slot per
+    pair. Empty input is a no-op.
+    """
+    if not keys:
+        return 0
+    clauses: list[str] = []
+    params: dict[str, object] = {}
+    for i, (store, week) in enumerate(keys):
+        clauses.append(f"(:s{i}, :w{i})")
+        params[f"s{i}"] = store
+        params[f"w{i}"] = week
+    sql = (
+        "DELETE FROM ops_variance_entries WHERE "
+        "(restaurant_number, week_end_date) IN ("
+        + ", ".join(clauses)
+        + ")"
+    )
+    engine = cached_engine()
+    with engine.begin() as conn:
+        result = conn.execute(text(sql), params)
+    return int(result.rowcount or 0)
+
+
+def recent_week_ends(n: int, today: date | None = None) -> list[date]:
+    """Most-recent ``n`` closed Tuesdays as of ``today`` — used as the
+    default value for the recon page's week range filter."""
+    today = today or date.today()
+    _, last_closed = previous_business_week(today)
+    return [last_closed - timedelta(days=7 * i) for i in range(max(n, 0))]
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
 def fm_portfolio(week_end: date) -> pd.DataFrame:
     engine = cached_engine()
     with engine.connect() as conn:
