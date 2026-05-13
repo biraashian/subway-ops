@@ -276,6 +276,101 @@ def cash_drops_with_deposits(
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
+def list_field_managers() -> list[str]:
+    """Active FM names sorted alphabetically — populates the owner-only picker."""
+    engine = cached_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text(
+                "SELECT name FROM ref_field_managers "
+                "WHERE is_active = true ORDER BY name"
+            )
+        ).all()
+    return [str(r[0]) for r in rows]
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def fm_name_for_email(email: str) -> str | None:
+    """Look up the FM ``name`` that owns the given ``email``.
+
+    Returns ``None`` for users (owner/readonly) who aren't field managers.
+    """
+    if not email:
+        return None
+    engine = cached_engine()
+    with engine.connect() as conn:
+        row = conn.execute(
+            text(
+                "SELECT name FROM ref_field_managers "
+                "WHERE lower(email) = lower(:e)"
+            ),
+            {"e": email},
+        ).first()
+    return None if row is None else str(row[0])
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def fm_portfolio_history(fm_name: str, weeks: int) -> pd.DataFrame:
+    """The last ``weeks`` rollup rows for one FM, chronologically."""
+    if weeks <= 0:
+        return pd.DataFrame()
+    engine = cached_engine()
+    with engine.connect() as conn:
+        df = pd.read_sql_query(
+            text(
+                """
+                SELECT
+                    week_end_date,
+                    store_count, store_count_in_target_food, store_count_in_target_labor,
+                    total_net_sales_weighted,
+                    portfolio_food_cost_pct,
+                    portfolio_labor_cost_pct,
+                    is_food_cost_in_portfolio_target,
+                    is_labor_cost_in_portfolio_target
+                FROM mart_field_manager_portfolio
+                WHERE field_manager_name = :fm
+                ORDER BY week_end_date DESC
+                LIMIT :weeks
+                """
+            ),
+            conn,
+            params={"fm": fm_name, "weeks": weeks},
+        )
+    return df.iloc[::-1].reset_index(drop=True)
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def fm_stores_for_week(fm_name: str, week_end: date) -> pd.DataFrame:
+    """The cluster's per-store rows for a single Tuesday week-end."""
+    engine = cached_engine()
+    with engine.connect() as conn:
+        return pd.read_sql_query(
+            text(
+                """
+                SELECT
+                    w.restaurant_number,
+                    s.store_name,
+                    w.net_sales_total,
+                    w.food_cost_actual_pct,
+                    w.labor_cost_pct,
+                    w.cash_overshort_total,
+                    w.customer_count,
+                    w.average_ticket,
+                    w.is_food_cost_in_target,
+                    w.is_labor_cost_in_target
+                FROM mart_store_weekly w
+                JOIN ref_stores s ON s.store_number = w.restaurant_number
+                WHERE s.field_manager_name = :fm
+                  AND w.week_end_date = :w
+                ORDER BY w.restaurant_number
+                """
+            ),
+            conn,
+            params={"fm": fm_name, "w": week_end},
+        )
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
 def fm_portfolio(week_end: date) -> pd.DataFrame:
     engine = cached_engine()
     with engine.connect() as conn:

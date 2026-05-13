@@ -231,12 +231,12 @@ calendar weeks.
 - **Time:** 90 min
 - **Notes:** Store selector at top defaults to `st.session_state["selected_store"]` (set by the owner-overview row-click), falls back to first visible store. Four tabs: **Daily** (30-day Altair line charts for net sales / transactions / sales-per-labor-hour / food-cost % from `mart_store_daily`, with the 22% target overlay), **Weekly** (13-week trends from `mart_store_weekly` with both 22% and 28% target lines), **Inventory** (`stg_wisr_inventory_items` for a chosen Tuesday, sorted by largest negative `value_difference` first, with red/green text via pandas Styler), **Cash drops** (events for a chosen date range, each joined to the same-day `deposit_in_bank` via a `VALUES`-based unpivot of ControlSheet's seven per-day columns). Three new cached helpers in `data.py`: `store_weekly_history(store, weeks)`, `wisr_inventory_items(store, week_end)`, `cash_drops_with_deposits(store, start, end)`. Variance colouring is a pure helper (`_style_value_difference`) so it's unit-tested without Streamlit. 10 new tests (3 pure colour + 5 DB-integration on helper shape and the unpivot join correctness + 2 importability sanity). Smoke launched headless: `/`, `/owner_overview`, `/store_detail` all return HTTP 200. Full suite 199 passed + 6 db-gated skips.
 
-### `[ ]` 4.4 — Field manager portfolio page
+### `[~]` 4.4 — Field manager portfolio page
 - **Accomplishes:** FM-level view: their 5 stores vs portfolio targets with side-by-side comparison.
 - **Branch:** `task-4.4-fm-page`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** FM selector locks to the user's own FM when the role is `field_manager` (looked up via `ref_field_managers.email`), shows a dropdown for owners. Four KPI cards: food cost %, labor cost %, total sales, stores-in-target — each carries a "+/-Xpp vs target" delta badge. Side-by-side store mini-grid from `mart_store_weekly` with food/labor emoji chips. Two Altair trend charts (13 weeks) with horizontal target lines at 20% / 25%; labor chart gracefully degrades to a placeholder banner while `labor_cost_pct` is still NULL upstream. Four new data helpers: `list_field_managers`, `fm_name_for_email`, `fm_portfolio_history`, `fm_stores_for_week`. `delta_badge_text(actual, target)` is a pure helper (positive = OVER target/bad, negative = under/good, "0.0pp" on equality) — 6 unit tests cover the sign conventions and None/edge cases. Smoke launched headless: `/`, `/owner_overview`, `/store_detail`, `/field_manager` all return HTTP 200. Full suite 205 passed + 6 db-gated skips.
 
 ### `[ ]` 4.5 — Deploy to Streamlit Cloud (or Fly.io)
 - **Accomplishes:** Dashboard reachable at a stable URL by all 5 users. Decide: Streamlit Cloud (free, public URL with in-app auth) vs Fly.io ($5/mo, private URL).
