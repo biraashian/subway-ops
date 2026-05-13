@@ -52,6 +52,12 @@ Timestamps: TIMESTAMPTZ in UTC.
 Dates: DATE representing Subway business date.
 Booleans: is_*.
 
+`stg_controlsheet_weekly` is intentionally wide (~820 columns) — every
+section field is flattened to one column per day plus a footer. Reads
+are cheap via the `(restaurant_number, week_end_date)` PK; queries stay
+narrow because the dashboard and mart layer select only the columns
+they need.
+
 ## Business calendar (load-bearing)
 
 - Business day: 02:00 → 01:59 local (America/Los_Angeles for all stores).

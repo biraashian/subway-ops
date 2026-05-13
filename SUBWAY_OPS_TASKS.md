@@ -125,12 +125,12 @@ calendar weeks.
 - **Time:** 60 min
 - **Notes:** Migration `003_daily_sales.sql` creates `raw_daily_sales` (JSONB envelope log) and `stg_daily_sales` (typed, FK on `ref_stores`, PK on (restaurant_number, business_date)). New `subway_ops.db.upsert.upsert_rows(table, rows, key_cols)` is the canonical `INSERT … ON CONFLICT DO UPDATE` helper — identifier-validated, accepts an empty list, falls back to `DO NOTHING` when all cols are keys. `subway_ops.ingest.daily_sales.ingest(start, end, store_numbers=None, *, client=None)`: resolves default stores from `ref_stores`, plans batches (20-store × 50-day caps via `plan_batches`), persists raw + parses via `DailySalesSummaryResponse` + upserts to stg, wrapped in `track_job("ingest_daily_sales")`. Tests: 4 unit (batching) + 3 db-integration (writes / idempotency / ops_job_runs row). Verified live against store 4092 for 2026-05-05..05-11 → 7 rows; re-run = 7 rows (no dupes). Full suite 102 passed + 4 db-gated skips.
 
-### `[ ]` 2.2 — Schema + ingest: ControlSheet (weekly)
+### `[~]` 2.2 — Schema + ingest: ControlSheet (weekly)
 - **Accomplishes:** The richest endpoint — weekly cash control, sales itemization, bread, labor — flattened into one wide table (~120 columns). Foundation for both the weekly mart and the entire reconciliation flow.
 - **Branch:** `task-2.2-controlsheet`
 - **PR:**
 - **Time:** 90 min
-- **Notes:**
+- **Notes:** ControlSheet's six nested sections (cash control / bread / labor / metrics / sales itemization / unit itemization) each contain ~20 fields, every field a 7-day dict plus a footer. Strict "8 cols per field" flatten produced **820 columns** in `stg_controlsheet_weekly` (well below PG's 1600 ceiling), not the playbook's "~120" estimate. Schema authored in Python (`subway_ops.ingest.controlsheet` field-section tables → `column_definitions()` → `generate_ddl()`); migration `004_controlsheet.sql` was emitted by `python -m subway_ops.ingest.controlsheet --print-ddl`. A test asserts the on-disk migration equals the generator's current output so future schema changes are guaranteed to round-trip. Footer column unifies `total` and `average` (labor/rate fields emit the latter); percentage cols only created where the API returns them (live coverage drives the truth, not the doc sample). `ingest(week_end, store_numbers=None, *, client=None)` chunks 40 stores per call, persists raw envelope, parses, flattens, upserts; wrapped in `track_job("ingest_controlsheet")`. 5 tests (2 DDL/flatten unit + 3 db integration). Verified live against store 4092 for week ending 2026-05-05 → netSales $6,566.89, 428 customers, $680 deposit, footlong 64.89% mix. Idempotent. CLAUDE.md updated with wide-table rationale.
 
 ### `[ ]` 2.3 — Schema + ingest: PaidOutsAndNoSales (cash drops)
 - **Accomplishes:** Every POS-recorded cash drop event lands in staging. Combined with ControlSheet's `depositInBank`, this is the data backbone of reconciliation.
