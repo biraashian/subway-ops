@@ -86,7 +86,9 @@ they need.
 2. New Pydantic model in `freshconnect/models.py`.
 3. New ingest module in `ingest/<endpoint>.py` exposing
    `ingest(start, end, store_numbers) -> int`.
-4. Add to `scripts/daily_pull.py` if it should run daily.
+4. Add the new ingest to `scripts/daily_pull.py` — pop it into either
+   `_default_daily_ingests()` (yesterday's window) or
+   `_default_weekly_ingests()` (week-end Tuesday, runs only on Wednesday).
 5. Add a fixture-based test in `tests/test_ingest_<endpoint>.py`.
 
 ## How to add a new mart

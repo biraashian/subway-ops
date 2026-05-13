@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     database_url: str = Field(default="", description="Postgres connection URL")
     freshconnect_api_client: str = Field(default="", description="FreshConnect client id")
     freshconnect_api_key: str = Field(default="", description="FreshConnect API key")
+    gmail_user: str = Field(default="", description="Gmail account for outbound SMTP")
+    gmail_app_password: str = Field(default="", description="Gmail app password for SMTP")
+    alert_email: str = Field(default="", description="Where failure notifications go")
+    dashboard_url: str = Field(default="", description="Public Streamlit URL (digest links)")
     app_env: Literal["dev", "prod"] = "dev"
 
     model_config = SettingsConfigDict(

@@ -160,12 +160,12 @@ calendar weeks.
 - **Time:** 60 min
 - **Notes:** Migration `008_timeclock.sql`: `raw_timeclock` + `stg_timeclock` (PK on (restaurant_number, clerk_id, clock_in); `business_date` computed via 02:00 cutoff; stores `hours_before_adj` and `hours_after_adj` directly — playbook's `hours_total` collapsed to the explicit pair to keep both signals). Migration `009_third_party_daily.sql`: `raw_third_party_daily` + `stg_3p_daily` (PK on (restaurant_number, business_date)) + `stg_3p_daily_provider` (PK adds provider). Ingest modules `subway_ops.ingest.timeclock` (10-store × 30-day caps) and `subway_ops.ingest.third_party_daily` (20-store × 30-day caps), both wrapped in their respective `track_job(...)`s. Heavy transactional-grain endpoints (TransactionDetails, TipsDetails, TransactionSummary, ThirdPartyTransactionSummary, WasteBreadCredits) deferred to Phase 7 per playbook. 10 tests (6 unit batching + 4 db integration). Live verified store 4092 for 2026-05-05..05-11: 13 timeclock shifts (96.5 hours); 7 days of 3P sales totaling $800.61 across doordash ($572.79 / 25 txns) / uber ($182.11 / 10 txns) / grubhub ($45.71 / 2 txns). Idempotent. Full suite 135 passed + 4 db-gated skips.
 
-### `[ ]` 2.7 — Daily orchestrator + GitHub Actions cron
+### `[~]` 2.7 — Daily orchestrator + GitHub Actions cron
 - **Accomplishes:** Single `daily_pull.py` runs all six ingests with right windows. GitHub Actions fires it every morning at 03:00 PT. System is now ingesting automatically.
 - **Branch:** `task-2.7-orchestrator`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** `scripts/daily_pull.py` factored into pure `run_daily_pull(today, daily_ingests, weekly_ingests)` (testable) and a thin `main()` that wraps it in `track_job("daily_pull")`. 5 daily ingests fire every run with yesterday's window; 2 weekly ingests (controlsheet, wisr) only on Wednesday for the just-closed Tuesday. `scripts/notify_failure.py` sends a plain-text Gmail SMTP_SSL email with the GitHub Actions run URL stitched from `GITHUB_SERVER_URL`/`GITHUB_REPOSITORY`/`GITHUB_RUN_ID`. `.github/workflows/daily_pull.yml` runs `migrate.py` then `daily_pull.py` then `notify_failure.py` on failure, cron at 10:00 UTC + `workflow_dispatch`. Settings extended with gmail/alert/dashboard env vars (empty defaults). CLAUDE.md "how to add a new ingest" updated to point at the new dispatcher. 7 tests (3 orchestrator dispatch + 4 notify_failure). End-to-end live run on 2026-05-12 (Tue, no weeklies): daily_pull row in `ops_job_runs` shows `status=success`, `rows_written=223` (14 daily_sales, 127 paidouts, 0 inventory, 46 timeclock, 36 3p_daily) with per-ingest breakdown in metadata JSONB. Full suite 142 passed + 4 db-gated skips.
 
 ---
 
