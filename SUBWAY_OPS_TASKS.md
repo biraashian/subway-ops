@@ -171,12 +171,12 @@ calendar weeks.
 
 ## Phase 3 — Marts & Backfill
 
-### `[ ]` 3.1 — `mart_store_daily`
+### `[~]` 3.1 — `mart_store_daily`
 - **Accomplishes:** One row per store per business date with every daily-grain KPI computed. Powers dashboard "current week" views and 30-day trends.
 - **Branch:** `task-3.1-mart-daily`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** Migration `010_mart_store_daily.sql` defines the mart with four GENERATED ALWAYS STORED columns (`sales_per_labor_hour`, `average_ticket`, `third_party_pct`, `food_cost_pct`) so Python never recomputes a rate — Postgres owns the math. PK on `(restaurant_number, business_date)`. `subway_ops.transform.mart_store_daily.refresh(start, end)` runs one `INSERT … ON CONFLICT DO UPDATE` over a CTE union of `stg_daily_sales` / `stg_3p_daily` / `stg_inventory_movement_totals` (filtered to `COST OF GOODS COST`) / `stg_cash_drops` count. Default window is the last 14 days to absorb late corrections. Wrapped in `track_job("refresh_mart_store_daily")`. 4 tests (3 db integration with synthetic seed: generated columns + idempotency + zero-denominator guards; 1 unit on default lookback). Live verified across store 4092 for 2026-05-05..05-11: 7 mart rows, sales/labor $30–88, average ticket $12.83–$19.19, 3p mix 7.8–31% — the days where upstream inventory totals are 0 leave `food_cost_pct` null by design (no fake imputation). Full suite 146 passed + 4 db-gated skips.
 
 ### `[ ]` 3.2 — `mart_store_weekly`
 - **Accomplishes:** One row per store per Tuesday week-end, blending ControlSheet, Wisr, daily rollups. KPIs flagged against 22%/28% store-level targets.
