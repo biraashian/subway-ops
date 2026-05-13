@@ -56,6 +56,7 @@ from subway_ops.ingest import (
     timeclock,
     wisr,
 )
+from subway_ops.observability import configure_logging
 from subway_ops.transform import (
     mart_field_manager_portfolio,
     mart_store_daily,
@@ -282,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
 
     end = args.end or date.today()
     start = args.start or (end - timedelta(days=365))

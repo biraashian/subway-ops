@@ -38,6 +38,7 @@ from subway_ops.db.connection import get_engine
 from subway_ops.db.job_runs import track_job
 from subway_ops.digest.builder import build_digest
 from subway_ops.digest.sender import send_email
+from subway_ops.observability import configure_logging
 from subway_ops.transform import mart_recon_weekly, mart_store_weekly
 
 JOB_NAME = "send_weekly_digest"
@@ -260,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
 
     with track_job(JOB_NAME) as meta:
         result = run_send_weekly_digest(week_end=args.week_end)

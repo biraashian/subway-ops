@@ -29,6 +29,7 @@ import structlog
 
 from subway_ops.calendar import business_date_now, previous_business_week
 from subway_ops.db.job_runs import track_job
+from subway_ops.observability import configure_logging
 from subway_ops.transform import (
     mart_field_manager_portfolio,
     mart_recon_weekly,
@@ -89,7 +90,7 @@ def run_refresh(
 
 
 def main() -> int:
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
     today = business_date_now()
     with track_job(JOB_NAME) as meta:
         result = run_refresh(today=today)

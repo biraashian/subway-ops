@@ -17,6 +17,7 @@ import sys
 
 import structlog
 
+from subway_ops.observability import configure_logging
 from subway_ops.uos.ingest import DEFAULT_DAYS, ingest_recent
 
 log = structlog.get_logger(__name__)
@@ -32,7 +33,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
 
     result = ingest_recent(days=args.days)
     print(

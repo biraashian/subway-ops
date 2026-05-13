@@ -35,4 +35,11 @@ pages = [
     st.Page(str(PAGES_DIR / "4_reconciliation.py"), title="Reconciliation"),
 ]
 
+# Owner-only pages. Hidden from the nav for field managers and readonly
+# users; the pages themselves also block on entry (defence in depth).
+if st.session_state.get("user_role") == "owner":
+    pages.append(
+        st.Page(str(PAGES_DIR / "5_system_status.py"), title="System status"),
+    )
+
 st.navigation(pages).run()

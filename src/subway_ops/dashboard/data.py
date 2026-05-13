@@ -504,6 +504,73 @@ def recent_week_ends(n: int, today: date | None = None) -> list[date]:
     return [last_closed - timedelta(days=7 * i) for i in range(max(n, 0))]
 
 
+@st.cache_data(ttl=60)
+def recent_job_runs(
+    limit: int = 50,
+    job_filter: tuple[str, ...] = (),
+    status_filter: tuple[str, ...] = (),
+) -> pd.DataFrame:
+    """Most recent ``ops_job_runs`` entries for the system-status page.
+
+    ``job_filter`` and ``status_filter`` are tuples (hashable for the
+    Streamlit cache); empty means "no filter". Columns returned:
+    ``id``, ``job_name``, ``started_at``, ``finished_at``,
+    ``duration_seconds``, ``status``, ``rows_written``,
+    ``error_text_snippet`` (first 200 chars of the error column).
+
+    The cache TTL is **60 seconds** (not the 5-minute default the
+    other helpers use) so the auto-refreshing system-status page
+    actually sees fresh rows when a job lands. The mart helpers can
+    tolerate 5 minutes of staleness; observability cannot.
+    """
+    if limit <= 0:
+        return pd.DataFrame()
+    engine = cached_engine()
+    where_clauses: list[str] = []
+    params: dict[str, object] = {"limit": limit}
+    if job_filter:
+        where_clauses.append("job_name = ANY(:jobs)")
+        params["jobs"] = list(job_filter)
+    if status_filter:
+        where_clauses.append("status = ANY(:statuses)")
+        params["statuses"] = list(status_filter)
+    where_sql = ("WHERE " + " AND ".join(where_clauses)) if where_clauses else ""
+    with engine.connect() as conn:
+        return pd.read_sql_query(
+            text(
+                f"""
+                SELECT
+                    id,
+                    job_name,
+                    started_at,
+                    finished_at,
+                    EXTRACT(EPOCH FROM (COALESCE(finished_at, now()) - started_at))
+                        AS duration_seconds,
+                    status,
+                    rows_written,
+                    LEFT(COALESCE(error_text, ''), 200) AS error_text_snippet
+                FROM ops_job_runs
+                {where_sql}
+                ORDER BY started_at DESC
+                LIMIT :limit
+                """
+            ),
+            conn,
+            params=params,
+        )
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def distinct_job_names() -> list[str]:
+    """All distinct ``job_name`` values for the status page's filter."""
+    engine = cached_engine()
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text("SELECT DISTINCT job_name FROM ops_job_runs ORDER BY job_name")
+        ).all()
+    return [str(r[0]) for r in rows]
+
+
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
 def get_compliance_summary(
     report_date: date, store_filter: tuple[str, ...] | None

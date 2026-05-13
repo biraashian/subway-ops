@@ -64,6 +64,7 @@ from subway_ops.freshconnect.models import (
     WasteBreadCreditsResponse,
     WisrResponse,
 )
+from subway_ops.observability import configure_logging
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures" / "recorded"
@@ -371,7 +372,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_arg_parser().parse_args(argv)
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
 
     store = args.store
     if not store and not args.no_db:

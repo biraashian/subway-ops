@@ -11,6 +11,7 @@ from subway_ops.dashboard.auth import (
     UserRow,
     _normalise_assigned,
     build_credentials,
+    is_owner,
     visible_stores,
 )
 
@@ -80,3 +81,19 @@ def test_visible_stores_preserves_input_order() -> None:
     user = _user(role="field_manager", assigned=("17967", "4092"))
     # Input order wins: ref_stores rows are sorted by store_number on read.
     assert visible_stores(user, ["4092", "17967", "26529"]) == ["4092", "17967"]
+
+
+# ---------------------------------------------------------------------------
+# is_owner (Task 7.2)
+# ---------------------------------------------------------------------------
+
+
+def test_is_owner_true_for_owner_role() -> None:
+    assert is_owner("owner") is True
+
+
+def test_is_owner_false_for_other_roles() -> None:
+    assert is_owner("field_manager") is False
+    assert is_owner("readonly") is False
+    assert is_owner(None) is False
+    assert is_owner("") is False

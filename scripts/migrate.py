@@ -7,13 +7,12 @@ from __future__ import annotations
 
 import sys
 
-import structlog
-
 from subway_ops.db.migrate import apply_migrations, discover_migrations
+from subway_ops.observability import configure_logging
 
 
 def main() -> int:
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
     newly_applied = apply_migrations()
     total = len(discover_migrations())
     skipped = total - len(newly_applied)

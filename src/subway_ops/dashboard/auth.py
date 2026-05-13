@@ -141,6 +141,15 @@ def visible_stores(user: UserRow, all_stores: list[str]) -> list[str]:
     return [s for s in all_stores if s in assigned]
 
 
+def is_owner(user_role: str | None) -> bool:
+    """True for any role that's allowed to see operational/system pages.
+
+    Centralised so the sidebar nav, the page guard at the top of
+    ``5_system_status.py``, and any future owner-only pages all agree.
+    """
+    return user_role in ALL_STORE_ROLES
+
+
 def lookup_user(email: str) -> UserRow | None:
     for row in load_user_rows():
         if row.email == email:

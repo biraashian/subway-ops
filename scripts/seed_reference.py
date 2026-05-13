@@ -34,6 +34,7 @@ from dateutil import parser as dateparser
 from dotenv import load_dotenv
 
 from subway_ops.db.migrate import apply_migrations as _runner_apply_migrations
+from subway_ops.observability import configure_logging
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SEED_DIR = REPO_ROOT / "seed"
@@ -329,7 +330,7 @@ def _build_arg_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     args = _build_arg_parser().parse_args(argv)
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
 
     with connect() as conn:
         newly_applied = apply_migrations(conn)

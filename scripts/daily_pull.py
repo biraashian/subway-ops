@@ -35,6 +35,7 @@ from subway_ops.ingest import (
     timeclock,
     wisr,
 )
+from subway_ops.observability import configure_logging
 
 JOB_NAME = "daily_pull"
 WEDNESDAY = 2
@@ -121,7 +122,7 @@ def run_daily_pull(
 
 
 def main() -> int:
-    structlog.configure(processors=[structlog.dev.ConsoleRenderer()])
+    configure_logging()
     today = business_date_now()
     with track_job(JOB_NAME) as meta:
         result = run_daily_pull(today=today)
