@@ -199,12 +199,12 @@ calendar weeks.
 - **Time:** 90 min code + days of wall-clock for full run
 - **Notes:** Migration `013_backfill_progress.sql` creates `ops_backfill_progress` PK on (job_name, endpoint, window_start, window_end). `scripts/backfill.py` plans windows per endpoint (daily endpoints chunked by their per-call day-cap: 50/31/50/30/30; weekly endpoints emit one Tuesday per chunk), filters out already-completed windows, calls the right ingest, records each success. On `RateLimitError` exits 0 with a status table + resume hint. After all endpoints clean, refreshes mart_store_daily for the whole range plus mart_store_weekly + mart_field_manager_portfolio per Tuesday. CLI flags: `--start` / `--end` (default end=today, start=end-365) / `--status` / `--no-refresh`. Wrapped in `track_job("backfill")`. 12 tests (10 unit pure window planning + dispatch, 2 db integration on checkpoint round-trip). Two existing mart tests fixed to assert "at least one row" instead of "exactly one" so they work alongside live backfilled data. Smoke-tested live for 2026-05-05..05-12: 9 windows loaded (1 each for daily endpoints, 2 for controlsheet+wisr); resume run = 0 windows; with `--refresh` populated marts: 112 daily / 28 weekly / 8 FM portfolio rows. Status table afterwards shows 9/9 done across 7 endpoints. Full suite 167 passed + 4 db-gated skips.
 
-### `[ ]` 3.5 — Mart refresh job + schedule
+### `[~]` 3.5 — Mart refresh job + schedule
 - **Accomplishes:** Marts stay current throughout the day without manual intervention. Dashboard never more than 4 hours stale.
 - **Branch:** `task-3.5-refresh-cron`
 - **PR:**
 - **Time:** 30 min
-- **Notes:**
+- **Notes:** `scripts/refresh_marts.py` factored into `run_refresh(today, *, refresh_daily, refresh_weekly, refresh_fm)` (testable with mocks) plus a `main()` that wraps in `track_job("refresh_marts")`. Daily mart refreshes the rolling 14-day window; weekly + FM marts refresh the **last 2 closed Tuesdays** (catches late corrections two weeks back without burning cycles on stable history). `.github/workflows/refresh_marts.yml` cron `0 */4 * * *` (every 4 hours) + `workflow_dispatch`; same notify_failure plumbing as daily_pull. 5 unit tests covering week-end math and dispatcher call shape — no DB needed. Live smoke run on 2026-05-13: 1 daily refresh (113 rows), 2 weekly refreshes (27 rows total), 2 FM refreshes (8 rows). `ops_job_runs` shows `status=success`, `rows_written=148`, full per-mart breakdown in metadata. Full suite 172 passed + 4 db-gated skips.
 
 ---
 
