@@ -132,12 +132,12 @@ calendar weeks.
 - **Time:** 90 min
 - **Notes:** ControlSheet's six nested sections (cash control / bread / labor / metrics / sales itemization / unit itemization) each contain ~20 fields, every field a 7-day dict plus a footer. Strict "8 cols per field" flatten produced **820 columns** in `stg_controlsheet_weekly` (well below PG's 1600 ceiling), not the playbook's "~120" estimate. Schema authored in Python (`subway_ops.ingest.controlsheet` field-section tables → `column_definitions()` → `generate_ddl()`); migration `004_controlsheet.sql` was emitted by `python -m subway_ops.ingest.controlsheet --print-ddl`. A test asserts the on-disk migration equals the generator's current output so future schema changes are guaranteed to round-trip. Footer column unifies `total` and `average` (labor/rate fields emit the latter); percentage cols only created where the API returns them (live coverage drives the truth, not the doc sample). `ingest(week_end, store_numbers=None, *, client=None)` chunks 40 stores per call, persists raw envelope, parses, flattens, upserts; wrapped in `track_job("ingest_controlsheet")`. 5 tests (2 DDL/flatten unit + 3 db integration). Verified live against store 4092 for week ending 2026-05-05 → netSales $6,566.89, 428 customers, $680 deposit, footlong 64.89% mix. Idempotent. CLAUDE.md updated with wide-table rationale.
 
-### `[ ]` 2.3 — Schema + ingest: PaidOutsAndNoSales (cash drops)
+### `[~]` 2.3 — Schema + ingest: PaidOutsAndNoSales (cash drops)
 - **Accomplishes:** Every POS-recorded cash drop event lands in staging. Combined with ControlSheet's `depositInBank`, this is the data backbone of reconciliation.
 - **Branch:** `task-2.3-paidouts`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** Migration `005_paidouts_no_sales.sql`: `raw_paidouts_no_sales` JSONB log; `stg_no_sales` PK on `(restaurant_number, event_time, clerk_id, no_sale_type)`; `stg_paid_outs` PK on `(restaurant_number, event_time, clerk_id, amount, reason)`; `stg_cash_drops` view filters `no_sale_type='cash drop'`. `business_date` is computed at ingest by attaching `STORE_TZ` to the model's naive `time` and applying the 02:00 cutoff via `dt_to_business_date`. `subway_ops.ingest.paidouts.ingest(start, end, store_numbers=None, *, client=None)` batches 20-store × 31-day windows, deduplicates per-batch by PK before upserting (live batches can carry duplicate keys), wraps in `track_job("ingest_paidouts_no_sales")`. 8 tests: 5 unit (cutoff math + batching) + 3 db integration (write / view / idempotency). Live verified against store 4092 for 2026-05-05..05-11 — 86 noSales (74 cash-in / 9 cash-drop / 3 no-sale) + 2 paid-outs ($26 total); re-run unchanged. Full suite 115 passed + 4 db-gated skips.
 
 ### `[ ]` 2.4 — Schema + ingest: InventoryMovement
 - **Accomplishes:** Daily per-item inventory deltas (deliveries, transfers, waste) flow into staging.
