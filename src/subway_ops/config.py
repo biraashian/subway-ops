@@ -17,10 +17,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # KPI targets (fractional, NOT whole-percent). These are policy, not env-
-# configurable, so they live as module constants. Per-store thresholds are
-# tighter than the portfolio-level targets that Task 3.3's FM mart uses.
+# configurable, so they live as module constants. Portfolio-level targets
+# are tighter than per-store because the field-manager mart sales-weights
+# across an entire cluster, smoothing out individual outliers.
 TARGET_FOOD_COST_STORE: Decimal = Decimal("0.22")
 TARGET_LABOR_COST_STORE: Decimal = Decimal("0.28")
+TARGET_FOOD_COST_PORTFOLIO: Decimal = Decimal("0.20")
+TARGET_LABOR_COST_PORTFOLIO: Decimal = Decimal("0.25")
 
 
 class Settings(BaseSettings):
