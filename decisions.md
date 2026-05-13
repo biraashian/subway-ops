@@ -115,3 +115,33 @@ discovery script (15 calls, ~30 seconds) and reconcile. Recorded
 fixtures live at `tests/fixtures/recorded/` (gitignored) and
 `tests/test_recorded_fixtures.py` re-parses them whenever they exist so
 drift is caught locally before it hits ingest.
+
+---
+
+## 2026-05-13 — Dashboard auth: streamlit-authenticator + ref_users
+
+**Context:** Phase 4's dashboard needs login, per-role visibility, and a
+sign-out flow. Task 0.3 already seeded `ref_users` with bcrypt-hashed
+passwords, so the storage layer is in place.
+
+**Decision:** Use `streamlit-authenticator` v0.3+ rather than rolling our
+own session/cookie code. The library handles bcrypt verification and
+cookie-signed sessions; we pass `auto_hash=False` because `ref_users`
+already stores hashed passwords, and feed it credentials built from a
+live `SELECT` at session start. Cookie signing key comes from
+`.streamlit/secrets.toml` in local dev and from the
+`AUTH_COOKIE_KEY` env var (Streamlit Cloud / CI secrets) in prod.
+
+Visibility: `auth.visible_stores(user, all_stores)` returns the full
+roster for the `owner` role or for any user whose `assigned_stores` list
+is NULL (the seed allows this as an admin override), otherwise filters
+to the cluster. Pages read `st.session_state["assigned_stores"]` rather
+than re-querying.
+
+**Consequences:** Streamlit + streamlit-authenticator added to runtime
+deps (no dev-only ceiling — the dashboard ships to Streamlit Cloud).
+Page files under `src/subway_ops/dashboard/pages/` start with a digit
+per Streamlit's nav-order convention; ruff's `N999` is silenced for
+that directory via `per-file-ignores`. If we ever swap auth (SSO,
+SAML, etc.) the surface is small: replace `make_authenticator()` and
+the session-state shape in `_bootstrap_session`.

@@ -16,6 +16,8 @@ dependencies = [
     "pytz",
     "structlog",
     "bcrypt>=4.0",
+    "streamlit>=1.36",
+    "streamlit-authenticator>=0.3.2",
 ]
 
 [dependency-groups]
@@ -45,13 +47,24 @@ target-version = "py312"
 select = ["E", "F", "I", "B", "UP", "N", "SIM", "PL", "RUF"]
 ignore = ["PLR0913", "PLR2004"]
 
+[tool.ruff.lint.per-file-ignores]
+# Streamlit page files must start with a digit (its nav-order convention),
+# which trips ruff's "valid module name" check. The files are scripts, not
+# importable modules.
+"src/subway_ops/dashboard/pages/*.py" = ["N999"]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true
 files = ["src/subway_ops"]
 
 [[tool.mypy.overrides]]
-module = ["pandas.*", "pyarrow.*", "streamlit.*"]
+module = [
+    "pandas.*",
+    "pyarrow.*",
+    "streamlit.*",
+    "streamlit_authenticator.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -210,12 +210,12 @@ calendar weeks.
 
 ## Phase 4 — Dashboard
 
-### `[ ]` 4.1 — Streamlit app skeleton + authentication
+### `[~]` 4.1 — Streamlit app skeleton + authentication
 - **Accomplishes:** Multipage Streamlit app with login. Role-based store visibility (owner sees all 15; FMs see their cluster).
 - **Branch:** `task-4.1-streamlit-skeleton`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** Added `streamlit>=1.36` + `streamlit-authenticator>=0.3.2` as runtime deps (the dashboard ships to Streamlit Cloud). Module layout per playbook: `dashboard/{app,auth,data}.py` + `dashboard/components/{__init__,kpi_card,store_grid,filters}.py` + `dashboard/pages/{1_owner_overview,2_store_detail,3_field_manager,4_reconciliation}.py`. `auth.py` loads `ref_users` into the `Authenticate` config with `auto_hash=False` (seed already bcrypts); cookie signing key reads `.streamlit/secrets.toml` first, falls back to `AUTH_COOKIE_KEY` env. `visible_stores()` returns full roster for owners and for users with NULL `assigned_stores`, otherwise filters. `data.py` exposes `@st.cache_resource cached_engine()` + `@st.cache_data(ttl=300)` query helpers for `mart_store_daily/weekly` and FM portfolio. Sidebar shows display name, role, store count, "Last data refresh" = `MAX(refreshed_at)` from the daily mart, plus Sign-Out. Each page is a "Welcome {name}…" placeholder pending Tasks 4.2-4.6. Ruff per-file-ignore for `N999` on the digit-prefixed Streamlit page files. 8 auth unit tests (credentials shape, list/CSV assignment parsing, owner-sees-all, null-fallback, filter ordering). decisions.md entry on the auth choice. Smoke-launched headless on :8765 → HTTP 200. Full suite 180 passed + 4 db-gated skips.
 
 ### `[ ]` 4.2 — Owner overview page (15-store grid)
 - **Accomplishes:** At-a-glance view of all 15 stores. Sortable, color-coded grid plus 13-week trend chart.
