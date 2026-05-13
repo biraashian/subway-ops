@@ -22,6 +22,16 @@ COLOR_NEAR_TARGET: str = "#f59e0b"  # amber-500
 COLOR_OFF_TARGET: str = "#dc2626"  # red-600
 COLOR_NEUTRAL: str = "#475569"  # slate-600
 
+# Email-safe palette for the weekly digest. Distinct from the dashboard
+# palette: Gmail/Outlook strip <style> blocks and render best with bright,
+# saturated tones on a near-white background. Importing from one module
+# keeps the dashboard and digest visually coherent (same status semantics,
+# slightly different shades).
+GREEN: str = "#22c55e"  # green-500
+YELLOW: str = "#eab308"  # yellow-500
+RED: str = "#ef4444"  # red-500
+NEUTRAL_BG: str = "#f9fafb"  # gray-50
+
 # How wide a "near target" amber band is. The playbook spec is +2pp above
 # the threshold (≤ target = green; target..target+2pp = yellow; > +2pp = red).
 NEAR_TARGET_TOLERANCE: Decimal = Decimal("0.02")
