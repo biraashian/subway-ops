@@ -139,12 +139,12 @@ calendar weeks.
 - **Time:** 60 min
 - **Notes:** Migration `005_paidouts_no_sales.sql`: `raw_paidouts_no_sales` JSONB log; `stg_no_sales` PK on `(restaurant_number, event_time, clerk_id, no_sale_type)`; `stg_paid_outs` PK on `(restaurant_number, event_time, clerk_id, amount, reason)`; `stg_cash_drops` view filters `no_sale_type='cash drop'`. `business_date` is computed at ingest by attaching `STORE_TZ` to the model's naive `time` and applying the 02:00 cutoff via `dt_to_business_date`. `subway_ops.ingest.paidouts.ingest(start, end, store_numbers=None, *, client=None)` batches 20-store × 31-day windows, deduplicates per-batch by PK before upserting (live batches can carry duplicate keys), wraps in `track_job("ingest_paidouts_no_sales")`. 8 tests: 5 unit (cutoff math + batching) + 3 db integration (write / view / idempotency). Live verified against store 4092 for 2026-05-05..05-11 — 86 noSales (74 cash-in / 9 cash-drop / 3 no-sale) + 2 paid-outs ($26 total); re-run unchanged. Full suite 115 passed + 4 db-gated skips.
 
-### `[ ]` 2.4 — Schema + ingest: InventoryMovement
+### `[~]` 2.4 — Schema + ingest: InventoryMovement
 - **Accomplishes:** Daily per-item inventory deltas (deliveries, transfers, waste) flow into staging.
 - **Branch:** `task-2.4-inventory`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** Migration `006_inventory_movement.sql`: `raw_inventory_movement` JSONB log; `stg_inventory_movement` PK on `(restaurant_number, business_date, inventory_item)`; `stg_inventory_movement_totals` PK on `(restaurant_number, business_date, metric_name)`. `subway_ops.ingest.inventory_movement.ingest(start, end, store_numbers=None, *, client=None)` chunks 20-store × 50-day windows, persists raw + parses + flattens day's `items[]` and `totals[]` into their tables, dedupes by PK, wrapped in `track_job("ingest_inventory_movement")`. Recorded fixture refreshed to a 7-day window since single days return empty (`inventory_movement.json`: 1 reporting day, 20 items + 3 totals). 5 tests (3 batching unit + 2 db integration). Live verified against store 4092 for 2026-05-05..05-11: 20 inventory items + 3 totals (UNITS / DRINKS / COST OF GOODS) → 23 rows; rerun unchanged. Full suite 120 passed + 4 db-gated skips.
 
 ### `[ ]` 2.5 — Schema + ingest: Wisr (weekly WISR)
 - **Accomplishes:** Subway's gold-standard weekly food-cost analysis lands in staging. Drives food-cost variance KPIs in `mart_store_weekly`.
