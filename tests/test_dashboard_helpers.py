@@ -12,9 +12,17 @@ from subway_ops.config import (
     VARIANCE_FLAGGED_USD,
 )
 from subway_ops.dashboard.components import (
+    COMPLIANCE_GREEN_MIN,
+    COMPLIANCE_YELLOW_MIN,
+    EMOJI_IN_TARGET,
+    EMOJI_NEAR_TARGET,
+    EMOJI_OFF_TARGET,
+    EMOJI_UNKNOWN,
     KEY_FILTER_STATUS,
     KEY_FILTER_STORE,
     KEY_FILTER_WEEK_CHOICE,
+    compliance_bucket,
+    compliance_emoji,
 )
 from subway_ops.dashboard.components.helpers import (
     csv_download_button,
@@ -112,3 +120,33 @@ def test_variance_thresholds_are_decimal_and_ordered() -> None:
     assert Decimal("50") == VARIANCE_ESCALATED_USD
     # Escalation must be a stricter (larger) threshold than mere flagging.
     assert VARIANCE_ESCALATED_USD > VARIANCE_FLAGGED_USD
+
+
+# ---------------------------------------------------------------------------
+# Compliance bucketing (Task 6.3)
+# ---------------------------------------------------------------------------
+
+
+def test_compliance_thresholds_are_ordered() -> None:
+    # Green threshold sits above yellow — sanity check the constants
+    # never accidentally invert.
+    assert COMPLIANCE_GREEN_MIN > COMPLIANCE_YELLOW_MIN
+    assert Decimal("0.90") == COMPLIANCE_GREEN_MIN
+    assert Decimal("0.80") == COMPLIANCE_YELLOW_MIN
+
+
+def test_compliance_bucket_decimal_and_float() -> None:
+    assert compliance_bucket(Decimal("0.95")) == "in_target"
+    assert compliance_bucket(Decimal("0.90")) == "in_target"  # boundary
+    assert compliance_bucket(Decimal("0.85")) == "near"
+    assert compliance_bucket(Decimal("0.80")) == "near"  # boundary
+    assert compliance_bucket(Decimal("0.79")) == "off"
+    assert compliance_bucket(0.92) == "in_target"
+    assert compliance_bucket(None) == "unknown"
+
+
+def test_compliance_emoji_uses_status_palette() -> None:
+    assert compliance_emoji(Decimal("0.92")) == EMOJI_IN_TARGET
+    assert compliance_emoji(Decimal("0.85")) == EMOJI_NEAR_TARGET
+    assert compliance_emoji(Decimal("0.50")) == EMOJI_OFF_TARGET
+    assert compliance_emoji(None) == EMOJI_UNKNOWN

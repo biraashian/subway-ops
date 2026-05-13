@@ -35,11 +35,15 @@ from subway_ops.config import (
 from subway_ops.dashboard.components import (
     COLOR_IN_TARGET,
     COLOR_OFF_TARGET,
+    COMPLIANCE_GREEN_MIN,
 )
 from subway_ops.dashboard.components.helpers import csv_download_button
 from subway_ops.dashboard.components.sidebar import render_sidebar
 from subway_ops.dashboard.data import (
     cash_drops_with_deposits,
+    get_compliance_summary,
+    get_store_compliance_detail,
+    get_store_compliance_trend,
     store_daily,
     store_weekly_history,
     wisr_inventory_items,
@@ -47,6 +51,7 @@ from subway_ops.dashboard.data import (
 
 DAILY_LOOKBACK_DAYS = 30
 WEEKLY_LOOKBACK_WEEKS = 13
+TRAINING_TREND_WEEKS = 13
 
 
 def _pick_store(visible: list[str]) -> str | None:
@@ -259,6 +264,109 @@ def _cash_drops_tab(store: str) -> None:
     )
 
 
+def _training_tab(store: str) -> None:
+    """Three-stack training view: trend → per-employee table → overdue list.
+
+    Compliance data is per-(store, report_date); the summary helper
+    finds the latest report on/before today and the trend chart
+    backfills the prior reports.
+    """
+    today = business_date_now()
+    summary = get_compliance_summary(today, (store,))
+    if summary.empty:
+        st.info(
+            "No uOS compliance data for this store yet. The uos_pull "
+            "workflow lands new reports daily once Gmail is wired up."
+        )
+        return
+
+    latest = summary.iloc[0]
+    report_date = pd.to_datetime(latest["latest_report_date"]).date()
+    pct = latest["compliance_pct"]
+    pct_value = float(pct) if pct is not None and not pd.isna(pct) else None
+
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        st.metric(
+            "Compliance %",
+            "—" if pct_value is None else f"{pct_value * 100:.1f}%",
+            help=f"Latest report: {report_date:%Y-%m-%d}",
+        )
+    with c2:
+        st.metric("Overdue", int(latest["overdue_cells"]))
+    with c3:
+        st.metric("Pending", int(latest["pending_cells"]))
+
+    trend = get_store_compliance_trend(store, TRAINING_TREND_WEEKS)
+    if not trend.empty:
+        chart_df = trend.copy()
+        chart_df["compliance_pct"] = pd.to_numeric(
+            chart_df["compliance_pct"], errors="coerce"
+        )
+        chart = _line_chart(
+            chart_df,
+            x="report_date",
+            y="compliance_pct",
+            title=(
+                f"Compliance % (green ≥ "
+                f"{float(COMPLIANCE_GREEN_MIN):.0%})"
+            ),
+            y_format="%",
+            target=float(COMPLIANCE_GREEN_MIN),
+        )
+        st.altair_chart(chart, use_container_width=True)
+
+    detail = get_store_compliance_detail(store, report_date)
+    if detail.empty:
+        return
+
+    st.subheader(f"Per-employee detail — {report_date:%Y-%m-%d}")
+    # Per-employee compliance %: complete / total across courses.
+    grouped = (
+        detail.assign(
+            is_complete=detail["completion_status"].eq("complete").astype(int),
+        )
+        .groupby("employee_name", as_index=False)
+        .agg(
+            courses=("course_name", "count"),
+            complete=("is_complete", "sum"),
+        )
+    )
+    grouped["compliance_pct"] = grouped["complete"] / grouped["courses"]
+    grouped["compliance_label"] = grouped["compliance_pct"].apply(
+        lambda v: "—" if pd.isna(v) else f"{v * 100:.0f}%"
+    )
+    st.dataframe(
+        grouped[["employee_name", "courses", "complete", "compliance_label"]].rename(
+            columns={"compliance_label": "compliance"}
+        ),
+        use_container_width=True,
+        hide_index=True,
+    )
+
+    overdue = detail[detail["completion_status"] == "overdue"].copy()
+    if not overdue.empty:
+        st.subheader("Overdue items")
+        overdue["days_overdue"] = (
+            pd.Timestamp(report_date)
+            - pd.to_datetime(overdue["completed_at"], errors="coerce")
+        ).dt.days
+        overdue["days_overdue"] = overdue["days_overdue"].fillna("—")
+        ordered = overdue[
+            ["employee_name", "course_name", "completed_at", "days_overdue"]
+        ].sort_values(
+            "days_overdue",
+            ascending=False,
+            key=lambda s: pd.to_numeric(s, errors="coerce"),
+        )
+        st.dataframe(ordered, use_container_width=True, hide_index=True)
+    csv_download_button(
+        detail,
+        filename=f"{store}_compliance_{report_date}.csv",
+        key="store_detail_training_csv",
+    )
+
+
 def main() -> None:
     if not st.session_state.get("user_email"):
         st.warning("Please log in via the main page.")
@@ -275,8 +383,8 @@ def main() -> None:
     if not store:
         return
 
-    daily_tab, weekly_tab, inventory_tab, cash_tab = st.tabs(
-        ["Daily trend", "Weekly history", "Inventory detail", "Cash drops"]
+    daily_tab, weekly_tab, inventory_tab, cash_tab, training_tab = st.tabs(
+        ["Daily trend", "Weekly history", "Inventory detail", "Cash drops", "Training"]
     )
     with daily_tab:
         _daily_trend_tab(store)
@@ -286,6 +394,8 @@ def main() -> None:
         _inventory_tab(store)
     with cash_tab:
         _cash_drops_tab(store)
+    with training_tab:
+        _training_tab(store)
 
 
 main()

@@ -26,6 +26,7 @@ from subway_ops.dashboard.components import (
     EMOJI_UNKNOWN,
     KEY_FILTER_STATUS,
     KEY_FILTER_WEEK_CHOICE,
+    compliance_emoji,
     food_cost_emoji,
     labor_cost_emoji,
 )
@@ -34,6 +35,7 @@ from subway_ops.dashboard.components.kpi_card import kpi_card
 from subway_ops.dashboard.components.sidebar import render_sidebar
 from subway_ops.dashboard.data import (
     current_and_last_week_ends,
+    get_compliance_summary,
     portfolio_trend,
     weekly_overview,
 )
@@ -77,7 +79,9 @@ def _format_pct(value: object) -> str:
     return "—" if f is None else f"{f * 100:.1f}%"
 
 
-def _build_display_df(df: pd.DataFrame) -> pd.DataFrame:
+def _build_display_df(
+    df: pd.DataFrame, compliance: pd.DataFrame | None
+) -> pd.DataFrame:
     """Add status emoji columns and pretty-print pct/money for the grid."""
     out = df.copy()
     out["food_cost"] = out["food_cost_actual_pct"].apply(_format_pct)
@@ -88,7 +92,18 @@ def _build_display_df(df: pd.DataFrame) -> pd.DataFrame:
     out["cash_overshort"] = out["cash_overshort_total"].apply(_format_currency)
     out["recon_status"] = EMOJI_UNKNOWN  # Task 5.1 fills this in
     out["recon_variance"] = "—"
-    return out[
+    if compliance is not None and not compliance.empty:
+        merged = out.merge(
+            compliance[["restaurant_number", "compliance_pct"]],
+            on="restaurant_number",
+            how="left",
+        )
+    else:
+        merged = out.copy()
+        merged["compliance_pct"] = None
+    merged["training"] = merged["compliance_pct"].apply(_format_pct)
+    merged["training_status"] = merged["compliance_pct"].apply(compliance_emoji)
+    return merged[
         [
             "restaurant_number",
             "store_name",
@@ -100,6 +115,8 @@ def _build_display_df(df: pd.DataFrame) -> pd.DataFrame:
             "labor_cost",
             "labor_cost_status",
             "cash_overshort",
+            "training",
+            "training_status",
             "recon_status",
             "recon_variance",
         ]
@@ -154,7 +171,11 @@ def _render_kpi_row(df: pd.DataFrame) -> None:
         )
 
 
-def _render_grid(df: pd.DataFrame, week_end_label: str) -> None:
+def _render_grid(
+    df: pd.DataFrame,
+    compliance: pd.DataFrame | None,
+    week_end_label: str,
+) -> None:
     if df.empty:
         st.info(
             "No mart_store_weekly rows yet for the selected week. "
@@ -170,7 +191,7 @@ def _render_grid(df: pd.DataFrame, week_end_label: str) -> None:
         help="Pick one or more food-cost buckets to narrow the grid.",
     )
 
-    display = _build_display_df(df)
+    display = _build_display_df(df, compliance)
     if selected_status:
         display = display[display["food_cost_status"].isin(selected_status)]
     if display.empty:
@@ -194,6 +215,8 @@ def _render_grid(df: pd.DataFrame, week_end_label: str) -> None:
             "labor_cost": st.column_config.TextColumn("Labor %", width="small"),
             "labor_cost_status": st.column_config.TextColumn("", width="small"),
             "cash_overshort": st.column_config.TextColumn("Cash o/s", width="small"),
+            "training": st.column_config.TextColumn("Training %", width="small"),
+            "training_status": st.column_config.TextColumn("", width="small"),
             "recon_status": st.column_config.TextColumn("Recon", width="small"),
             "recon_variance": st.column_config.TextColumn("Variance", width="small"),
         },
@@ -267,9 +290,10 @@ def main() -> None:
     st.caption(f"Showing data for week ending **{week_end:%Y-%m-%d}** (Tuesday).")
 
     df = weekly_overview(week_end, visible)
+    compliance = get_compliance_summary(week_end, visible)
     _render_kpi_row(df)
     st.divider()
-    _render_grid(df, week_end_label=week_end.isoformat())
+    _render_grid(df, compliance, week_end_label=week_end.isoformat())
     st.divider()
     st.subheader(f"Portfolio net sales — last {TREND_WEEKS} weeks")
     _render_trend(visible)

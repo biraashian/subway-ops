@@ -24,6 +24,7 @@ from subway_ops.digest.builder import (
     COLOR_GREEN,
     COLOR_RED,
     COLOR_YELLOW,
+    ComplianceSummary,
     DigestData,
     FMRollup,
     PortfolioSnapshot,
@@ -33,6 +34,7 @@ from subway_ops.digest.builder import (
     TargetRow,
     _bucket_color,
     _bucket_pct,
+    _compliance_bucket,
     _default_targets,
     _fmt_money,
     _fmt_money_signed,
@@ -420,3 +422,120 @@ def test_digest_data_post_init_back_fills_counts() -> None:
     )
     assert data.flagged_count == 3
     assert data.escalated_count == 7
+
+
+# ---------------------------------------------------------------------------
+# Compliance section (Task 6.3)
+# ---------------------------------------------------------------------------
+
+
+def test_compliance_bucket_threshold_boundaries() -> None:
+    # Exactly 90% counts as in target (matches dashboard semantics).
+    assert _compliance_bucket(Decimal("0.90")) == "in_target"
+    assert _compliance_bucket(Decimal("0.85")) == "near"
+    assert _compliance_bucket(Decimal("0.79")) == "off"
+    assert _compliance_bucket(None) == "unknown"
+
+
+@pytest.fixture
+def fixture_data_with_compliance(fixture_data: DigestData) -> DigestData:
+    """Take the all-buckets fixture and tack compliance data onto it.
+
+    Three stores: one green (92%), one yellow (85%), one red (60%).
+    Covers every render branch (row tint, color cell) plus a fourth
+    store missing from the compliance set so the renderer doesn't
+    blow up on partial data.
+    """
+    compliance = (
+        ComplianceSummary(
+            store_number="4001",
+            store_name="Bellevue Main",
+            report_date=date(2026, 5, 3),
+            total_cells=25,
+            complete_cells=23,
+            overdue_cells=1,
+            pending_cells=1,
+            compliance_pct=Decimal("0.92"),
+        ),
+        ComplianceSummary(
+            store_number="4002",
+            store_name="Bellevue North",
+            report_date=date(2026, 5, 3),
+            total_cells=20,
+            complete_cells=17,
+            overdue_cells=2,
+            pending_cells=1,
+            compliance_pct=Decimal("0.85"),
+        ),
+        ComplianceSummary(
+            store_number="4101",
+            store_name="Seattle Downtown",
+            report_date=date(2026, 5, 3),
+            total_cells=30,
+            complete_cells=18,
+            overdue_cells=8,
+            pending_cells=4,
+            compliance_pct=Decimal("0.60"),
+        ),
+    )
+    # Frozen dataclass — rebuild via dataclasses.replace-style.
+    return DigestData(
+        week_end=fixture_data.week_end,
+        week_start=fixture_data.week_start,
+        portfolio=fixture_data.portfolio,
+        targets=fixture_data.targets,
+        recon=fixture_data.recon,
+        fm_rollups=fixture_data.fm_rollups,
+        stores=fixture_data.stores,
+        dashboard_url=fixture_data.dashboard_url,
+        feedback_email=fixture_data.feedback_email,
+        compliance=compliance,
+    )
+
+
+def test_compliance_section_renders_for_each_bucket(
+    fixture_data_with_compliance: DigestData,
+) -> None:
+    _, body = render_digest(fixture_data_with_compliance)
+    assert "Training compliance" in body
+    # Every store name from the compliance set is present.
+    for c in fixture_data_with_compliance.compliance:
+        assert c.store_name in body
+    # Each bucket colour shows up at least once in the section.
+    for color in (COLOR_GREEN, COLOR_YELLOW, COLOR_RED):
+        assert f"background:{color}" in body, color
+    # Percentages render formatted.
+    assert "92.0%" in body
+    assert "85.0%" in body
+    assert "60.0%" in body
+
+
+def test_compliance_section_tints_low_rows_red(
+    fixture_data_with_compliance: DigestData,
+) -> None:
+    """Stores under 90% should have a red-tinted background. The 92%
+    store should NOT carry that tint."""
+    _, body = render_digest(fixture_data_with_compliance)
+    # Both sub-90% stores get the tint; 92% does not. We can't reliably
+    # parse the HTML, but we can check that the red-tint colour appears
+    # AT LEAST twice (yellow + red stores) — once would be a regression.
+    tint_count = body.count('background:#fef2f2;')
+    assert tint_count >= 2, tint_count
+
+
+def test_compliance_section_dropped_when_empty(
+    fixture_data: DigestData,
+) -> None:
+    """The contract is "skip the section if no uOS data exists for the
+    week" — fixture_data has no compliance tuple by default."""
+    _, body = render_digest(fixture_data)
+    assert "Training compliance" not in body
+
+
+def test_compliance_section_after_per_store_table(
+    fixture_data_with_compliance: DigestData,
+) -> None:
+    _, body = render_digest(fixture_data_with_compliance)
+    per_store_idx = body.index("Per-store summary")
+    compliance_idx = body.index("Training compliance")
+    assert compliance_idx > per_store_idx

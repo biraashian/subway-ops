@@ -57,6 +57,12 @@ COLOR_NEUTRAL_BG = NEUTRAL_BG
 # points matches the dashboard's NEAR_TARGET_TOLERANCE.
 NEAR_TARGET_TOLERANCE_PP = Decimal("0.02")
 
+# Compliance thresholds — fractional. Match
+# ``components.COMPLIANCE_GREEN_MIN`` / ``COMPLIANCE_YELLOW_MIN`` so the
+# email and the dashboard agree on what "in target" means.
+COMPLIANCE_GREEN_MIN = Decimal("0.90")
+COMPLIANCE_YELLOW_MIN = Decimal("0.80")
+
 # Address operators reply to with digest feedback. Defaults to the same
 # inbox that gets failure alerts; falls back to a static string if unset.
 _DEFAULT_FEEDBACK = "amitojsubway@gmail.com"
@@ -116,6 +122,26 @@ class ReconSummary:
 
 
 @dataclass(frozen=True)
+class ComplianceSummary:
+    """One row per store for the training-compliance digest section.
+
+    ``compliance_pct`` is fractional (0.93 == 93%). ``report_date`` is
+    the most-recent uOS report date that produced this snapshot — it
+    may pre-date the digest's ``week_end`` by a few days because uOS
+    publishes on its own cadence.
+    """
+
+    store_number: str
+    store_name: str
+    report_date: date
+    total_cells: int
+    complete_cells: int
+    overdue_cells: int
+    pending_cells: int
+    compliance_pct: Decimal | None
+
+
+@dataclass(frozen=True)
 class StoreRow:
     """One per-store row in the all-stores table at the bottom."""
 
@@ -158,6 +184,7 @@ class DigestData:
     stores: tuple[StoreRow, ...]
     dashboard_url: str
     feedback_email: str
+    compliance: tuple[ComplianceSummary, ...] = ()
     flagged_count: int = field(init=False)
     escalated_count: int = field(init=False)
 
@@ -249,6 +276,21 @@ def _bucket_pct(value: Decimal | None, target: Decimal) -> str:
     if value <= target:
         return "in_target"
     if value <= target + NEAR_TARGET_TOLERANCE_PP:
+        return "near"
+    return "off"
+
+
+def _compliance_bucket(value: Decimal | None) -> str:
+    """Bucket fractional compliance % into in_target / near / off / unknown.
+
+    Mirror of ``components.compliance_bucket`` so the email and the
+    dashboard pick the same colour for the same number.
+    """
+    if value is None:
+        return "unknown"
+    if value >= COMPLIANCE_GREEN_MIN:
+        return "in_target"
+    if value >= COMPLIANCE_YELLOW_MIN:
         return "near"
     return "off"
 
@@ -580,6 +622,63 @@ def _render_fm_rollups(data: DigestData) -> str:
     return "".join(parts)
 
 
+def _render_compliance(data: DigestData) -> str:
+    """Render the training-compliance section.
+
+    Returns an empty string when there's no compliance data — the
+    playbook contract is to drop the section rather than render an
+    empty placeholder. Stores with ``compliance_pct < 90%`` get a red
+    row tint (matches the dashboard's COMPLIANCE_GREEN_MIN).
+    """
+    if not data.compliance:
+        return ""
+    rows_html: list[str] = []
+    for c in data.compliance:
+        bucket = _compliance_bucket(c.compliance_pct)
+        color = _bucket_color(bucket)
+        pct_text = _fmt_pct(c.compliance_pct)
+        # Tint the row when compliance is below the green threshold.
+        row_style = (
+            ' style="background:#fef2f2;"'
+            if bucket in ("near", "off")
+            else ""
+        )
+        rows_html.append(
+            f"<tr{row_style}>"
+            + _td(html.escape(c.store_number))
+            + _td(html.escape(c.store_name))
+            + _td(
+                html.escape(c.report_date.isoformat()),
+                style="text-align:right;color:#6b7280;",
+            )
+            + _td(
+                html.escape(_fmt_int(c.overdue_cells)),
+                style="text-align:right;font-variant-numeric:tabular-nums;",
+            )
+            + _td(
+                html.escape(_fmt_int(c.pending_cells)),
+                style="text-align:right;font-variant-numeric:tabular-nums;",
+            )
+            + _color_cell(pct_text, color)
+            + "</tr>"
+        )
+    return (
+        _section_header("Training compliance")
+        + f'<table role="presentation" cellpadding="0" cellspacing="0" '
+        f'style="border-collapse:collapse;width:100%;max-width:{EMAIL_WIDTH_PX}px;">'
+        + "<tr>"
+        + _th("Store #")
+        + _th("Name")
+        + _th("Report date", style="text-align:right;")
+        + _th("Overdue", style="text-align:right;")
+        + _th("Pending", style="text-align:right;")
+        + _th("Compliance", style="text-align:right;")
+        + "</tr>"
+        + "".join(rows_html)
+        + "</table>"
+    )
+
+
 def _render_header(data: DigestData) -> str:
     return (
         f'<h1 style="font-size:22px;margin:0 0 4px 0;color:#111827;">'
@@ -640,6 +739,7 @@ def render_digest(data: DigestData) -> tuple[str, str]:
         + _render_fm_rollups(data)
         + _section_header("Per-store summary")
         + _render_store_table(data.stores)
+        + _render_compliance(data)
         + _render_footer(data)
         + "</div></body></html>"
     )
@@ -789,6 +889,44 @@ def _collect_digest_data(week_end: date) -> DigestData:
             {"w": week_end},
         ).all()
 
+        # Compliance snapshot: most recent uOS report on/before week_end
+        # for each store visible in the week's mart. Window function so
+        # we get the latest report_date per store in one round-trip.
+        compliance_rows_raw = conn.execute(
+            text(
+                """
+                WITH latest AS (
+                    SELECT restaurant_number, MAX(report_date) AS report_date
+                    FROM stg_uos_compliance
+                    WHERE report_date <= :w
+                    GROUP BY restaurant_number
+                )
+                SELECT
+                    u.restaurant_number,
+                    s.store_name,
+                    l.report_date,
+                    COUNT(*) AS total_cells,
+                    SUM(CASE WHEN u.completion_status = 'complete'
+                             THEN 1 ELSE 0 END) AS complete_cells,
+                    SUM(CASE WHEN u.completion_status = 'overdue'
+                             THEN 1 ELSE 0 END) AS overdue_cells,
+                    SUM(CASE WHEN u.completion_status = 'pending'
+                             THEN 1 ELSE 0 END) AS pending_cells,
+                    CASE WHEN COUNT(*) = 0 THEN NULL
+                         ELSE SUM(CASE WHEN u.completion_status = 'complete'
+                                       THEN 1 ELSE 0 END)::numeric
+                              / COUNT(*)
+                    END AS compliance_pct
+                FROM stg_uos_compliance u
+                JOIN latest l USING (restaurant_number, report_date)
+                JOIN ref_stores s ON s.store_number = u.restaurant_number
+                GROUP BY u.restaurant_number, s.store_name, l.report_date
+                ORDER BY u.restaurant_number
+                """
+            ),
+            {"w": week_end},
+        ).all()
+
     stores = tuple(
         StoreRow(
             store_number=str(r.restaurant_number),
@@ -866,6 +1004,20 @@ def _collect_digest_data(week_end: date) -> DigestData:
         ),
     )
 
+    compliance = tuple(
+        ComplianceSummary(
+            store_number=str(r.restaurant_number),
+            store_name=str(r.store_name),
+            report_date=r.report_date,
+            total_cells=int(r.total_cells),
+            complete_cells=int(r.complete_cells),
+            overdue_cells=int(r.overdue_cells),
+            pending_cells=int(r.pending_cells),
+            compliance_pct=r.compliance_pct,
+        )
+        for r in compliance_rows_raw
+    )
+
     feedback = settings.alert_email or _DEFAULT_FEEDBACK
     return DigestData(
         week_end=week_end,
@@ -880,6 +1032,7 @@ def _collect_digest_data(week_end: date) -> DigestData:
         stores=stores,
         dashboard_url=settings.dashboard_url,
         feedback_email=feedback,
+        compliance=compliance,
     )
 
 

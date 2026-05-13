@@ -505,6 +505,143 @@ def recent_week_ends(n: int, today: date | None = None) -> list[date]:
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
+def get_compliance_summary(
+    report_date: date, store_filter: tuple[str, ...] | None
+) -> pd.DataFrame:
+    """Per-store uOS training compliance % for the latest report on/before
+    ``report_date``.
+
+    The uOS pipeline (Task 6.2) lands one row per (store, report_date,
+    employee, course). Different stores can report on different dates,
+    so the query picks the latest ``report_date <= :report_date`` per
+    store via a window function, then computes complete cells / total
+    cells.
+
+    Columns returned: ``restaurant_number``, ``store_name``,
+    ``latest_report_date``, ``total_cells``, ``complete_cells``,
+    ``overdue_cells``, ``pending_cells``, ``compliance_pct``
+    (fractional, e.g. 0.93 == 93%).
+
+    ``store_filter`` of ``None`` means no filter; an empty tuple means
+    "no stores visible" and returns an empty frame so a misconfigured
+    page doesn't accidentally query the whole portfolio.
+    """
+    if store_filter is not None and not store_filter:
+        return pd.DataFrame()
+    engine = cached_engine()
+    where_stores = "AND u.restaurant_number = ANY(:stores)" if store_filter else ""
+    params: dict[str, object] = {"d": report_date}
+    if store_filter is not None:
+        params["stores"] = list(store_filter)
+    with engine.connect() as conn:
+        return pd.read_sql_query(
+            text(
+                f"""
+                WITH latest AS (
+                    SELECT restaurant_number, MAX(report_date) AS report_date
+                    FROM stg_uos_compliance u
+                    WHERE report_date <= :d
+                      {where_stores}
+                    GROUP BY restaurant_number
+                )
+                SELECT
+                    u.restaurant_number,
+                    s.store_name,
+                    l.report_date AS latest_report_date,
+                    COUNT(*) AS total_cells,
+                    SUM(CASE WHEN u.completion_status = 'complete'
+                             THEN 1 ELSE 0 END) AS complete_cells,
+                    SUM(CASE WHEN u.completion_status = 'overdue'
+                             THEN 1 ELSE 0 END) AS overdue_cells,
+                    SUM(CASE WHEN u.completion_status = 'pending'
+                             THEN 1 ELSE 0 END) AS pending_cells,
+                    CASE WHEN COUNT(*) = 0 THEN NULL
+                         ELSE SUM(CASE WHEN u.completion_status = 'complete'
+                                       THEN 1 ELSE 0 END)::numeric
+                              / COUNT(*)
+                    END AS compliance_pct
+                FROM stg_uos_compliance u
+                JOIN latest l USING (restaurant_number, report_date)
+                JOIN ref_stores s ON s.store_number = u.restaurant_number
+                GROUP BY u.restaurant_number, s.store_name, l.report_date
+                ORDER BY u.restaurant_number
+                """
+            ),
+            conn,
+            params=params,
+        )
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def get_store_compliance_detail(
+    store_number: str, report_date: date
+) -> pd.DataFrame:
+    """Per-employee, per-course detail for one store + report date.
+
+    Caller is expected to pass the ``latest_report_date`` it got from
+    ``get_compliance_summary`` so the detail matches what the summary
+    counted.
+    """
+    engine = cached_engine()
+    with engine.connect() as conn:
+        return pd.read_sql_query(
+            text(
+                """
+                SELECT
+                    employee_name,
+                    course_name,
+                    completion_status,
+                    completed_at,
+                    ingested_at
+                FROM stg_uos_compliance
+                WHERE restaurant_number = :s
+                  AND report_date = :d
+                ORDER BY employee_name, course_name
+                """
+            ),
+            conn,
+            params={"s": store_number, "d": report_date},
+        )
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
+def get_store_compliance_trend(
+    store_number: str, weeks: int
+) -> pd.DataFrame:
+    """Weekly compliance % trend for one store, last ``weeks`` report dates.
+
+    Returned chronologically so an Altair line chart renders left-to-
+    right.
+    """
+    if weeks <= 0:
+        return pd.DataFrame(columns=["report_date", "compliance_pct"])
+    engine = cached_engine()
+    with engine.connect() as conn:
+        df = pd.read_sql_query(
+            text(
+                """
+                SELECT
+                    report_date,
+                    CASE WHEN COUNT(*) = 0 THEN NULL
+                         ELSE SUM(CASE WHEN completion_status = 'complete'
+                                       THEN 1 ELSE 0 END)::numeric
+                              / COUNT(*)
+                    END AS compliance_pct,
+                    COUNT(*) AS total_cells
+                FROM stg_uos_compliance
+                WHERE restaurant_number = :s
+                GROUP BY report_date
+                ORDER BY report_date DESC
+                LIMIT :weeks
+                """
+            ),
+            conn,
+            params={"s": store_number, "weeks": weeks},
+        )
+    return df.iloc[::-1].reset_index(drop=True)
+
+
+@st.cache_data(ttl=CACHE_TTL_SECONDS)
 def fm_portfolio(week_end: date) -> pd.DataFrame:
     engine = cached_engine()
     with engine.connect() as conn:

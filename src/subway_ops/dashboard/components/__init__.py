@@ -89,6 +89,32 @@ def labor_cost_emoji(value: Decimal | float | None, *, portfolio: bool = False) 
     return status_emoji(status_bucket(value, target))
 
 
+# Compliance buckets. Industry custom for franchise training puts the
+# "healthy" mark at 90% and the alert mark at 80%; below 80% the
+# operator should be on the phone with the store manager.
+COMPLIANCE_GREEN_MIN: Decimal = Decimal("0.90")
+COMPLIANCE_YELLOW_MIN: Decimal = Decimal("0.80")
+
+
+def compliance_bucket(value: Decimal | float | None) -> str:
+    """Return ``in_target`` / ``near`` / ``off`` / ``unknown`` for a
+    fractional compliance percentage. Mirrors ``status_bucket`` so the
+    grid colour helpers can share emoji + colour logic.
+    """
+    if value is None:
+        return "unknown"
+    v = value if isinstance(value, Decimal) else Decimal(str(value))
+    if v >= COMPLIANCE_GREEN_MIN:
+        return "in_target"
+    if v >= COMPLIANCE_YELLOW_MIN:
+        return "near"
+    return "off"
+
+
+def compliance_emoji(value: Decimal | float | None) -> str:
+    return status_emoji(compliance_bucket(value))
+
+
 # ---------------------------------------------------------------------------
 # Session-state keys for cross-page filter persistence.
 # ---------------------------------------------------------------------------
