@@ -1,0 +1,11 @@
+University of Subway Weekly Compliance Report
+Generated: 2026-05-13
+Store,Employee Name,Course,Status,Completed Date
+4092,Alice Johnson,Food Safety Basics,Complete,05/06/2026
+4092,Alice Johnson,Slicer Safety,Pending,
+4092,Bob Patel,Food Safety Basics,Overdue,
+4092,Bob Patel,Hand Washing,Completed,05/01/2026
+4093,Carol Singh,Food Safety Basics,Past Due,
+4093,Carol Singh,Slicer Safety,In Progress,
+99999,Unknown Person,Some Course,Complete,05/10/2026
+,Empty Store Row,Course,Complete,05/10/2026

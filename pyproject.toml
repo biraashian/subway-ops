@@ -21,6 +21,8 @@ dependencies = [
     "google-api-python-client>=2.120",
     "google-auth-oauthlib>=1.2",
     "google-auth-httplib2>=0.2",
+    "pypdf>=4.0",
+    "beautifulsoup4>=4.12",
 ]
 
 [dependency-groups]
@@ -71,6 +73,8 @@ module = [
     "google_auth_oauthlib.*",
     "google.auth.*",
     "google.oauth2.*",
+    "pypdf.*",
+    "bs4.*",
 ]
 ignore_missing_imports = true
 
