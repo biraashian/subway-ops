@@ -118,12 +118,12 @@ calendar weeks.
 
 ## Phase 2 — Ingestion Layer
 
-### `[ ]` 2.1 — Schema + ingest: DailySalesSummary
+### `[~]` 2.1 — Schema + ingest: DailySalesSummary
 - **Accomplishes:** Daily per-store totals flowing end-to-end. Sets the pattern every other ingest follows.
 - **Branch:** `task-2.1-daily-sales`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** Migration `003_daily_sales.sql` creates `raw_daily_sales` (JSONB envelope log) and `stg_daily_sales` (typed, FK on `ref_stores`, PK on (restaurant_number, business_date)). New `subway_ops.db.upsert.upsert_rows(table, rows, key_cols)` is the canonical `INSERT … ON CONFLICT DO UPDATE` helper — identifier-validated, accepts an empty list, falls back to `DO NOTHING` when all cols are keys. `subway_ops.ingest.daily_sales.ingest(start, end, store_numbers=None, *, client=None)`: resolves default stores from `ref_stores`, plans batches (20-store × 50-day caps via `plan_batches`), persists raw + parses via `DailySalesSummaryResponse` + upserts to stg, wrapped in `track_job("ingest_daily_sales")`. Tests: 4 unit (batching) + 3 db-integration (writes / idempotency / ops_job_runs row). Verified live against store 4092 for 2026-05-05..05-11 → 7 rows; re-run = 7 rows (no dupes). Full suite 102 passed + 4 db-gated skips.
 
 ### `[ ]` 2.2 — Schema + ingest: ControlSheet (weekly)
 - **Accomplishes:** The richest endpoint — weekly cash control, sales itemization, bread, labor — flattened into one wide table (~120 columns). Foundation for both the weekly mart and the entire reconciliation flow.
