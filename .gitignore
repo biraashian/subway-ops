@@ -29,6 +29,11 @@ htmlcov/
 !.env.example
 secrets.toml
 
+# Gmail OAuth artefacts (Task 6.1 — never commit, base64'd into GH secret)
+token.json
+token.b64
+client_secret*.json
+
 # Recorded API fixtures (real responses, never committed)
 tests/fixtures/recorded/
 

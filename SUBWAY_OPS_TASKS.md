@@ -288,12 +288,12 @@ calendar weeks.
 
 ## Phase 6 — University of Subway Pipeline
 
-### `[ ]` 6.1 — Gmail API setup + token + tests
+### `[~]` 6.1 — Gmail API setup + token + tests
 - **Accomplishes:** Read-only OAuth access to Gmail inbox containing uOS emails. After this, system can list and read those emails programmatically.
 - **Branch:** `task-6.1-gmail-api`
 - **PR:**
 - **Time:** 60 min
-- **Notes:**
+- **Notes:** Three new runtime deps (`google-api-python-client`, `google-auth-oauthlib`, `google-auth-httplib2`) plus mypy override for the four Google namespaces; `requirements.txt` regenerated (238 lines). `subway_ops.config.settings` extended with `gmail_token_json_b64` (env var of the same name). `src/subway_ops/uos/gmail_client.py` exposes `GmailClient` (search + get_message + get_attachment), `Message` / `Attachment` frozen dataclasses, and pure payload-flattening helpers (`_walk_parts`, `_decode_body`, `_header`, `message_from_payload`). Credentials load env-first via `_decode_token_b64` (the CI path) then `./token.json` (the local-dev path) — never both, so a stale CI token can't shadow a local file. `_refresh_if_needed` calls `creds.refresh(Request())` when expired, writes the refreshed JSON back only when we read it from disk, and raises with "re-run gmail_get_token.py" if no refresh token is present. The constructor accepts an injected `service=` so unit tests skip the network entirely. Scope is read-only (`gmail.readonly`). `scripts/gmail_get_token.py` runs the `InstalledAppFlow` against `~/.config/subway-ops/client_secret.json` (overridable via CLI arg) and writes `./token.json` with the `base64 -w0` next-step. `.gitignore` extended with `token.json`, `token.b64`, `client_secret*.json`. `docs/gmail_setup.md` walks through GCP project creation → API enable → OAuth consent (External, Testing mode, test user = the operator) → Desktop OAuth client → local token run → GitHub Actions secret. 23 unit tests in `tests/test_gmail_client.py` cover: case-insensitive header lookup, URL-safe base64 decode w/o padding, multipart walk leaves-only, full-payload round-trip incl. attachment metadata, single-part fallback, env→file credential precedence, refresh path with/without write-back, refresh-raise on missing refresh token, mock-`service` paginated search w/ max-results cap, get_message round-trip, get_attachment decoding, input-validation guards. Full suite 305 passed + 6 db-gated skips.
 
 ### `[ ]` 6.2 — uOS email parser + ingest
 - **Accomplishes:** Parses uOS training compliance email and lands per-employee, per-course rows in staging. Schema-flexible — courses change quarterly without schema changes.

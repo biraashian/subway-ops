@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     freshconnect_api_key: str = Field(default="", description="FreshConnect API key")
     gmail_user: str = Field(default="", description="Gmail account for outbound SMTP")
     gmail_app_password: str = Field(default="", description="Gmail app password for SMTP")
+    gmail_token_json_b64: str = Field(
+        default="",
+        description="Base64-encoded Gmail OAuth token.json for inbound uOS API",
+    )
     alert_email: str = Field(default="", description="Where failure notifications go")
     dashboard_url: str = Field(default="", description="Public Streamlit URL (digest links)")
     app_env: Literal["dev", "prod"] = "dev"
