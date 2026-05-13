@@ -82,3 +82,36 @@ The old `_schema_migrations` table from the bootstrap seed script is
 abandoned; we never query it again, and migration 001 is idempotent so
 the first run of the new runner re-records it under `ops_migrations`
 without side effects.
+
+---
+
+## 2026-05-12 — Model drift caught by Task 1.3 discovery
+
+**Context:** Task 1.3 ran the discovery script against the live FreshConnect
+API for store 4092 with `business_date = 2026-05-11` and
+`weekEndDate = 2026-05-05`. Two of fifteen endpoints failed Pydantic
+validation; the rest (including the giant `controlsheet` and `wisr`
+envelopes) parsed cleanly.
+
+**Decision:** Treat the live response as authoritative whenever it diverges
+from the JSON sample in `APIUrlsDocumentation.pdf`. The doc's field-name
+table generally matched live; the embedded JSON samples were the ones out
+of date.
+
+- `DailyTimeclock.data[]`: the doc sample uses `hours` / `totalAdj` /
+  `totalBeforeAdj`; live API and the doc's own field-name table use
+  `hoursBeforeAdj` / `hoursAfterAdj` / `adjAmount`. Switched
+  `TimeclockEntry` to the live names — no aliasing of the doc-sample keys
+  because they never appear in production.
+- `TransactionDetails.data[].tenders[]`: doc sample uses `cardLastFour`;
+  live API uses `cardLast4` and emits `null` for non-card tenders.
+  `Tender.card_last_four` now accepts both spellings via `AliasChoices`
+  and is `Optional[str]`.
+
+**Consequences:** Models track the live API rather than the PDF samples.
+If FreshConnect ever publishes corrected sample JSON we'll likely see
+parsing errors from the new shape — at which point we re-run the
+discovery script (15 calls, ~30 seconds) and reconcile. Recorded
+fixtures live at `tests/fixtures/recorded/` (gitignored) and
+`tests/test_recorded_fixtures.py` re-parses them whenever they exist so
+drift is caught locally before it hits ingest.

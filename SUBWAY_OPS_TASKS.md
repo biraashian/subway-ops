@@ -107,12 +107,12 @@ calendar weeks.
 - **Time:** 90 min
 - **Notes:** Pulled `APIDocumentation.pdf` + `APIUrlsDocumentation.pdf` into `docs/freshconnect/` and built models for all 15 endpoints (the playbook listed 13; SalesSummary and TransactionSummary are also documented). Every model inherits `_FCModel` (`populate_by_name=True`, `extra="forbid"`). One `DaysOfWeek` covers all 7-day variants (total / average / percentage all Optional); `DaysOfWeekLong` handles Wisr's full-name day keys. Restaurant numbers accept both `restaurantNumber` and the documented typo `resturantNumber` via `AliasChoices`. All money/percentage fields are `Decimal`; datetimes are naive (storage layer attaches LA tz). 16 model tests (one per envelope) parse the doc samples; full suite 80 passed + 4 db-gated skips, ruff + mypy green. Task 1.3 will replace inline samples with recorded fixtures.
 
-### `[ ]` 1.3 — Discovery script + recorded fixtures
+### `[~]` 1.3 — Discovery script + recorded fixtures
 - **Accomplishes:** Hits every endpoint with your real credentials, saves response bodies as test fixtures, produces a field-coverage report. First real-world confirmation the API behaves as documented.
 - **Branch:** `task-1.3-discovery`
 - **PR:**
 - **Time:** 60 min (+ wait time if rate-limited)
-- **Notes:**
+- **Notes:** `scripts/discovery.py` exercises all 15 endpoints against a single store (defaults to first active in `ref_stores`; `--store` overrides; `--no-db` for DB-less runs). Wraps itself in `track_job("discovery")` with the day/week-end/endpoint list in metadata. On 429 it stops gracefully and prints the resume list. `tests/fixtures/recorded/` is gitignored; `tests/test_recorded_fixtures.py` skips on fresh checkouts and parses each fixture against its model otherwise. Ran live against store 4092 on 2026-05-12: 15/15 endpoints HTTP-200; first pass parsed 13/15. Fixed two real-vs-doc drifts (decisions.md entry dated 2026-05-12): `TimeclockEntry` now uses `hoursBeforeAdj`/`hoursAfterAdj`/`adjAmount` (live names) instead of the doc-sample's `hours`/`totalAdj`/`totalBeforeAdj`; `Tender.card_last_four` accepts both `cardLast4` (live) and `cardLastFour` (doc) and is Optional. Second discovery run: 15/15 parsed. `docs/api_field_coverage.md` regenerated. Full suite: 95 passed + 4 db-gated skips.
 
 ---
 

@@ -137,9 +137,8 @@ def test_daily_timeclock_parses_doc_sample() -> None:
                 "employeeName": "John Smith",
                 "clockIn": "2024-08-13T08:00:00",
                 "clockOut": "2024-08-13T16:15:00",
-                "hours": 8.25,
-                "totalAdj": 0,
-                "totalBeforeAdj": 8.25,
+                "hoursBeforeAdj": 8.25,
+                "hoursAfterAdj": 8.25,
                 "adjAmount": 0,
             }
         ],

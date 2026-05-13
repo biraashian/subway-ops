@@ -137,14 +137,18 @@ class SalesSummaryResponse(_FCModel):
 
 
 class TimeclockEntry(_FCModel):
+    """Live API (2026-05-12) returns ``hoursAfterAdj``/``hoursBeforeAdj``/
+    ``adjAmount`` per the field table in the FreshConnect docs. The doc's JSON
+    sample uses different keys (``hours``/``totalAdj``/``totalBeforeAdj``);
+    we trust the field table and the live payload."""
+
     restaurant_number: str = Field(validation_alias=_RESTAURANT_NUMBER_ALIASES)
     clerk_id: str = Field(alias="clerkId")
     employee_name: str = Field(alias="employeeName")
     clock_in: datetime = Field(alias="clockIn")
     clock_out: datetime = Field(alias="clockOut")
-    hours: Decimal
-    total_adj: Decimal = Field(alias="totalAdj")
-    total_before_adj: Decimal = Field(alias="totalBeforeAdj")
+    hours_before_adj: Decimal = Field(alias="hoursBeforeAdj")
+    hours_after_adj: Decimal = Field(alias="hoursAfterAdj")
     adj_amount: Decimal = Field(alias="adjAmount")
 
 
@@ -385,7 +389,12 @@ class Tender(_FCModel):
     change_amount: Money = Field(alias="changeAmount")
     tip_amount: Money = Field(alias="tipAmount")
     reference_number: str = Field(alias="referenceNumber")
-    card_last_four: str = Field(alias="cardLastFour")
+    # Live API uses ``cardLast4`` and emits null for non-card tenders; the
+    # doc sample shows ``cardLastFour``. Accept either name and allow None.
+    card_last_four: str | None = Field(
+        default=None,
+        validation_alias=AliasChoices("cardLast4", "cardLastFour"),
+    )
 
 
 class LoyaltyEntry(_FCModel):
