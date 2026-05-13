@@ -1,5 +1,12 @@
 # subway-ops
 
+<!--
+  CI badge: replace OWNER with the GitHub user/org that owns the repo
+  once it has a remote. Until then GitHub renders this badge as
+  "no status" — harmless.
+-->
+[![CI](https://github.com/amitoj/subway-ops/actions/workflows/ci.yml/badge.svg)](https://github.com/amitoj/subway-ops/actions/workflows/ci.yml)
+
 Internal operations system for a 15-store Subway franchise: ingests Fresh
 Connect (LiveIQ) data, builds analytical marts, surfaces a Streamlit
 dashboard, runs reconciliation, and emails a weekly digest.

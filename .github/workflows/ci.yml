@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  # One run per branch — newer pushes cancel in-flight runs.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint + type-check + tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Ruff
+        run: uv run ruff check .
+
+      - name: mypy
+        run: uv run mypy src/
+
+      - name: pytest with coverage gate
+        # Coverage gate at 75% — leaves room for Streamlit page modules
+        # that we don't unit-test (rendered by the Streamlit harness in
+        # production, smoke-tested in their own dashboard tests).
+        run: uv run pytest --cov=src/subway_ops --cov-report=term --cov-fail-under=75

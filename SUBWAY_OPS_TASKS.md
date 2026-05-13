@@ -313,12 +313,12 @@ calendar weeks.
 
 ## Phase 7 — Hardening & Operate
 
-### `[ ]` 7.1 — Test coverage pass + CI green
+### `[~]` 7.1 — Test coverage pass + CI green
 - **Accomplishes:** Every module tested; CI runs on every PR. Know within 2 minutes if any change breaks anything.
 - **Branch:** `task-7.1-ci`
 - **PR:**
 - **Time:** 90 min
-- **Notes:**
+- **Notes:** Baseline coverage was **77%** before this task — already over the 75% playbook gate, but two non-Streamlit modules sat below 80%: `dashboard/auth.py` 62% (`_cookie_signing_key` fallback chain + DB helpers never exercised) and `db/connection.py` 69% (URL normaliser + no-URL raise + session helpers). New `tests/test_coverage_lifts.py` (15 tests) lifts both: cookie key tier resolution (secrets → env → dev default; treats empty secrets as missing), every `_normalize_url` branch (passthrough / `postgresql://` rewrite / `postgres://` rewrite / unknown-scheme fall-through), `get_engine` raise on missing DATABASE_URL, `make_authenticator` happy path + DB-load fallback, `lookup_user` hit/miss, `all_active_store_numbers` + `load_user_rows` exercised against a mocked engine (no live DB needed). After the lift: `dashboard/auth.py` 98%, `db/connection.py` 79%, **TOTAL 78.32%**. Streamlit page modules (21-43% coverage) deliberately stay below 80% — they're rendered by the Streamlit harness in production and smoke-tested via the headless launch in earlier task notes; unit-testing them in isolation pulls in too much fixture machinery for the value. `.github/workflows/ci.yml` runs ruff → mypy → `pytest --cov=src/subway_ops --cov-fail-under=75` on every PR and on push-to-main; `concurrency.cancel-in-progress: true` so newer pushes drop stale runs. README gets a CI badge pointing at the workflow (owner placeholder = `amitoj`, comment in markdown calls out the swap-when-remote-lands). Full suite 363 passed + 6 db-gated skips.
 
 ### `[ ]` 7.2 — Observability: structured logs + ops_job_runs surfaced
 - **Accomplishes:** When something breaks at 3am you can see what happened. Job history visible in dashboard.
