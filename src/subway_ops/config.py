@@ -7,6 +7,7 @@ level `settings` singleton.
 
 from __future__ import annotations
 
+from decimal import Decimal
 from pathlib import Path
 from typing import Literal
 
@@ -14,6 +15,12 @@ from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+
+# KPI targets (fractional, NOT whole-percent). These are policy, not env-
+# configurable, so they live as module constants. Per-store thresholds are
+# tighter than the portfolio-level targets that Task 3.3's FM mart uses.
+TARGET_FOOD_COST_STORE: Decimal = Decimal("0.22")
+TARGET_LABOR_COST_STORE: Decimal = Decimal("0.28")
 
 
 class Settings(BaseSettings):
