@@ -1,11 +1,11 @@
 name: uOS pull
 
 on:
-  schedule:
+#  schedule:
     # 11:00 UTC daily = 03:00–04:00 PT depending on DST. One hour after
     # daily_pull so any uOS email landing overnight is captured before
     # the dashboard refresh window.
-    - cron: "0 11 * * *"
+ #   - cron: "0 11 * * *"
   workflow_dispatch: {}
 
 jobs:
