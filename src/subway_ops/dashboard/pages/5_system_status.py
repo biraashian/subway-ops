@@ -172,7 +172,7 @@ def _render_grid() -> None:
                 "rerun_url",
             ]
         ],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         column_config={
             "job_name": st.column_config.TextColumn("Job", width="medium"),

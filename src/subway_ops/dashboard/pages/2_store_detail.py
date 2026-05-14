@@ -125,26 +125,26 @@ def _daily_trend_tab(store: str) -> None:
             df, x="business_date", y="net_sales",
             title="Net sales ($)", y_format="$,.0f",
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
     with c2:
         chart = _line_chart(
             df, x="business_date", y="transactions", title="Transactions",
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
     c3, c4 = st.columns(2)
     with c3:
         chart = _line_chart(
             df, x="business_date", y="sales_per_labor_hour",
             title="Sales / labor hour ($)", y_format="$,.0f",
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
     with c4:
         chart = _line_chart(
             df, x="business_date", y="food_cost_pct",
             title=f"Food cost % (target {float(TARGET_FOOD_COST_STORE):.0%})",
             y_format="%", target=float(TARGET_FOOD_COST_STORE),
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
 
 
 def _weekly_history_tab(store: str) -> None:
@@ -169,12 +169,12 @@ def _weekly_history_tab(store: str) -> None:
             df, x="week_end_date", y="net_sales_total",
             title="Net sales ($)", y_format="$,.0f",
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
     with c2:
         chart = _line_chart(
             df, x="week_end_date", y="transactions_total", title="Transactions",
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
     c3, c4 = st.columns(2)
     with c3:
         chart = _line_chart(
@@ -182,14 +182,14 @@ def _weekly_history_tab(store: str) -> None:
             title="Food cost %", y_format="%",
             target=float(TARGET_FOOD_COST_STORE),
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
     with c4:
         chart = _line_chart(
             df, x="week_end_date", y="labor_cost_pct",
             title="Labor cost %", y_format="%",
             target=float(TARGET_LABOR_COST_STORE),
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
 
 
 def _style_value_difference(val: object) -> str:
@@ -223,7 +223,7 @@ def _inventory_tab(store: str) -> None:
         )
         return
     styled = df.style.map(_style_value_difference, subset=["value_difference"])
-    st.dataframe(styled, use_container_width=True, hide_index=True)
+    st.dataframe(styled, width="stretch", hide_index=True)
     csv_download_button(
         df,
         filename=f"{store}_wisr_{week_end}.csv",
@@ -254,7 +254,7 @@ def _cash_drops_tab(store: str) -> None:
     )
     st.dataframe(
         display[["business_date", "drop_time", "clerk_id", "clerk_name", "deposit_in_bank"]],
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
     csv_download_button(
@@ -314,7 +314,7 @@ def _training_tab(store: str) -> None:
             y_format="%",
             target=float(COMPLIANCE_GREEN_MIN),
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
 
     detail = get_store_compliance_detail(store, report_date)
     if detail.empty:
@@ -340,7 +340,7 @@ def _training_tab(store: str) -> None:
         grouped[["employee_name", "courses", "complete", "compliance_label"]].rename(
             columns={"compliance_label": "compliance"}
         ),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
 
@@ -359,7 +359,7 @@ def _training_tab(store: str) -> None:
             ascending=False,
             key=lambda s: pd.to_numeric(s, errors="coerce"),
         )
-        st.dataframe(ordered, use_container_width=True, hide_index=True)
+        st.dataframe(ordered, width="stretch", hide_index=True)
     csv_download_button(
         detail,
         filename=f"{store}_compliance_{report_date}.csv",

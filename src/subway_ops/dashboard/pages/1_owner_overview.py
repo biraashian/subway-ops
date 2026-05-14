@@ -207,7 +207,7 @@ def _render_grid(
 
     event = st.dataframe(
         display,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         selection_mode="single-row",
         on_select="rerun",
@@ -259,7 +259,7 @@ def _render_trend(stores: tuple[str, ...]) -> None:
         )
         .properties(height=260)
     )
-    st.altair_chart(chart, use_container_width=True)
+    st.altair_chart(chart, width="stretch")
     csv_download_button(
         trend, filename=f"portfolio_trend_{TREND_WEEKS}w.csv",
         key="owner_overview_trend_csv",

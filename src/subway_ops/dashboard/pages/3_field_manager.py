@@ -203,7 +203,7 @@ def _store_grid(fm: str, week_end: pd.Timestamp | None) -> None:
                 "labor_cost": "Labor %",
             }
         ),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
     )
     csv_download_button(
@@ -245,7 +245,7 @@ def _trend_section(history: pd.DataFrame) -> None:
             title=f"Food cost % (target {float(TARGET_FOOD_COST_PORTFOLIO):.0%})",
             target=float(TARGET_FOOD_COST_PORTFOLIO),
         )
-        st.altair_chart(chart, use_container_width=True)
+        st.altair_chart(chart, width="stretch")
     with c2:
         # labor_cost_pct is NULL upstream until a wage source lands; the
         # chart will simply have no points. The amber target line still
@@ -257,7 +257,7 @@ def _trend_section(history: pd.DataFrame) -> None:
                 title=f"Labor cost % (target {float(TARGET_LABOR_COST_PORTFOLIO):.0%})",
                 target=float(TARGET_LABOR_COST_PORTFOLIO),
             )
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, width="stretch")
         else:
             st.markdown(
                 "<div style='padding:1rem;border-left:4px solid "

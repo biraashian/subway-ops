@@ -12,4 +12,4 @@ def store_grid(df: pd.DataFrame) -> None:
     if df.empty:
         st.info("No store rows yet for this period. Run the mart refresh first.")
         return
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, width="stretch", hide_index=True)
