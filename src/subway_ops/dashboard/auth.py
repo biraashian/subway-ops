@@ -16,7 +16,11 @@ Public surface:
 
     make_authenticator()
         Compose the ``Authenticate`` object using the cookie key from
-        Streamlit secrets / env.
+        Streamlit secrets / env. Cached per session in
+        ``st.session_state`` to avoid the
+        ``StreamlitDuplicateElementKey('init')`` crash that arises when
+        the wrapper's internal ``CookieManager`` is re-registered on
+        every script rerun.
 
     visible_stores(user_row)
         Return the set of store_numbers the given user can see. Owners
@@ -26,6 +30,7 @@ Public surface:
 
 from __future__ import annotations
 
+import contextlib
 import os
 from dataclasses import dataclass
 from typing import Any
@@ -40,6 +45,14 @@ COOKIE_NAME = "subway_ops_auth"
 COOKIE_EXPIRY_DAYS = 30
 # Auth roles that get to see every store regardless of assigned_stores.
 ALL_STORE_ROLES = frozenset({"owner"})
+
+# Key under which the cached ``Authenticate`` instance lives in
+# ``st.session_state``. Constructing ``Authenticate`` twice in the
+# same script run triggers ``StreamlitDuplicateElementKey`` because
+# the library's internal ``CookieManager`` registers a widget with
+# ``key='init'``. Cache the wrapper so every call from a given
+# Streamlit session returns the same object.
+_AUTHENTICATOR_STATE_KEY = "_authenticator"
 
 
 @dataclass(frozen=True)
@@ -123,7 +136,43 @@ def _cookie_signing_key() -> str:
 def make_authenticator(
     credentials: dict[str, Any] | None = None,
 ) -> stauth.Authenticate:
-    creds = credentials if credentials is not None else load_credentials_from_db()
+    """Return the per-session ``Authenticate`` wrapper.
+
+    Cached in ``st.session_state`` so multiple ``make_authenticator()``
+    calls in the same render (``app.py`` for the login form +
+    ``sidebar.py`` for the sign-out button) hand back the same
+    instance — otherwise the library re-registers its internal
+    ``CookieManager`` widget under ``key='init'`` and Streamlit raises
+    ``StreamlitDuplicateElementKey``.
+
+    The cache lives in ``session_state`` (per-user), **never** in
+    ``@st.cache_resource`` (process-wide). Sharing one ``Authenticate``
+    across sessions would leak login cookies between users.
+
+    Tradeoff: a password change applied mid-session doesn't propagate
+    until the user signs out and signs back in. That's already the
+    behaviour of any cookie-bound session and matches the rest of the
+    app's auth model.
+
+    Passing an explicit ``credentials`` dict bypasses the cache. The
+    test suite uses that to exercise the construction path without
+    re-using cached state.
+    """
+    if credentials is not None:
+        # Caller is forcing a rebuild (tests, future "credentials
+        # rotated" flow). Don't touch the cache so we never hand back
+        # a stale instance whose internal credentials don't match.
+        return _build_authenticator(credentials)
+
+    cached = _get_cached_authenticator()
+    if cached is not None:
+        return cached
+    auth = _build_authenticator(load_credentials_from_db())
+    _store_cached_authenticator(auth)
+    return auth
+
+
+def _build_authenticator(creds: dict[str, Any]) -> stauth.Authenticate:
     return stauth.Authenticate(
         credentials=creds,
         cookie_name=COOKIE_NAME,
@@ -131,6 +180,33 @@ def make_authenticator(
         cookie_expiry_days=COOKIE_EXPIRY_DAYS,
         auto_hash=False,  # ref_users already stores bcrypt hashes
     )
+
+
+def _get_cached_authenticator() -> stauth.Authenticate | None:
+    """Look up the cached authenticator. ``None`` when running outside
+    Streamlit (tests, scripts) or on a fresh session.
+
+    ``st.session_state`` access can raise in bare mode (no script
+    context) — suppress and treat it as a cache miss so unit tests
+    and one-shot CLI imports don't crash.
+    """
+    with contextlib.suppress(Exception):
+        return st.session_state.get(_AUTHENTICATOR_STATE_KEY)
+    return None
+
+
+def _store_cached_authenticator(auth: stauth.Authenticate) -> None:
+    """Cache the authenticator in ``session_state``. No-op when
+    Streamlit isn't running."""
+    with contextlib.suppress(Exception):
+        st.session_state[_AUTHENTICATOR_STATE_KEY] = auth
+
+
+def clear_cached_authenticator() -> None:
+    """Drop the cached authenticator — used by tests + a future
+    password-rotation hook."""
+    with contextlib.suppress(Exception):
+        st.session_state.pop(_AUTHENTICATOR_STATE_KEY, None)
 
 
 def visible_stores(user: UserRow, all_stores: list[str]) -> list[str]:

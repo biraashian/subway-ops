@@ -121,6 +121,17 @@ def test_cookie_signing_key_treats_empty_secret_as_missing(
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _clear_authenticator_cache() -> None:
+    """``make_authenticator`` caches the Authenticate wrapper in
+    ``st.session_state``. Tests that exercise the construction path
+    need a clean cache or they'd hand back a stale instance from a
+    prior test and skip the DB-load assertion."""
+    auth_mod.clear_cached_authenticator()
+    yield
+    auth_mod.clear_cached_authenticator()
+
+
 def _user_row(email: str = "owner@example.com") -> UserRow:
     return UserRow(
         email=email,
@@ -151,6 +162,62 @@ def test_make_authenticator_loads_credentials_from_db_when_missing() -> None:
     ):
         make_authenticator()
     load.assert_called_once()
+
+
+def test_make_authenticator_caches_within_session() -> None:
+    """Regression for StreamlitDuplicateElementKey('init').
+
+    Two ``make_authenticator()`` calls (e.g. the login form on app.py
+    plus the sign-out button on the sidebar, both invoked during one
+    page render) must hand back the **same** ``Authenticate`` object
+    so the library's internal CookieManager is registered as a
+    Streamlit widget exactly once.
+    """
+    fake_creds = {"usernames": {"a@b.com": {"name": "a", "password": "h"}}}
+    with (
+        patch.object(auth_mod, "load_credentials_from_db", return_value=fake_creds) as load,
+        patch.object(auth_mod, "_cookie_signing_key", return_value="k"),
+    ):
+        first = make_authenticator()
+        second = make_authenticator()
+    assert first is second
+    # And the DB-load helper was only consulted on the cache miss.
+    load.assert_called_once()
+
+
+def test_make_authenticator_explicit_credentials_skip_the_cache() -> None:
+    """Passing ``credentials=`` is the test/forced-rebuild path. It
+    must always build a fresh wrapper so the caller never sees a
+    cached instance whose internal credentials don't match."""
+    cached_creds = {"usernames": {"a@b.com": {"name": "a", "password": "h"}}}
+    explicit_creds = {"usernames": {"b@b.com": {"name": "b", "password": "h"}}}
+    with (
+        patch.object(auth_mod, "load_credentials_from_db", return_value=cached_creds),
+        patch.object(auth_mod, "_cookie_signing_key", return_value="k"),
+    ):
+        cached = make_authenticator()
+        rebuilt = make_authenticator(credentials=explicit_creds)
+    assert cached is not rebuilt
+    # And subsequent no-arg calls still return the cached instance —
+    # the explicit-credentials call did not poison the cache.
+    with (
+        patch.object(auth_mod, "load_credentials_from_db", return_value=cached_creds),
+        patch.object(auth_mod, "_cookie_signing_key", return_value="k"),
+    ):
+        again = make_authenticator()
+    assert again is cached
+
+
+def test_clear_cached_authenticator_forces_rebuild() -> None:
+    fake_creds = {"usernames": {"a@b.com": {"name": "a", "password": "h"}}}
+    with (
+        patch.object(auth_mod, "load_credentials_from_db", return_value=fake_creds),
+        patch.object(auth_mod, "_cookie_signing_key", return_value="k"),
+    ):
+        first = make_authenticator()
+        auth_mod.clear_cached_authenticator()
+        second = make_authenticator()
+    assert first is not second
 
 
 def test_lookup_user_returns_matching_row() -> None:
