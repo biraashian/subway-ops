@@ -29,6 +29,7 @@ from subway_ops.dashboard.components import (
     compliance_emoji,
     food_cost_emoji,
     labor_cost_emoji,
+    safe_decimal,
 )
 from subway_ops.dashboard.components.helpers import csv_download_button
 from subway_ops.dashboard.components.kpi_card import kpi_card
@@ -46,7 +47,13 @@ TREND_WEEKS = 13
 
 
 def _weighted_food_cost(df: pd.DataFrame) -> Decimal | None:
-    """Sales-weighted portfolio food-cost across the rows currently shown."""
+    """Sales-weighted portfolio food-cost across the rows currently shown.
+
+    Returns ``None`` when every row has a missing food-cost pct or
+    when the sales denominator is zero. ``safe_decimal`` defangs the
+    final coercion so a NaN that somehow survived the mask still
+    yields ``None`` instead of an ``InvalidOperation``.
+    """
     if df.empty:
         return None
     mask = df["food_cost_actual_pct"].notna() & df["net_sales_total"].notna()
@@ -57,7 +64,7 @@ def _weighted_food_cost(df: pd.DataFrame) -> Decimal | None:
     if not denom or denom == 0:
         return None
     weighted = (sub["food_cost_actual_pct"] * sub["net_sales_total"]).sum() / denom
-    return Decimal(str(weighted))
+    return safe_decimal(weighted)
 
 
 def _to_float(value: object) -> float | None:
