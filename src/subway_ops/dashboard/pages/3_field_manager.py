@@ -33,6 +33,7 @@ from subway_ops.dashboard.components import (
     COLOR_OFF_TARGET,
     food_cost_emoji,
     labor_cost_emoji,
+    safe_decimal,
 )
 from subway_ops.dashboard.components.helpers import csv_download_button
 from subway_ops.dashboard.components.kpi_card import kpi_card
@@ -61,10 +62,14 @@ def delta_badge_text(
     Sign convention: positive means OVER the target (bad), negative
     means under (good). ``in_target_flag`` mirrors the sign for the
     KPI card's coloured border.
+
+    Missing values (``None``, NaN, ``pd.NA``) collapse to
+    ``("—", None)`` so the KPI card can render a neutral placeholder
+    instead of crashing on ``Decimal(str(NaN))``.
     """
-    if actual is None:
+    a = safe_decimal(actual)
+    if a is None:
         return "—", None
-    a = actual if isinstance(actual, Decimal) else Decimal(str(actual))
     diff_pp = (a - target) * 100
     sign = "+" if diff_pp > 0 else ""
     return f"{sign}{diff_pp:.1f}pp vs target", a <= target

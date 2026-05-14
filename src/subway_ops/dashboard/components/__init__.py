@@ -6,7 +6,9 @@ internally consistent. Pages should never hand-roll their own thresholds.
 
 from __future__ import annotations
 
-from decimal import Decimal
+import math
+from decimal import Decimal, InvalidOperation
+from typing import Any
 
 from subway_ops.config import (
     TARGET_FOOD_COST_PORTFOLIO,
@@ -14,6 +16,49 @@ from subway_ops.config import (
     TARGET_LABOR_COST_PORTFOLIO,
     TARGET_LABOR_COST_STORE,
 )
+
+
+def safe_decimal(value: Any, *, default: Decimal | None = None) -> Decimal | None:
+    """Coerce a possibly-missing DB value into a ``Decimal`` or ``default``.
+
+    Treats every flavour of "missing" the dashboard sees in practice as
+    ``default`` rather than letting ``Decimal(str(value))`` blow up with
+    ``InvalidOperation``:
+
+    - ``None``
+    - float / numpy ``NaN`` (NULL Numeric columns surface as NaN when
+      pandas widens the column to float64)
+    - ``pd.NA`` / any sentinel where ``not bool(x == x)`` would have
+      flagged NaN — we check ``x != x`` defensively via ``math.isnan``
+      after a float coercion
+    - strings like ``"NaN"`` / ``"None"`` / ``""``
+    - any value that ``Decimal(str(value))`` rejects outright
+
+    Returning ``None`` (or the caller's chosen default) lets the
+    consumer take the "unknown" branch instead of crashing.
+    """
+    if value is None:
+        return default
+    if isinstance(value, Decimal):
+        # Already a Decimal — but Decimal('NaN') is still a Decimal,
+        # and comparing it against another Decimal raises. Filter it.
+        return default if value.is_nan() else value
+    if value is False or value is True:
+        # bools are ints — keep the explicit allow.
+        return Decimal(int(value))
+    # Numeric path: pandas / numpy / int / float / numeric-string.
+    # float() raises TypeError on pd.NA / NaT and ValueError on bad
+    # strings; non-finite floats (NaN / inf) collapse to the default
+    # too. Then convert via repr(f) for floats (avoids 0.1 →
+    # Decimal('0.10000000000000000555…')) and str(value) otherwise.
+    try:
+        f = float(value)
+        if math.isnan(f) or math.isinf(f):
+            return default
+        return Decimal(repr(f)) if isinstance(value, float) else Decimal(str(value))
+    except (TypeError, ValueError, InvalidOperation):
+        return default
+
 
 # Traffic-light palette. Hex values match the dark-theme defaults Streamlit
 # ships with so cards look at home next to st.metric() out of the box.
@@ -52,12 +97,13 @@ def status_bucket(
 ) -> str:
     """Bucket a pct against ``target`` into ``in_target`` / ``near`` / ``off``.
 
-    Returns ``"unknown"`` for ``None``. Uses ``Decimal`` math so the
+    Returns ``"unknown"`` for any missing value (``None``, NaN,
+    ``pd.NA``, non-numeric strings, etc.). Uses ``Decimal`` math so the
     fractional comparisons can't bite us on float rounding.
     """
-    if value is None:
+    v = safe_decimal(value)
+    if v is None:
         return "unknown"
-    v = value if isinstance(value, Decimal) else Decimal(str(value))
     if v <= target:
         return "in_target"
     if v <= target + tolerance:
@@ -99,11 +145,12 @@ COMPLIANCE_YELLOW_MIN: Decimal = Decimal("0.80")
 def compliance_bucket(value: Decimal | float | None) -> str:
     """Return ``in_target`` / ``near`` / ``off`` / ``unknown`` for a
     fractional compliance percentage. Mirrors ``status_bucket`` so the
-    grid colour helpers can share emoji + colour logic.
+    grid colour helpers can share emoji + colour logic — including the
+    same NaN / ``pd.NA`` / ``None`` tolerance.
     """
-    if value is None:
+    v = safe_decimal(value)
+    if v is None:
         return "unknown"
-    v = value if isinstance(value, Decimal) else Decimal(str(value))
     if v >= COMPLIANCE_GREEN_MIN:
         return "in_target"
     if v >= COMPLIANCE_YELLOW_MIN:
