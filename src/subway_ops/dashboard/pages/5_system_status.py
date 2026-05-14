@@ -50,6 +50,7 @@ _JOB_TO_WORKFLOW = {
     "ingest_uos": "uos_pull.yml",
     "backfill": None,  # no scheduled workflow — backfill is hand-run
     "discovery": None,
+    "audit_backfill": None,  # manual quarterly audit (Task 7.4)
     "send_failure_notification": None,
 }
 

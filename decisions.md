@@ -168,3 +168,35 @@ cron with a worker that wakes daily and self-schedules via
 `scripts/send_weekly_digest.py` (`ops_digest_log` PK on `week_end`)
 already protects against double-sends if a worker and the cron ever
 run concurrently during a migration.
+
+## 2026-05-13 — Phase 7 audit finding: 12-month backfill still pending
+
+**Context:** Task 7.4 ran `scripts/audit_backfill.py` against the live
+Supabase database and the first audit report
+(`docs/audit_2026-05-13.md`) shows:
+
+- Daily-mart coverage: **111 / 4,704** cells (4,593 missing).
+- Weekly-mart coverage: **27 / 681** cells (654 missing).
+- 14 active stores × 365 days = 4,704 expected, but only the
+  smoke-test window `2026-05-05`..`2026-05-12` actually ingested in
+  Phase 3.
+
+**Decision:** This is a **legitimate audit finding**, not a script
+bug. The Phase 3 task notes (`SUBWAY_OPS_TASKS.md` §3.4) state the
+12-month backfill is "smoke-tested" only and warn that a full run
+"takes days of wall-clock" due to FreshConnect's daily rate-limit
+window. We ship Phase 7 with the audit script and report in place;
+the actual full backfill is a manual operational task.
+
+**Consequences:** Before declaring the system production-ready,
+run `uv run python scripts/backfill.py --start "$(date -v-365d
++%Y-%m-%d)"` and let it resume across multiple days as 429s push it
+forward; re-run `audit_backfill.py` and confirm the daily/weekly
+coverage tables go green. Until then, dashboard pages render
+correctly for the populated window only — operators should not draw
+historical conclusions from current data. Also noted: the playbook's
+"`stg_controlsheet_weekly.net_sales_total`" reference is stale —
+the actual column is `net_sales` (no `_total` suffix; the wide-table
+DDL generator omits the suffix for top-level metrics that are
+already weekly aggregates). The audit script and rendered markdown
+both reference the correct column name.
