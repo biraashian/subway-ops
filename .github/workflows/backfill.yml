@@ -1,0 +1,44 @@
+name: Backfill
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Start date (YYYY-MM-DD). Default: 365 days ago."
+        required: false
+        default: ""
+      end_date:
+        description: "End date (YYYY-MM-DD). Default: today."
+        required: false
+        default: ""
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350    # GitHub Actions max is 360
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v6
+      - run: uv sync --frozen
+      - name: Run backfill
+        run: |
+          if [ -n "${{ inputs.start_date }}" ]; then
+            START_ARG="--start ${{ inputs.start_date }}"
+          else
+            START_ARG="--start $(date -u -d '365 days ago' +%Y-%m-%d 2>/dev/null || date -u -v-365d +%Y-%m-%d)"
+          fi
+          if [ -n "${{ inputs.end_date }}" ]; then
+            END_ARG="--end ${{ inputs.end_date }}"
+          fi
+          uv run python scripts/backfill.py $START_ARG $END_ARG
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          FRESHCONNECT_API_CLIENT: ${{ secrets.FRESHCONNECT_API_CLIENT }}
+          FRESHCONNECT_API_KEY: ${{ secrets.FRESHCONNECT_API_KEY }}
+          APP_ENV: prod
+      - name: Notify on failure
+        if: failure()
+        run: uv run python scripts/notify_failure.py "backfill"
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
