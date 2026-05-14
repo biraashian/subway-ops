@@ -1,0 +1,852 @@
+Delivered-To: amitojsubway@gmail.com
+Received: by 2002:a05:651c:230a:b0:393:6a21:fea5 with SMTP id bi10csp358087ljb;
+        Wed, 13 May 2026 07:01:55 -0700 (PDT)
+X-Received: by 2002:a05:620a:2587:b0:908:a758:baae with SMTP id af79cd13be357-90f8a91f13bmr359732785a.6.1778680915499;
+        Wed, 13 May 2026 07:01:55 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; t=1778680915; cv=none;
+        d=google.com; s=arc-20240605;
+        b=ZS1qhJgG3W1LMx53ZVz8maJtunu0S6geJcRMicorYpCNMHeLRn/qzr8UumKHIkuAgy
+         X8501lPr/JoqngY9RHvPgM/MIZy1emTysq0h+kQ1V/3q16zK2fPPT9w+35hM0t6JSYlU
+         drp12MWRqX+edz1YPbARPiSwXtuBaIsFvEglof7drVD1WxO/ylxChlNPtS62FBdOd+nJ
+         QaLZAoy6vT6nO4MGDa3RWhEta80jTD1aHXjW3RiuxRcYL+7yKAGrGjiaL3CMRh5ic0SX
+         wTGZn6S/jRaZfjiCxdeXaIY4w+XBdOhDPgyMFIhttfHMjiHxWl8Co1keHuAcv/8zuDLj
+         TctQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=google.com; s=arc-20240605;
+        h=feedback-id:date:message-id:x_schoox_reference_id:cc:to:from
+         :subject:mime-version:dkim-signature:dkim-signature;
+        bh=SIDCPxJqIXY0RGTzC6d8ukXzUBa9wj1xvLmQPWoiyMI=;
+        fh=59X3FG33iXqaidASyV5e9KOxCeC+vnAnUlrnUkpGUQ4=;
+        b=Jmup6Rv90n8AZDhjEPgTrX5bZQragt7o/9KICpOyVFfLEriUi6q0HsiaFf4GrqSoCd
+         zLyV1qUZDnP4FvoEqO8w2tHHI3vntMAkhjuXnaaDtW9OhdPzEU7bPrXpTMOJ+VBBv5an
+         Pze3pNepfnNQbO5Mk96644o3VX18il/oRFEnJxJJ++8MH8lT52yGIiFfmjd9GC7XYrbp
+         suUOO3XZctHlM87oflxadIuRodFl40OgJWDqB3CyBXZwxMIZjEgQzjeX81lP1EUOo57m
+         GIZ/J8qp7OgD/XgQH56pbyz9pAi9GBVQSBTdJxa8hfQb2jFWsNU1YsCQ+pAU4PeuHuzB
+         0wFQ==;
+        dara=google.com
+ARC-Authentication-Results: i=1; mx.google.com;
+       dkim=pass header.i=@schoox.com header.s=qekxqmqih5glnhu4qqlrsx4nqqy7c7md header.b=LKTaSo4w;
+       dkim=pass header.i=@amazonses.com header.s=224i4yxa5dv7c2xz3womw6peuasteono header.b=rslN7htE;
+       spf=pass (google.com: domain of 0100019e21a4e498-b8584347-e40e-4ca0-adc5-d86ad54afb52-000000@mail.schoox.com designates 54.240.42.75 as permitted sender) smtp.mailfrom=0100019e21a4e498-b8584347-e40e-4ca0-adc5-d86ad54afb52-000000@mail.schoox.com;
+       dmarc=pass (p=QUARANTINE sp=NONE dis=NONE) header.from=schoox.com
+Return-Path: <0100019e21a4e498-b8584347-e40e-4ca0-adc5-d86ad54afb52-000000@mail.schoox.com>
+Received: from a42-75.smtp-out.amazonses.com (a42-75.smtp-out.amazonses.com. [54.240.42.75])
+        by mx.google.com with ESMTPS id af79cd13be357-9065e28e82asi1997512285a.203.2026.05.13.07.01.55
+        for <amitojsubway@gmail.com>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 13 May 2026 07:01:55 -0700 (PDT)
+Received-SPF: pass (google.com: domain of 0100019e21a4e498-b8584347-e40e-4ca0-adc5-d86ad54afb52-000000@mail.schoox.com designates 54.240.42.75 as permitted sender) client-ip=54.240.42.75;
+Authentication-Results: mx.google.com;
+       dkim=pass header.i=@schoox.com header.s=qekxqmqih5glnhu4qqlrsx4nqqy7c7md header.b=LKTaSo4w;
+       dkim=pass header.i=@amazonses.com header.s=224i4yxa5dv7c2xz3womw6peuasteono header.b=rslN7htE;
+       spf=pass (google.com: domain of 0100019e21a4e498-b8584347-e40e-4ca0-adc5-d86ad54afb52-000000@mail.schoox.com designates 54.240.42.75 as permitted sender) smtp.mailfrom=0100019e21a4e498-b8584347-e40e-4ca0-adc5-d86ad54afb52-000000@mail.schoox.com;
+       dmarc=pass (p=QUARANTINE sp=NONE dis=NONE) header.from=schoox.com
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=qekxqmqih5glnhu4qqlrsx4nqqy7c7md; d=schoox.com; t=1778680915;
+	h=Content-Type:MIME-Version:Subject:From:To:Cc:Message-ID:Date;
+	bh=XKwJC67KMs3td9wfDayK0FEsy0IQXkvdL504gDweApg=;
+	b=LKTaSo4wrE6AlvjIx06svcypbbVrrODxbi8rVtrXbRGbStI+rlgMt3/AUlcbEbcm
+	SMl8S88OgL1AyxPfJ5YnL98WWqUvFmIykffz1+i8uQe6CZm+KHCzx8eLLkb9QniZOwM
+	FbM9Z6DfRt1JtcXEBqcZFke5iq0MDTLaLMRUTk8U=
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/simple;
+	s=224i4yxa5dv7c2xz3womw6peuasteono; d=amazonses.com; t=1778680915;
+	h=Content-Type:MIME-Version:Subject:From:To:Cc:Message-ID:Date:Feedback-ID;
+	bh=XKwJC67KMs3td9wfDayK0FEsy0IQXkvdL504gDweApg=;
+	b=rslN7htEUGpn+eLncwAb5bTh7DfJIfb94YGzgzpSynZ+qMsig4bSCj41MMFcXXsl
+	dikLGGGaHR7cNZmuw8rINEcrWdNImp9symc/Xc5BeehmIf7YKAllja95yEA9ePfMfAn
+	gp83BKjOQ/N2I0uhSLoa37jQayLVH6jumVps1H40=
+Content-Type: multipart/alternative; boundary="===============8255121575601386402=="
+MIME-Version: 1.0
+Subject: Your report is ready: Completion: Daily
+From: University of Subway <no-reply@schoox.com>
+To: amitojsubway@gmail.com
+Cc: 
+X_SCHOOX_REFERENCE_ID: 26bcc7d5-343f-42f6-b589-817a7e9cb8d8
+Message-ID: <0100019e21a4e498-b8584347-e40e-4ca0-adc5-d86ad54afb52-000000@email.amazonses.com>
+Date: Wed, 13 May 2026 14:01:55 +0000
+Feedback-ID: ::1.us-east-1.fw29EkodW++nQT1OQoQfcGCz3J2g40Ha8fiz1ksnUBM=:AmazonSES
+X-SES-Outgoing: 2026.05.13-54.240.42.75
+
+--===============8255121575601386402==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+You've received a message from Schoox.  Please visit http://schoox.com, log in, and check your inbox to view your message.
+--===============8255121575601386402==
+Content-Type: text/html; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <style type="text/css">
+
+        div, p, a, li, td {
+            -webkit-text-size-adjust: none;
+        }
+
+        * {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .ReadMsgBody {
+            width: 100%;
+            background-color: #ffffff;
+        }
+
+        .ExternalClass {
+            width: 100%;
+            background-color: #ffffff;
+        }
+
+        body {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 0;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        html {
+            width: 100%;
+            background-color: #ffffff
+        }
+
+        @font-face {
+            font-family: 'proxima_novalight';
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-light-webfont.eot');
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-light-webfont.eot?#iefix') format('embedded-opentype'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-light-webfont.woff') format('woff'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-light-webfont.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'proxima_nova_rgregular';
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-regular-webfont.eot');
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-regular-webfont.eot?#iefix') format('embedded-opentype'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-regular-webfont.woff') format('woff'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-regular-webfont.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'proxima_novasemibold';
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-semibold-webfont.eot');
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-semibold-webfont.eot?#iefix') format('embedded-opentype'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-semibold-webfont.woff') format('woff'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-semibold-webfont.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'proxima_nova_rgbold';
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-bold-webfont.eot');
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-bold-webfont.eot?#iefix') format('embedded-opentype'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-bold-webfont.woff') format('woff'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-bold-webfont.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'proxima_novablack';
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-black-webfont.eot');
+            src: url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-black-webfont.eot?#iefix') format('embedded-opentype'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-black-webfont.woff') format('woff'), url('https://app.schoox.com/theme/schoox/assets/general/font/proximanova-black-webfont.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        p {
+            padding: 0 !important;
+            margin-top: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 0 !important;
+            margin-left: 0 !important;
+        }
+
+        p img {
+            max-width: 100% !important;
+            height: auto !important;
+        }
+
+        .hover:hover {
+            opacity: 0.85;
+            filter: alpha(opacity=85);
+        }
+
+        a:link {
+            color: #005cbb;
+            text-decoration: none;
+                    }
+
+        a:visited {
+            color: #005cbb;
+        }
+
+        #animate {
+            -webkit-animation: Animate 8s;
+            -moz-animation: Animate 8s;
+            -o-animation: Animate 8s;
+            animation: Animate 8s;
+        }
+
+        @-webkit-keyframes Animate {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @-moz-keyframes Animate {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @-o-keyframes Animate {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes Animate {
+            0% {
+                opacity: 0;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .fullImage img {
+            width: 600px;
+            border-radius: 4px !important;
+            height: auto;
+            text-align: center;
+        }
+
+        .img186 img {
+            width: 186px;
+            border-radius: 4px !important;
+            text-align: center;
+            height: auto;
+        }
+
+        .img265 img {
+            width: 265px;
+            text-align: center;
+            height: auto;
+            -webkit-animation: Animate 10s;
+            -moz-animation: Animate 10s;
+            -o-animation: Animate 10s;
+            animation: Animate 10s;
+        }
+
+        .avatar100 img {
+            width: 100px;
+            border-radius: 4px !important;
+            height: auto;
+        }
+
+        .icons14 img {
+            width: 14px;
+            height: auto;
+        }
+
+        .image316 img {
+            width: 316px;
+            height: auto;
+        }
+
+        .img214 img {
+            width: 214px;
+            height: auto;
+        }
+
+        .header_academy_image img {
+            width: auto;
+            height: auto;
+        }
+
+        .header_schoox_image img {
+            width: auto;
+            height: auto;
+        }
+
+    </style>
+
+    <style type="text/css"> @media only screen and (max-width: 640px) {
+            body {
+                width: auto !important;
+            }
+
+            table[class=full] {
+                width: 100% !important;
+                clear: both;
+            }
+
+            table[class=mobile] {
+                width: 100% !important;
+                padding-left: 20px;
+                padding-right: 20px;
+                clear: both;
+            }
+
+            table[class=fullCenter] {
+                width: 100% !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            td[class=fullCenter] {
+                width: 100% !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .erase {
+                display: none;
+            }
+
+            table[class=fullImage] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .fullImage img {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=image316] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .image316 img {
+                width: 316px !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=header_schoox_image] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .header_schoox_image img {
+                width: auto !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=header_academy_image] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .header_academy_image img {
+                width: 110px !important;
+                height: 110px !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=img265] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .img265 img {
+                width: 265px !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            td[class=center] {
+                width: 33% !important;
+                text-align: center !important;
+            }
+
+            .buttonPad {
+                padding-left: 22px !important;
+                padding-right: 22px !important;
+            }
+
+            table[class=buttonsCenter] {
+                width: 100% !important;
+                text-align: center !important;
+            }
+
+            td[class=h70] {
+                height: 70px !important;
+            }
+
+            .showDevice {
+                width: 100% !important;
+                text-align: center !important;
+            }
+
+            .showImg {
+                width: 14px !important;
+                height: 10px !important;
+            }
+
+            td[class=w25] {
+                width: 33% !important;
+            }
+
+            td[class=butLeft] {
+                width: 49% !important;
+                text-align: right !important;
+            }
+
+            td[class=butright] {
+                width: 49% !important;
+                text-align: left !important;
+            }
+
+            .buttonScale {
+                float: none !important;
+                text-align: center !important;
+                display: inline-block !important;
+                clear: both;
+            }
+
+            .buttonRight {
+                text-align: right !important;
+                float: right !important;
+            }
+
+            .buttonLeft {
+                text-align: left !important;
+                float: left !important;
+            }
+        }
+    </style>
+
+    <style type="text/css"> @media only screen and (max-width: 479px) {
+            body {
+                width: auto !important;
+            }
+
+            table[class=full] {
+                width: 100% !important;
+                clear: both;
+            }
+
+            table[class=mobile] {
+                width: 100% !important;
+                padding-left: 20px;
+                padding-right: 20px;
+                clear: both;
+            }
+
+            table[class=fullCenter] {
+                width: 100% !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            td[class=fullCenter] {
+                width: 100% !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .erase {
+                display: none;
+            }
+
+            img[class=fullImage] {
+                width: 100% !important;
+                height: auto !important;
+            }
+
+            table[class=fullImage] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .fullImage img {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=image316] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .image316 img {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=header_schoox_image] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .header_schoox_image img {
+                width: auto !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=header_academy_image] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .header_academy_image img {
+                width: 110px !important;
+                height: 110px !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            table[class=img265] {
+                width: 100% !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            .img265 img {
+                width: 265px !important;
+                height: auto !important;
+                text-align: center !important;
+                clear: both;
+            }
+
+            td[class=center] {
+                width: 33% !important;
+                text-align: center !important;
+            }
+
+            table[class=buttonsCenter] {
+                width: 100% !important;
+                text-align: center !important;
+            }
+
+            .buttonPad {
+                padding-left: 22px !important;
+                padding-right: 22px !important;
+            }
+
+            td[class=h70] {
+                height: 70px !important;
+            }
+
+            .showDevice {
+                width: 100% !important;
+                text-align: center !important;
+            }
+
+            td[class=w25] {
+                width: 22% !important;
+            }
+
+            .showImg {
+                width: 14px !important;
+                height: 10px !important;
+            }
+
+            .buttonScale {
+                float: none !important;
+                text-align: center !important;
+                display: inline-block !important;
+                clear: both;
+            }
+
+            .buttonRight {
+                text-align: right !important;
+                float: right !important;
+            }
+
+            .buttonLeft {
+                text-align: left !important;
+                float: left !important;
+            }
+        }
+    </style>
+
+</head>
+<body>
+
+<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="full">
+    <tr>
+        <td width="100%" valign="top" bgcolor="#0384DA" style="background-color: rgb(3, 132, 218); ">
+            <!-- Wrapper -->
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile">
+                <tr>
+                    <td>
+                        <!-- Wrapper -->
+                        <table width="654" border="0" cellpadding="0" cellspacing="0" align="center" class="full">
+                            <tr>
+                                <td width="100%">
+
+                                    <!-- Space -->
+                                    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center"
+                                           style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+                                           class="full">
+                                        <tr>
+                                            <td width="100%" height="6"></td>
+                                        </tr>
+                                    </table>
+                                    <!-- End Space -->
+
+                                    <!-- Image 1 -->
+                                    <table width="auto" border="0" cellpadding="0" cellspacing="0"
+                                           align="left"
+                                           style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+                                           class="header_academy_image">
+                                        <tr>
+                                            <td width="100%" class="Center"><a href="https://app.schoox.com/academies/home.php?acadId=5267&source=email"
+                                                                               style="text-decoration: none;"><img
+                                                        src="https://content-cdn3.schoox.com/content/adaptive_resize-140-140/academies/5267/87189ec1f01cd64b612f1c8f210dc9e7.png"
+                                                        width="110px" height="110px"
+                                                        style="width: 110px; height: 110px; border: solid 10px; color: rgb(255,255,255)"
+                                                        alt="" border="0" class="hover"></a>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Text -->
+                                    <table width="440" border="0" cellpadding="0" cellspacing="0"
+                                           style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; padding-left: 16px; display: flex;"
+                                           class="fullCenter">
+                                        <tr>
+                                        <tr>
+                                            <td width="100%" height="30"></td>
+                                        </tr>
+                                        <td width="100%"
+                                            style="font-size: 24px; color: #f6f6f6; text-align: left; font-family: Helvetica; line-height: 40px; vertical-align: top; "
+                                            class="fullCenter"><a href="https://app.schoox.com/academies/home.php?acadId=5267&source=email"
+                                                                  style="text-decoration: none; color: white">
+                                                University of Subway</a>
+                                        </td>
+                                        </tr>
+                                        <tr>
+                                            <td width="100%"
+                                                style="font-size: 16px; color: #bae094; text-align: left; font-family: Trebuchet MS; line-height: 26px; vertical-align: top; "
+                                                class="fullCenter">
+
+                                                                                                           <a href="https://app.schoox.com?source=email&acadId=5267"
+                                                              style="text-decoration: none;"><img
+                                                                       src="https://app.schoox.com/theme/schoox/assets/emails/power_by_new.png"
+                                                                       width="auto" height="auto" style="width: auto; height: auto; display: flex;"
+                                                                       alt="" border="0"></a>
+                                                
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                        <!-- End Wrapper 2 -->
+
+                        <!-- Space -->
+                        <table width="100%" border="0" cellpadding="0" cellspacing="0" align="left"
+                               style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+                               class="full">
+                            <tr>
+                                <td width="100%" height="2"></td>
+                            </tr>
+                        </table>
+                        <!-- End Space -->
+                    </td>
+                </tr>
+            </table>
+            <!-- End Wrapper -->
+        </td>
+    </tr>
+</table>
+
+
+<!-- Wrapper 2 (Text) -->
+<table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="full">
+    <tr>
+        <td width="100%" valign="top">
+
+
+            <!-- Wrapper -->
+            <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="mobile">
+                <tr>
+                    <td>
+
+                        <!-- Wrapper -->
+                        <table width="750" border="0" cellpadding="0" cellspacing="0" align="center" class="full">
+                            <tr>
+                                <td width="100%">
+
+                                    <!-- Text -->
+                                    <table width="654" border="0" cellpadding="0" cellspacing="0" align="center"
+                                           style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+                                           class="full">
+                                        <tr>
+                                            <td width="100%"
+                                                style="font-size: 14px; color: #70767b; text-align: left; font-family: Helvetica; line-height: 25px; vertical-align: top; "
+                                                class="full">
+                                                <br><br>
+
+Hi BIR AMITOJ,<br><br>You can download your report now. <br><br><b>Report Details</b><br> Description: <p>Who has completed Window #1 2026, SubClub, NEW Sandwich Artistry, Restaurant Slicer Training</p><br><li>Report Type: Completion: Daily</li><li>Export Date: May 13, 2026 PDT</li><li>Selected Criteria: All Above units & Units</li><li>This report is scheduled</li><li>Date Range: 2026-05-12 07:00:00 PDT - 2026-05-13 06:59:59 PDT</li><li>Based On: Without Specific Column</li><br><br><table border="0" cellpadding="0" cellspacing="0" align="left" class="buttonsCenter">
+                    <tr>
+                        <td align="center" height="30" class="fullCenter">
+                            <a href="https://app.schoox.com/academies/panel/reporting-engine/index.php?acadId=5267&rid=606607" style="color: rgb(255, 255, 255); font-size: 13px; text-decoration: none; line-height: 20px; font-family: Arial, sans-serif; width: 100%; padding: 8px 23px; background-color: rgb(3, 132, 218); border-radius: 20px;" class="hover">
+                                Edit Report
+                            </a>
+                        </td>
+                    </tr>
+                  </table><br><br><table border="0" cellpadding="0" cellspacing="0" align="left" class="buttonsCenter">
+                    <tr>
+                        <td align="center" height="30" class="fullCenter">
+                            <a href="https://app.schoox.com/file/download.php?id=23497505" style="color: rgb(255, 255, 255); font-size: 13px; text-decoration: none; line-height: 20px; font-family: Arial, sans-serif; width: 100%; padding: 8px 23px; background-color: rgb(3, 132, 218); border-radius: 20px;" class="hover">
+                                Download Report
+                            </a>
+                        </td>
+                    </tr>
+                  </table>
+<br><br><p>Thanks,<br> University of Subway</p><br><br>
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+<!-- End Wrapper 2 -->
+
+</td>
+</tr>
+</table>
+<!-- End Wrapper -->
+
+
+</td>
+</tr>
+</table><!-- Wrapper 2 -->
+    <!--FooterStart-->
+<!-- Wrapper 6 (Centered Text) -->
+    <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center" class="full">
+        <tr>
+            <td width="100%" valign="top">
+
+                <!-- Wrapper -->
+                <table width="100%" bgcolor="#edeff1" border="0" cellpadding="0" cellspacing="0" align="center"
+                       class="mobile">
+                    <tr>
+                        <td>
+
+                            <!-- Wrapper -->
+                            <table width="600" border="0" cellpadding="0" cellspacing="0" align="center" class="full">
+                                <tr>
+                                    <td width="100%">
+
+                                                                                    <!-- Space -->
+                                        <table width="100%" border="0" cellpadding="0" cellspacing="0" align="center"
+                                               style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+                                               class="full">
+                                            <tr>
+                                                <td align="center" width="100%" height="50"><img
+                                                        src="https://app.schoox.com/theme/schoox/assets/emails/schoox_x_logo_footer.png"
+                                                        width="auto"
+                                                        height="auto"
+                                                        style="width: 20%; height: auto; position: relative"
+                                                        alt="" border="0"></td>
+                                            </tr>
+                                        </table>
+                                                                                <!-- End Space -->
+
+                                        <!-- Text -->
+                                        <table width="600" border="0" cellpadding="0" cellspacing="0" align="center"
+                                               style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+                                               class="fullCenter">
+                                            <tr>
+                                                <td width="100%"
+                                                    style="font-size: 12px; color: #595b58; text-align: justify; font-family: Trebuchet MS, Tahoma, Verdana, Arial, sans-serif; line-height: 17px; vertical-align: top; "
+                                                    class="full">
+
+<br><br>This message was sent to amitojsubway@gmail.com. 
+
+To change your email preferences, visit your account settings to manage <a href='https://app.schoox.com/user/settings/notifications/index.php?menu=academies&tab=4&source=email&acadId=5267'> email notifications</a>. Please do not reply to this message; it was sent from an unmonitored email address. If you're having problems please call the support center at 1800-888-4848 x4767 or submit a Support Request through Subway Partners.<br><br>
+</td>
+</tr>
+<tr>
+    <td width="100%" height="25"></td>
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+<!-- End Wrapper 2 -->
+
+<!-- Space -->
+
+<!-- End Space -->
+
+</td>
+</tr>
+</table>
+<!-- End Wrapper -->
+<table width="100%" bgcolor="#2f4666" border="0" cellpadding="0" cellspacing="0" align="right"
+       style="border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt;"
+       class="full">
+    <tr style="text-align: right; color: white; font-family: Arial, sans-serif; font-size: 11px;">
+        <td width="100%" height="12"></td>
+    </tr>
+</table>
+
+</td>
+</tr>
+</table><!-- Wrapper 6 -->
+
+<!--FooterEnd-->
+
+</body>
+<style>
+    body {
+        background: none !important;
+    }
+</style>
+</html>
+--===============8255121575601386402==--
