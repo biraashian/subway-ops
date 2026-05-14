@@ -5,6 +5,31 @@ decision, consequences. Newest at the bottom.
 
 ---
 
+## 2026-05-13 — uOS pipeline deferred to Phase 8
+
+Context: University of Subway training reports are delivered via Schoox
+(no-reply@schoox.com). Email bodies are notifications only — they
+contain report metadata and a "Download Report" button linking to
+https://app.schoox.com/file/download.php?id=... which requires an
+authenticated Schoox session. No table data or CSV attachment is
+embedded in the email itself.
+
+Decision: Disable the uOS_pull cron. Mark the compliance widget in the
+dashboard as "Data unavailable — see runbook." Re-engage in Phase 8
+with one of three paths:
+  1. Configure Schoox scheduled-report delivery to attach the file
+     (free, depends on whether the franchisee plan exposes this option)
+  2. Manual download workflow: human drops files into uos-inbox/, a
+     separate ingest reads from there
+  3. Schoox API integration (requires IT/vendor coordination)
+
+Consequences: The 28 parser unit tests still pass (they validate the
+parser against synthetic fixtures). The parser code is preserved for
+future re-engagement. The uOS workflow still exists for manual
+workflow_dispatch but no longer runs on schedule. Compliance tracking
+is a manual eyeball process via Schoox login until then.
+
+
 ## 2026-05-11 — Language and stack
 
 **Context:** Operator preference for Python; need free-tier-only hosting;
