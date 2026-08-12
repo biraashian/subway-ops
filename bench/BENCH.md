@@ -5,6 +5,88 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0014 — How is a (store, clerk_id) resolved to a person?
+Task: SPEC-PPL-001 Q-001 · Blocks: REQ-002, US-003, every employee grain · Raised: 2026-08-11
+codex 06 (6.2A) says one person, many store assignments. The data cannot
+deliver that automatically. Measured: 250 distinct clerk_ids across 399
+(clerk_id, store) pairs; **56 clerk_ids carry more than one name** — PIN
+`8` appears under 5 different names at 5 stores, `1998` under 4 names at
+9 stores. clerk_id is a per-store PIN, not a person. Names are no better:
+`samir, samir` appears at 5 stores under 6 clerk_ids.
+Options: A) Never auto-link — every pair its own person, office merges
+manually (~149 merges).  B) Auto-link on exact clerk_id + normalised name
+(51 pairs qualify); everything else separate, merge available. Under-links
+(`singh, bir` vs `bir` stay apart) but effectively cannot over-link.
+C) Auto-link on name alone — over-links badly, see samir.
+Burst recommends: **B** — under-linking is repairable by a merge; over-
+linking silently fuses two people's hours, wages and certificates.
+Status: OPEN
+
+### B-0015 — How do crew authenticate?
+Task: SPEC-PPL-001 Q-002 · Blocks: REQ-006 permissions, SPEC-APP-001 · Raised: 2026-08-11
+codex 06 (6.4B) makes phone the login identifier, but `ref_users` is
+email-PK with `password_hash NOT NULL` — it cannot represent a crew login.
+Options: A) Crew are not in `ref_users` at all; they authenticate against
+`ref_employees.phone` by SMS one-time code. Clean separation; SMS costs.
+B) Widen `ref_users` — nullable email, add phone, nullable password_hash.
+One auth table; the admin table now carries 250 crew rows.
+C) Discord OAuth — they are all being put on Discord anyway (D-018), so
+the account already exists and there is no SMS bill.
+Burst recommends: **C**, with **A** as fallback for anyone not on Discord.
+It reuses an identity the rollout is already creating.
+Status: OPEN
+
+### B-0016 — Which hours field costs labor dollars?
+Task: SPEC-PPL-001 Q-003 · Blocks: REQ-003 · Raised: 2026-08-11
+`stg_timeclock` carries `hours_before_adj`, `hours_after_adj` and
+`adj_amount`. 1,369 of 19,089 rows (7%) differ — one by −2.48 h on a
+7.98 h shift. So the POS already has an adjustment concept, separate from
+the custody chain in codex 08.
+Options: A) `hours_after_adj` — the POS's final word; codex 08's chain
+later layers on top.  B) `hours_before_adj` — raw evidence only, our chain
+owns every adjustment.  C) Carry both; before as evidence, after as the
+default payable.
+Burst recommends: **A** — the POS adjustment is already someone's
+decision, and discarding it means re-making 1,369 decisions by hand.
+Status: OPEN
+
+### B-0017 — Salaried employees, and the overtime rate
+Task: SPEC-PPL-001 Q-004/Q-005 · Blocks: REQ-003 schema · Raised: 2026-08-11
+`ref_employee_wages.hourly_rate` assumes everyone is hourly. Two
+questions: (a) is anyone salaried — a store manager on a fixed weekly
+figure breaks hours × rate entirely; (b) is overtime paid at a premium?
+codex 08 sets a 40-hour threshold, and WA/OR both require 1.5× over 40,
+so labor dollars need the multiplier or they understate.
+Burst recommends: on (b), **1.5× over 40**, matching WA/OR law. On (a) no
+recommendation — it is a fact about the business, not a design choice.
+Status: OPEN
+
+### B-0018 — Display-name normalisation
+Task: SPEC-PPL-001 Q-006 · Blocks: AC-004 · Raised: 2026-08-11
+Observed names are `LAST, FIRST` and inconsistent — `singh, bir` and
+`bir` are the same human under the same PIN.
+Options: A) Derive `First Last` from `LAST, FIRST`, office can override.
+B) Store verbatim.  C) Office types every display name.
+Burst recommends: **A** — it is right most of the time and the override
+covers the rest.
+Status: OPEN
+
+### B-0019 — stg_timeclock.clock_in violates codex 02 (naive TIMESTAMP)
+Task: SPEC-PPL-001 A-003 · Blocks: nothing today · Raised: 2026-08-11
+codex 02 requires `TIMESTAMPTZ` stored UTC. `stg_timeclock.clock_in` and
+`clock_out` are naive `TIMESTAMP`; the ingest attaches `STORE_TZ` at read
+time to derive `business_date`. A genuine code/codex disagreement, found
+by retro-reading during SPEC-PPL-001 and recorded rather than normalised
+by silence (the D-016 guard).
+SPEC-PPL-001 does not depend on it — it keys on `business_date`. But
+codex 08's clock reconciliation compares clock times to scheduled times,
+and that comparison across a DST boundary is where a naive timestamp
+bites.
+Options: A) Leave it; document the deviation in codex 02 as a known
+exception.  B) Migrate both columns to TIMESTAMPTZ before Phase C.
+Burst recommends: **B**, timed before SPEC-SCH-003, not now.
+Status: OPEN
+
 ### B-0009 — Crew bonus scorecard: 5.2 and 3.1 contradict each other
 Task: T-0002 · Blocks: codex 05 → all of SPEC-BON · Raised: 2026-08-11
 Answer 5.2 puts crew on a weighted scorecard of "sales / food / labor /
