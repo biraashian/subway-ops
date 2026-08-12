@@ -1,6 +1,6 @@
 store_number,store_name,city,state,field_manager_name,timezone,opening_date_estimate
 4092,Bothell,Bothell,WA,Eva,PST,"December 11, 2024"
-10393,Belltown,Seattle,WA,Sid,"October 18, 2023"
+10393,Belltown,Seattle,WA,Sid,PST,"October 18, 2023"
 17967,Kirkland,Kirkland,WA,Jacky,PST,"December 11, 2024"
 24339,Seattle,Seattle,WA,Adriana,PST,"October 18, 2023"
 26529,Redmond,Redmond,WA,Gregory,PST,"March 31, 2025"
