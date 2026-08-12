@@ -24,7 +24,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 ## Runway — spec pipeline (floor: 3 tasks spec-scoped ahead)
 | Spec | Component | Status | Open Qs | Tasks ready |
 |---|---|---|---|---|
-| SPEC-PPL-001 | Employee roster + wages | **approved** — ready for /plan | 1 (B-0020, fenced by NG-007) | Phase A |
+| SPEC-PPL-001 | Employee roster + wages | **planned** — ready for /tasks | 2 (B-0020, B-0021 — both fenced) | 7 forecast: T-0003…T-0009 |
 | SPEC-TGT-001 | Targets and budgets | codex 04 authoritative — ready to spec | 1 (B-0007, additive) | Phase A |
 | SPEC-KPI-* | The four grains | codex 03 authoritative — ready to spec | 1 (B-0008, scope) | Phase E |
 

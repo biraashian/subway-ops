@@ -6,11 +6,11 @@
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
 version:        1.0.0
-status:         approved
+status:         planned
 owner:          amitoj
 inherits:       codex@2026-08-11
 source:         codex/06-PEOPLE (greenfield; reads the existing stg_timeclock)
-phase:          specify
+phase:          plan
 interview:      6 Qs asked 2026-08-11, 6 decided — see §10
 bound_by:
   - codex/06-PEOPLE            # the whole chapter — this spec is its implementation
@@ -19,7 +19,8 @@ bound_by:
   - codex/03-MEASUREMENT       # the person is the employee grain
   - codex/08-SCHEDULING-AND-HOURS   # the 40-hour threshold (draft; only the threshold is used)
   - D-020                      # wages are hand-kept; FreshConnect has none
-open_questions: 1              # Q-007, deferred to the labor-dollar mart spec
+open_questions: 2              # Q-007 (labor-dollar mart), Q-008/B-0021 (AC-019 grain)
+l1_plan:        design/PLAN-SPEC-PPL-001.md
 ```
 
 ## 1 · Intent
@@ -386,3 +387,10 @@ Tasks and tests are filled by `/tasks`.
   **B-0019** rather than resolved. This spec does not depend on it — it keys on
   `business_date` — but codex 08's clock-versus-schedule comparison will, across
   a DST boundary.
+
+- `Q-008` — **What grain does AC-019's "labor-dollar aggregate" mark
+  `partially_costed` at?** codex 03 says a metric without a stated grain is a
+  gap. Read by the L1 plan as per person per business week, since `CON-005` is
+  the only aggregate this spec produces; store-level marking rides with the
+  labor-dollar mart. Blocks nothing — the design does not depend on the answer.
+  Raised as **B-0021**.

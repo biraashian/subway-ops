@@ -5,6 +5,20 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0021 — AC-019 names no grain for `partially_costed`
+Task: SPEC-PPL-001 Q-008 · Blocks: nothing · Raised: 2026-08-11
+AC-019 says "a labor-dollar aggregate" is marked `partially_costed`.
+codex 03 says a metric without a stated grain is a gap, so strictly this
+is one. PLAN-SPEC-PPL-001 reads it as per person per business week,
+because CON-005 is the only aggregate this spec produces and NG-007
+fences store allocation out.
+Options: A) Per person per week only here; the labor-dollar mart marks
+its own store/week aggregate from the person-week flags. B) Amend AC-019
+to name the grain explicitly.
+Burst recommends: **B** — same behavior, but the AC stops being ambiguous
+to the next reader. Cosmetic, do it whenever the spec is next touched.
+Status: OPEN
+
 ### B-0020 — Which store bears the overtime premium?
 Task: SPEC-PPL-001 Q-007 · Blocks: the labor-dollar mart, not SPEC-PPL-001 · Raised: 2026-08-11
 Created by the interview's own answers rather than found: Q-005 sets 1.5x
