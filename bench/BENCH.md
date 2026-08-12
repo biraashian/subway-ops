@@ -5,6 +5,24 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0020 — Which store bears the overtime premium?
+Task: SPEC-PPL-001 Q-007 · Blocks: the labor-dollar mart, not SPEC-PPL-001 · Raised: 2026-08-11
+Created by the interview's own answers rather than found: Q-005 sets 1.5x
+beyond 40 h **per person**, and codex 06 makes a person one record across
+stores. So 25 h at store A plus 25 h at store B is 10 overtime hours, and
+the premium has to land on some store's labor cost.
+Options: A) Chronological — the hours after the 40th, wherever they were
+worked. Truest to what happened; needs shift-level ordering across stores.
+B) Pro-rata by hours — simple, defensible, matches no individual shift.
+C) Wholly to the store where the crossing occurred — punishes whichever
+store scheduled last.
+Burst recommends: **A** — the data supports it (`clock_in` orders shifts)
+and it is the only rule that survives someone asking "why is my store
+carrying that?"
+SPEC-PPL-001 is unblocked regardless: CON-005 returns a per-person weekly
+cost and NG-007 fences the allocation out.
+Status: OPEN
+
 ### B-0014 — How is a (store, clerk_id) resolved to a person?
 Task: SPEC-PPL-001 Q-001 · Blocks: REQ-002, US-003, every employee grain · Raised: 2026-08-11
 codex 06 (6.2A) says one person, many store assignments. The data cannot
@@ -20,7 +38,10 @@ manually (~149 merges).  B) Auto-link on exact clerk_id + normalised name
 C) Auto-link on name alone — over-links badly, see samir.
 Burst recommends: **B** — under-linking is repairable by a merge; over-
 linking silently fuses two people's hours, wages and certificates.
-Status: OPEN
+Status: **DECIDED 2026-08-11 → B.** Link on exact clerk_id + exact
+normalized name; everything else separate, merge available. Folded into
+SPEC-PPL-001 REQ-002 (AC-005…AC-010). Accepted cost: `singh, bir` and
+`bir` stay separate until office merges them.
 
 ### B-0015 — How do crew authenticate?
 Task: SPEC-PPL-001 Q-002 · Blocks: REQ-006 permissions, SPEC-APP-001 · Raised: 2026-08-11
@@ -34,7 +55,9 @@ C) Discord OAuth — they are all being put on Discord anyway (D-018), so
 the account already exists and there is no SMS bill.
 Burst recommends: **C**, with **A** as fallback for anyone not on Discord.
 It reuses an identity the rollout is already creating.
-Status: OPEN
+Status: **DECIDED 2026-08-11 → C.** Discord OAuth, with phone as
+fallback for anyone not on Discord. SPEC-PPL-001 stores `discord_user_id`
+and `phone`; the flow itself is SPEC-APP-001 (NG-004).
 
 ### B-0016 — Which hours field costs labor dollars?
 Task: SPEC-PPL-001 Q-003 · Blocks: REQ-003 · Raised: 2026-08-11
@@ -48,7 +71,8 @@ owns every adjustment.  C) Carry both; before as evidence, after as the
 default payable.
 Burst recommends: **A** — the POS adjustment is already someone's
 decision, and discarding it means re-making 1,369 decisions by hand.
-Status: OPEN
+Status: **DECIDED 2026-08-11 → A.** `hours_after_adj` is the costing
+basis. Folded into SPEC-PPL-001 AC-015.
 
 ### B-0017 — Salaried employees, and the overtime rate
 Task: SPEC-PPL-001 Q-004/Q-005 · Blocks: REQ-003 schema · Raised: 2026-08-11
@@ -59,7 +83,9 @@ codex 08 sets a 40-hour threshold, and WA/OR both require 1.5× over 40,
 so labor dollars need the multiplier or they understate.
 Burst recommends: on (b), **1.5× over 40**, matching WA/OR law. On (a) no
 recommendation — it is a fact about the business, not a design choice.
-Status: OPEN
+Status: **DECIDED 2026-08-11.** (a) All employees are hourly — no
+salary support; SPEC-PPL-001 NG-006. (b) Overtime at 1.5x beyond 40 h per
+person per business week, matching WA/OR law; AC-016.
 
 ### B-0018 — Display-name normalisation
 Task: SPEC-PPL-001 Q-006 · Blocks: AC-004 · Raised: 2026-08-11
@@ -69,7 +95,9 @@ Options: A) Derive `First Last` from `LAST, FIRST`, office can override.
 B) Store verbatim.  C) Office types every display name.
 Burst recommends: **A** — it is right most of the time and the override
 covers the rest.
-Status: OPEN
+Status: **DECIDED 2026-08-11 → A.** Derive `First Last` from
+`LAST, FIRST`, office may override and the override survives later
+derivation runs. AC-026…AC-028.
 
 ### B-0019 — stg_timeclock.clock_in violates codex 02 (naive TIMESTAMP)
 Task: SPEC-PPL-001 A-003 · Blocks: nothing today · Raised: 2026-08-11
