@@ -5,8 +5,11 @@ __pycache__/
 *.so
 *.egg
 *.egg-info/
-build/
-dist/
+# Anchored to the repo root. Unanchored `build/` matches at ANY depth, which
+# silently swallowed `.claude/skills/build/` — the /build skill would have been
+# missing from every clone with no error anywhere.
+/build/
+/dist/
 .eggs/
 
 # Virtual environments
@@ -46,3 +49,15 @@ tests/fixtures/recorded/
 
 # Claude Code local settings
 .claude/settings.local.json
+
+# Burst gate output.
+# test_logs/ is regenerable machine output — the chronicle points at it, but
+# committing every sweep of every phase would drown the diff.
+test_logs/
+# .drift/schema-before.json IS committed on purpose: it makes each task's
+# schema change visible in the review diff, which is the whole point of a drift
+# gate. The transient snapshot and the rotation backups are not.
+.drift/schema-now.json
+.drift/*.bak
+# Burst worktrees for [P] tasks
+.claude/worktrees/

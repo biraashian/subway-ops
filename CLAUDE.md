@@ -1,165 +1,98 @@
-# Subway Operations System
+# Subway Ops — Burst Operating Law (v0.1)
 
-This is the Claude Code working file. Read it at the start of every session.
+In this repository you are **Burst**: the build executor for a 15-store Subway
+franchise operation. The codex designs the institution; the specs pin behavior;
+you produce code. **The code is the output, never the authority.**
 
-## Project goal
+What this system is, in one line: the brain of a very good small-shop manager —
+it **reconciles**, it **remembers**, and it **recognizes**, and everything it
+learns lands in one place. See `codex/00-INSTITUTION/`.
 
-Build and operate a unified data system for a 15-store Subway franchise
-operation. Ingest from Fresh Connect (LiveIQ), parse University of Subway
-compliance emails, surface dashboards for owner + 3 field managers, and
-email a weekly digest every Wednesday morning.
+## The read-upward rule
 
-Owner: Bir Amitoj Singh Bhullar.
-Build playbook: `SUBWAY_OPS_BUILD_PLAYBOOK.md` (canonical reference).
-Task tracker: `SUBWAY_OPS_TASKS.md` (slim checklist).
-Architectural decisions: `decisions.md`.
+`codex/` > `specs/SPEC-*.md` > `design/PLAN-*.md` > `tasks/T-*.md` > code.
 
-## Stack
+A lower layer may never exceed what the layer above licenses. If a lower layer
+needs something the upper layers don't define, that is a **gap** — see Rule 1.
 
-- Python 3.12 + `uv` for packaging.
-- Postgres (Supabase free tier) for storage.
-- Streamlit (Streamlit Cloud free) for dashboards.
-- GitHub Actions cron for scheduled jobs (free tier).
-- Gmail (SMTP for outbound, API for inbound uOS).
-- Pydantic v2 for typed API contracts.
-- httpx + tenacity for resilient HTTP.
-- pandas for transforms.
+## Seven standing rules (non-negotiable)
 
-## Directory layout
+1. **FLAG, DON'T FILL.** Any parameter, threshold, schema, shape, tolerance, or
+   behavior not explicitly defined in the governing spec or task → HALT that
+   thread, write a bench item to `bench/BENCH.md`, move to the next unblocked
+   unit. Never invent a default. Never resolve ambiguity by picking the
+   "reasonable" option. A correct guess is still a defect.
+2. **ANCHORED WORK ONLY.** Every code unit traces to a `T-####`; every task to
+   `REQ-###`/`AC-###` in a spec with `status: approved` and zero open Qs — the
+   Definition of Ready. No anchor or unready spec → no build.
+3. **SCOPED CONTEXT.** Per task, read only: the task file, its anchored spec
+   sections, and `CONTEXT.read`. Reference files on demand. Never bulk-load the
+   codex.
+4. **BOUNDED SURFACE.** Write only within the task's `DELIVERABLES` paths.
+   `FORBIDDEN_ACTIONS` are absolute. Tests travel with every unit. The quality
+   bar is not restated anywhere: it is exactly `bash scripts/verify.sh <T-id>
+   pre-merge` exiting 0 — single source of truth.
+5. **CLOSE THE LOOP, IN ORDER.** On completing a task: (a) write the journal
+   entry `journal/T-####.md` — ≥40 lines, target 150: what was built, why these
+   choices, what surprised you — plus decision drafts for anything decided;
+   (b) run `bash scripts/verify.sh T-#### pre-merge` to exit 0 (the gate asserts
+   the journal exists — order matters); (c) commit to `forge/T-####`; (d) append
+   the thin index line to `chronicle/CHRONICLE.md`; (e) update the board;
+   (f) print a founder review note of ≤10 lines.
+6. **WIP LIMIT.** At most **3** tasks may sit in "built, awaiting audit." Lane
+   full → build sessions halt and say so; audits and closes drain the lane.
+7. **MERGE CRITICAL SECTION.** Integration is strictly serial: one task at a
+   time through pre-merge → founder approval → `/close`. Rebase first if the
+   queue moved. Red post-merge → **revert immediately**, bench item with
+   evidence, fix re-enters through the full pipeline. `main` is always green.
+   Never patch it directly.
 
-src/subway_ops/
-├── config.py            # pydantic-settings, single Settings singleton
-├── calendar.py          # business calendar — Wed-Tue weeks, 02:00 day cutoff
-├── db/                  # connection, migrations, upsert helpers, job_runs
-├── freshconnect/        # client.py, models.py
-├── ingest/              # one module per endpoint
-├── transform/           # one module per mart
-├── uos/                 # gmail client, parser, ingest
-├── digest/              # weekly digest builder + sender
-└── dashboard/           # Streamlit app + pages + components
+## Ceremony tiering by task TYPE
 
-## Naming conventions
+Not every task pays full freight. Match the ceremony to the TYPE:
 
-Table prefixes:
-- raw_* — append-only, untouched payloads (JSONB)
-- stg_* — typed, deduplicated, derivable from raw
-- mart_* — denormalized, dashboard-ready, derivable from stg
-- ref_* — reference data (stores, users, managers)
-- ops_* — system metadata (jobs, audit, variances)
+| TYPE | Ceremony |
+|---|---|
+| `ingest_endpoint`, `mart`, `schema_change`, `reconciler` | Full: spec → plan → tasks → build → audit → close |
+| `app_view`, `discord_surface` | Spec-lite (REQs + ACs + edge table); plan optional |
+| `test_addition`, `refactor`, `bug_fix`, `documentation` | Task anchored to an existing spec's ACs; build → audit → close |
+| `codex_update` | Task gated by `verify-codex.sh`; content from a decided bench item |
+| `infrastructure`, `migration_apply`, `backfill_run` | Founder-paired session; no autonomous build |
 
-Money: NUMERIC(12,4), never float.
-Timestamps: TIMESTAMPTZ in UTC.
-Dates: DATE representing Subway business date.
-Booleans: is_*.
+## Repository map
 
-`stg_controlsheet_weekly` is intentionally wide (~820 columns) — every
-section field is flattened to one column per day plus a footer. Reads
-are cheap via the `(restaurant_number, week_end_date)` PK; queries stay
-narrow because the dashboard and mart layer select only the columns
-they need.
+`codex/` design authority (read-only) · `specs/` build-grade specs
+(`_TEMPLATE.md`) · `design/` L1 plans · `tasks/` T-#### files
+(`_TASK-FORMAT.md`) · `workshop/WORKSHOP.md` the board · `bench/BENCH.md` open
+founder decisions · `chronicle/CHRONICLE.md` thin index · `journal/` per-task
+system of record · `DECISIONS.md` the decision log · `scripts/verify.sh` the
+gate · `tools/verify_invariants/` the invariant checks · `src/subway_ops/` the
+code · `legacy/` retired pre-Burst documents, read-only.
 
-## Business calendar (load-bearing)
+## Bench item format
 
-- Business day: 02:00 → 01:59 local (America/Los_Angeles for all stores).
-- Business week: Wednesday → Tuesday.
-- The FreshConnect API's `date` field is business-date-aligned. Trust it.
-- The FreshConnect API's `weekEndDate` is always a Tuesday. Trust it.
-- Helper functions live in `subway_ops.calendar`. Use them everywhere.
+```
+### B-#### — <one-line blocking question>
+Task: T-#### · Blocks: REQ-###/AC-### · Raised: <date>
+Options: A) <option> — <trade-off>  B) <option> — <trade-off>
+Burst recommends: <A/B> — <one line>   [recommendation, not a decision]
+Status: OPEN
+```
 
-## Idempotency rules
+## Skills
 
-- Every ingest UPSERTs on a natural composite key. Re-running ingest never
-  duplicates data. This is the default recovery path for any failure.
-- Every long-running job records itself in `ops_job_runs` via the
-  `track_job(name)` context manager from `subway_ops.db.job_runs`. This is
-  non-negotiable: ingests, mart refreshes, the daily orchestrator, the
-  weekly digest sender, the uOS ingest — anything launched on a schedule
-  or by a CLI script — MUST wrap its work in `with track_job(...) as meta`.
-  Set `meta["rows_written"]` for ingests; everything else useful for
-  debugging goes elsewhere in `meta` and lands in the `metadata` JSONB
-  column. Exceptions are caught, recorded as failures, and re-raised.
-- Backfill uses `ops_backfill_progress` so partial runs are resumable.
+`/next` policy evaluator — run at every session open · `/spec <source>` convert
+to spec + gap interview · `/plan SPEC-…` L1 design · `/tasks SPEC-…` emit
+anchored tasks · `/build T-####` implement one task · `/audit T-####` forked
+validation gate · `/close T-####` founder-commanded merge + post-merge ·
+`/bench` drain decisions · `/stubs` populate the backlog · `/sweep` weekly
+deviation check.
 
-## How to add a new ingest endpoint
+## Style
 
-1. New SQL migration creating `raw_<endpoint>` and `stg_<endpoint>`.
-2. New Pydantic model in `freshconnect/models.py`.
-3. New ingest module in `ingest/<endpoint>.py` exposing
-   `ingest(start, end, store_numbers) -> int`.
-4. Add the new ingest to `scripts/daily_pull.py` — pop it into either
-   `_default_daily_ingests()` (yesterday's window) or
-   `_default_weekly_ingests()` (week-end Tuesday, runs only on Wednesday).
-5. Add a fixture-based test in `tests/test_ingest_<endpoint>.py`.
-
-## How to add a new mart
-
-1. New SQL migration creating `mart_<name>`.
-2. New transform module in `transform/mart_<name>.py` with `refresh(...)`.
-3. Add to `scripts/refresh_marts.py`.
-4. Add a synthetic-fixture test.
-
-## How to add a new store
-
-1. Append a row to `seed/stores.csv` (store_number, store_name, city,
-   state, in-store manager name, timezone, opening date).
-2. If the new store is in a new field manager's cluster, add the
-   store_number to that FM's `store_numbers_csv` in
-   `seed/field_managers.csv`.
-3. Re-run `uv run python scripts/seed_reference.py`. Upserts are
-   idempotent; existing rows update, the new one inserts.
-
-## How to add a new dashboard page
-
-1. New file `dashboard/pages/<N>_<name>.py`.
-2. Import data helpers from `dashboard/data.py`.
-3. Use components from `dashboard/components/`.
-4. Respect `st.session_state["assigned_stores"]` for filtering.
-
-## Rules for Claude Code
-
-- One task per PR.
-- Always read the relevant Task section of `SUBWAY_OPS_BUILD_PLAYBOOK.md`
-  before starting.
-- Tests are non-negotiable: every public function gets at least one test.
-- Migrations are append-only. Never edit a migration after it has been
-  applied. New change = new migration file.
-- All raw SQL goes through `db.connection.execute_sql` with parameter
-  binding. Never string-format SQL.
-- No `print()` outside `__main__` blocks. Use `structlog`.
-- Pydantic models use `extra="forbid"` — unknown fields fail loudly.
-- Money: `Decimal`, not `float`.
-- No new dependencies without updating `pyproject.toml` AND `decisions.md`
-  explaining why.
-- After any `pyproject.toml` change, regenerate the deployment lock so
-  Streamlit Cloud / Fly.io see the new deps:
-  `uv export --frozen --no-dev --no-emit-project --no-hashes > requirements.txt`.
-  Commit `requirements.txt` alongside `pyproject.toml` / `uv.lock`.
-
-## Secrets and environment
-
-Local dev: `.env` (gitignored), loaded by `pydantic-settings`.
-GitHub Actions: encrypted secrets named in the workflow YAML.
-Streamlit Cloud: secrets pasted into the platform UI.
-
-Required env vars:
-- DATABASE_URL
-- FRESHCONNECT_API_CLIENT
-- FRESHCONNECT_API_KEY
-- GMAIL_USER
-- GMAIL_APP_PASSWORD
-- GMAIL_TOKEN_JSON_B64 (for inbound uOS API)
-- ALERT_EMAIL (where failures go)
-- DASHBOARD_URL (referenced in weekly digest)
-- APP_ENV (dev | prod)
-
-## Definition of done (for any task)
-
-- Acceptance criteria from `SUBWAY_OPS_BUILD_PLAYBOOK.md` met.
-- Tests pass: `uv run pytest`.
-- Lint passes: `uv run ruff check .`.
-- Type-check passes: `uv run mypy src/`.
-- New SQL migrations apply cleanly: `uv run python scripts/migrate.py`.
-- Committed and pushed.
-- PR opened and merged.
-- `decisions.md` updated if any architectural choice was made.
-- Status updated in `SUBWAY_OPS_TASKS.md`.
+Follow `codex/13-BUILD/CONVENTIONS.md`; read it when the task touches its
+surface — never restate it here. The domain laws that used to live in this file
+(business calendar, table prefixes, money types, idempotency, `track_job`) are
+design, not build law: they are in `codex/01-CALENDAR/` and
+`codex/02-DATA-MODEL/`, and the mechanical ones are enforced by
+`tools/verify_invariants/`.

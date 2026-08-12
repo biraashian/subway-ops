@@ -1,7 +1,151 @@
-# Architectural decisions
+# Decisions
 
-Append-only log of significant design choices. Each entry: context,
-decision, consequences. Newest at the bottom.
+Append-only. `/bench` appends here; `/sweep` diffs live state against it.
+
+Two sections. **Inherited** are the Burst v0.2 harness decisions carried in
+from the Verity build — they govern *how* we work and are in force here except
+where noted. **Subway Ops** are this institution's own decisions, D-016 onward,
+continuing the same number space because the inherited ones are not superseded.
+Below both sits the original dated log from the pre-Burst build, kept verbatim
+as the record of why the data layer looks the way it does.
+
+---
+
+## Inherited from Burst v0.2 (Verity era 2)
+
+| ID | Decision | Status here |
+|---|---|---|
+| D-001 | Spec-driven build as one stack inside Claude Code | **In force** |
+| D-002 | `/close` is founder-commanded and atomic | **In force** |
+| D-003 | The gate-enforced per-task journal is the system of record | **In force**, amended by D-023 |
+| D-004 | Red post-merge → revert first, never fix-forward | **In force** |
+| D-005 | WIP limit of 3 in "built, awaiting audit" | **In force** |
+| D-006 | `/next` is the policy evaluator, run at every session open | **In force** |
+| D-007 | The spec is the organizing unit; specs get their own ID space and lifecycle | **In force** (no CT stream ever existed here) |
+| D-008 | The board is the single pane; runway floor of 3 | **In force** |
+| D-009 | A dependency-ordered source queue feeds `/spec` | **In force**, as `codex/12-PROMPTS/` |
+| D-010 | Greenfield entry; no adopt-and-audit | **Bent** — see D-016 |
+| D-011 | Blue-green cutover; legacy is a read-only harvest corpus | **Void** (no cutover). The harvest-don't-copy rule applies to `legacy/` |
+| D-012 | Eight environments on two axes | **Void** — Verity-specific |
+| D-013 | Critical-path pull-forward of four components | **Void** — Verity-specific |
+| D-014 | Pipeline mechanics: serial merge queue, V&V split, R-503 | **In force** |
+| D-015 | v1 built completely; v2 quarantined | **Void** — Verity-specific |
+
+---
+
+## Subway Ops decisions
+
+## D-016 — D-010 is bent: the data layer is retro-specced, not rebuilt
+- **When:** 2026-08-11 (founder call).
+- **Reasoning:** D-010 rules out adopt-and-audit because it produces "fake-done:
+  green checkmarks over unvetted decisions." That reasoning targets *unspecced
+  layers sitting under specced ones*. The subway data layer is not unvetted in
+  that sense: 490 passing tests, ruff and mypy green, 15 endpoints verified
+  against the live API in a recorded discovery pass, 19 applied migrations, and
+  15 months of ingested history. It lacks **specs**, not **verification**. This
+  domain is also an order of magnitude simpler than the one Burst was built for.
+- **Guard against fake-done:** retro-spec ACs are written from the codex and
+  from observed behavior. Wherever existing code and the spec disagree, that is
+  a **bench item** — never a silent spec amendment to match the code.
+- **Ruled out:** full greenfield per RUNBOOK-CUTOVER (rebuilds 15 verified
+  endpoints and 19 migrations for no proportionate gain).
+- **Reopen if:** three or more retro-specs produce bench items that reveal the
+  layer's design was actually wrong — then that layer graduates to greenfield.
+
+## D-017 — Codex first: no new spec without a design authority above it
+- **When:** 2026-08-11 (founder call).
+- **Reasoning:** the read-upward rule needs something above `specs/`. The
+  existing `SUBWAY_OPS_BUILD_PLAYBOOK.md` only covers the original reporting
+  scope and is shaped as a build guide, not an authority. The new domain —
+  what a territory is, what a manager owns, how a bonus computes, what an
+  orientation must legally record — exists only in the founder's head.
+- **Ruled out:** extending the playbook (wrong shape); letting specs be the top
+  layer for new areas (weakens read-upward exactly where the domain is least
+  defined, which is where drift comes from).
+- **Reopen if:** never for era 1 of this system.
+
+## D-018 — Discord is the single staff channel; scheduling is in scope
+- **When:** 2026-08-11 (founder call).
+- **Reasoning:** staff comms are currently split across three channels; the
+  founder wants one, carrying communication, schedule, and real-time updates.
+  Scheduling was not in the original scope and is the highest-leverage addition
+  because it closes the labor loop: a report says last week was over budget, a
+  schedule checked against budget says Saturday is over while it is still
+  Wednesday.
+- **Ruled out:** WhatsApp (weak for hosting guides, video, and searchable
+  content; per-conversation cost; outbound rate limits); staying split.
+- **Consequences:** the org is not on Discord yet, so rollout is a real change-
+  management task, piloted on one territory before going wide.
+
+## D-019 — A new mobile-first web app; Streamlit retires
+- **When:** 2026-08-11 (founder call).
+- **Reasoning:** crew need a personal page — shifts, KPI, certificates,
+  training, photo upload — that opens on a phone in front of a health
+  inspector. Streamlit cannot do that: auth is a CSV of password hashes, there
+  is no mobile layout, and file upload is clumsy. Stack is FastAPI + Jinja2 +
+  HTMX, server-rendered, so the entire existing Python data layer is reused with
+  no second toolchain. Deployed on Fly.io, where the Dockerfile already points.
+- **Ruled out:** keeping Streamlit and adding a second crew app (two codebases,
+  two logins, contradicts the single-place goal); Discord-only for crew (no page
+  to show an inspector).
+- **Consequences:** Streamlit runs until the new app reaches parity, then goes.
+  `ref_users.role` grows `store_manager`, `office`, `crew`.
+
+## D-020 — Monarch is bank truth
+- **When:** 2026-08-11 (founder call).
+- **Reasoning:** Monarch already aggregates the accounts, so deposits and
+  settlements reconcile against it rather than against a second aggregation we
+  would have to build and maintain.
+- **Consequences:** Monarch has no official public API, so this is a scheduled
+  **export import**, not a live feed. That import is a first-class ingest with
+  its own `raw_`/`stg_` pair and `track_job` wrapper.
+- **Reopen if:** Monarch ships an API, or the export cadence proves too coarse.
+
+## D-021 — Capture is photo + AI extraction + human confirm; never auto-post
+- **When:** 2026-08-11 (founder call).
+- **Reasoning:** the existing cash-drop spreadsheet fails on ease of use, and
+  data entry is the friction that stops reconciliation happening at all. A
+  manager photographs the receipt; a vision model proposes amount, date, and
+  store; a person confirms before anything posts.
+- **Non-negotiable:** the model never writes to a staging table directly. Both
+  the source image and the raw model output are retained for audit, so any
+  posted number can be traced back to the pixels it came from.
+- **Ruled out:** manual entry (same friction as today); statement-import-only
+  (no digital source exists for cash drops).
+
+## D-022 — Payroll is a locked report, not an integration
+- **When:** 2026-08-11 (founder call).
+- **Reasoning:** the timecard custody chain is office adjusts → founder
+  approves → payroll. After approval the system emits an approved, immutable
+  hours report and office staff key it into payroll.
+- **Consequences:** zero payroll integration to build or maintain, at the cost
+  of a re-keying step after approval. The report must therefore be laid out for
+  transcription, and the approved rows must be immutable so the keyed figures
+  can always be traced back.
+- **Reopen if:** re-keying errors show up, or the provider offers a usable API.
+
+## D-023 — The journal lives in-repo; the gate ignores it (amends D-003)
+- **When:** 2026-08-11.
+- **Reasoning:** Burst keeps `journal/` in a sibling repo specifically so
+  `assert_worktree_clean` cannot see the uncommitted entry written moments
+  before the gate runs. Subway has no Zone C and no secrecy split, and one
+  clone carrying the full record is worth more here than a separate repo.
+- **Decision:** `journal/T-####.md` is in-repo and committed. `verify.sh`'s
+  worktree-clean assertion excludes `journal/` and `test_logs/`; nothing else
+  is excluded, so the check still catches the case it was written for — an
+  uncommitted edit to the gate script riding along through a checkout.
+  `test_logs/` is repo-local and gitignored, since it is regenerable machine
+  output.
+- **Ruled out:** a sibling journal repo (two clones to keep in sync for a
+  solo operator); gitignoring the journal (unversioned; defeats the point).
+
+---
+
+## Pre-Burst build log (verbatim)
+
+The original dated entries from the pre-Burst build. Kept as-is: they record
+why the data layer, calendar, and reconciliation model look the way they do,
+and the codex harvests from them.
 
 ---
 

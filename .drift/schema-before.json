@@ -1,0 +1,5269 @@
+{
+  "_schema_migrations": {
+    "columns": {
+      "applied_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "filename": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "filename"
+    ]
+  },
+  "mart_field_manager_portfolio": {
+    "columns": {
+      "field_manager_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "is_food_cost_in_portfolio_target": {
+        "nullable": true,
+        "type": "boolean"
+      },
+      "is_labor_cost_in_portfolio_target": {
+        "nullable": true,
+        "type": "boolean"
+      },
+      "portfolio_food_cost_pct": {
+        "nullable": true,
+        "type": "numeric(8,6)"
+      },
+      "portfolio_labor_cost_pct": {
+        "nullable": true,
+        "type": "numeric(8,6)"
+      },
+      "refreshed_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "store_count": {
+        "nullable": false,
+        "type": "integer"
+      },
+      "store_count_in_target_food": {
+        "nullable": false,
+        "type": "integer"
+      },
+      "store_count_in_target_labor": {
+        "nullable": false,
+        "type": "integer"
+      },
+      "total_net_sales_weighted": {
+        "nullable": true,
+        "type": "numeric(14,4)"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "field_manager_name",
+      "week_end_date"
+    ]
+  },
+  "mart_recon_weekly": {
+    "columns": {
+      "actual_bank_deposit": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "pos_deposit_in_bank": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "refreshed_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "status": {
+        "nullable": true,
+        "type": "text"
+      },
+      "variance": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "week_end_date"
+    ]
+  },
+  "mart_store_daily": {
+    "columns": {
+      "average_ticket": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "cash_drop_count": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "daily_inventory_cost": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "daily_inventory_waste": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "food_cost_pct": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "hours_worked": {
+        "nullable": true,
+        "type": "numeric(8,2)"
+      },
+      "net_sales": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "refreshed_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "sales_per_labor_hour": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "tax": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "third_party_pct": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "third_party_sales": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "third_party_transactions": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "transactions": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "units": {
+        "nullable": true,
+        "type": "integer"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "business_date"
+    ]
+  },
+  "mart_store_weekly": {
+    "columns": {
+      "adjusted_cost_of_goods_pct": {
+        "nullable": true,
+        "type": "numeric(8,6)"
+      },
+      "average_ticket": {
+        "nullable": true,
+        "type": "numeric(10,4)"
+      },
+      "bread_overshort_total": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "cash_overshort_total": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "customer_count": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "deposit_in_bank_total": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "distribution_cost_value": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "factor": {
+        "nullable": true,
+        "type": "numeric(10,4)"
+      },
+      "food_cost_actual_pct": {
+        "nullable": true,
+        "type": "numeric(8,6)"
+      },
+      "food_cost_diff_pct": {
+        "nullable": true,
+        "type": "numeric(8,6)"
+      },
+      "food_cost_expected_pct": {
+        "nullable": true,
+        "type": "numeric(8,6)"
+      },
+      "hours_worked_total": {
+        "nullable": true,
+        "type": "numeric(8,2)"
+      },
+      "is_food_cost_in_target": {
+        "nullable": true,
+        "type": "boolean"
+      },
+      "is_labor_cost_in_target": {
+        "nullable": true,
+        "type": "boolean"
+      },
+      "labor_cost_pct": {
+        "nullable": true,
+        "type": "numeric(8,6)"
+      },
+      "net_sales_total": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "productivity": {
+        "nullable": true,
+        "type": "numeric(10,4)"
+      },
+      "refreshed_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "total_inventory_value": {
+        "nullable": true,
+        "type": "numeric(12,4)"
+      },
+      "transactions_total": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "units_total": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "week_start_date": {
+        "nullable": true,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "week_end_date"
+    ]
+  },
+  "ops_backfill_progress": {
+    "columns": {
+      "completed_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "endpoint": {
+        "nullable": false,
+        "type": "text"
+      },
+      "job_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "window_end": {
+        "nullable": false,
+        "type": "date"
+      },
+      "window_start": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "job_name",
+      "endpoint",
+      "window_start",
+      "window_end"
+    ]
+  },
+  "ops_digest_log": {
+    "columns": {
+      "recipient_count": {
+        "nullable": false,
+        "type": "integer"
+      },
+      "sent_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "subject": {
+        "nullable": false,
+        "type": "text"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "week_end_date"
+    ]
+  },
+  "ops_job_runs": {
+    "columns": {
+      "error_text": {
+        "nullable": true,
+        "type": "text"
+      },
+      "finished_at": {
+        "nullable": true,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "job_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "metadata": {
+        "nullable": true,
+        "type": "jsonb"
+      },
+      "rows_written": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "started_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "status": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "ops_migrations": {
+    "columns": {
+      "applied_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "checksum": {
+        "nullable": false,
+        "type": "text"
+      },
+      "filename": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "filename"
+    ]
+  },
+  "ops_variance_entries": {
+    "columns": {
+      "actual_bank_deposit": {
+        "nullable": false,
+        "type": "numeric(12,4)"
+      },
+      "entered_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "entered_by": {
+        "nullable": false,
+        "type": "text"
+      },
+      "note": {
+        "nullable": true,
+        "type": "text"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "week_end_date"
+    ]
+  },
+  "raw_controlsheet": {
+    "columns": {
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "raw_daily_sales": {
+    "columns": {
+      "end_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "start_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "raw_inventory_movement": {
+    "columns": {
+      "end_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "start_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "raw_paidouts_no_sales": {
+    "columns": {
+      "end_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "start_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "raw_third_party_daily": {
+    "columns": {
+      "end_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "start_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "raw_timeclock": {
+    "columns": {
+      "end_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "start_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "raw_uos_emails": {
+    "columns": {
+      "attachment_count": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "gmail_message_id": {
+        "nullable": false,
+        "type": "text"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "received_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "subject": {
+        "nullable": true,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "raw_wisr": {
+    "columns": {
+      "fetched_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "payload": {
+        "nullable": false,
+        "type": "jsonb"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
+  "ref_field_managers": {
+    "columns": {
+      "email": {
+        "nullable": false,
+        "type": "text"
+      },
+      "is_active": {
+        "nullable": false,
+        "type": "boolean"
+      },
+      "name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "phone": {
+        "nullable": true,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "name"
+    ]
+  },
+  "ref_stores": {
+    "columns": {
+      "city": {
+        "nullable": false,
+        "type": "text"
+      },
+      "created_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "field_manager_name": {
+        "nullable": true,
+        "type": "text"
+      },
+      "is_active": {
+        "nullable": false,
+        "type": "boolean"
+      },
+      "opening_date": {
+        "nullable": true,
+        "type": "date"
+      },
+      "state": {
+        "nullable": false,
+        "type": "character(2)"
+      },
+      "store_manager_name": {
+        "nullable": true,
+        "type": "text"
+      },
+      "store_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "store_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "timezone": {
+        "nullable": false,
+        "type": "text"
+      },
+      "updated_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      }
+    },
+    "primary_key": [
+      "store_number"
+    ]
+  },
+  "ref_users": {
+    "columns": {
+      "assigned_stores": {
+        "nullable": true,
+        "type": "ARRAY"
+      },
+      "created_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "display_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "email": {
+        "nullable": false,
+        "type": "text"
+      },
+      "is_active": {
+        "nullable": false,
+        "type": "boolean"
+      },
+      "password_hash": {
+        "nullable": false,
+        "type": "text"
+      },
+      "role": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "email"
+    ]
+  },
+  "stg_3p_daily": {
+    "columns": {
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "total_net_sales": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "total_sales": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "total_transactions": {
+        "nullable": true,
+        "type": "integer"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "business_date"
+    ]
+  },
+  "stg_3p_daily_provider": {
+    "columns": {
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "net_sales": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "provider": {
+        "nullable": false,
+        "type": "text"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "sales": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "transactions": {
+        "nullable": true,
+        "type": "integer"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "business_date",
+      "provider"
+    ]
+  },
+  "stg_controlsheet_weekly": {
+    "columns": {
+      "adjusted_cost_of_goods_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "adjusted_cost_of_units_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "bread_bread_left_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_left_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_left_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_left_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_left_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_left_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_left_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_left_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_bread_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_credits_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_delivered_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_left_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_flatbread_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_left_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_left_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_muffin_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_opening_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_left_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_other_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_left_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_pizza_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_left_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_salad_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_sold_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "bread_used_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_actual_cash_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjusted_proceeds_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_adjustments_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_american_express_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cash_rounding_adjustment_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_cashcards_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_catering_call_center_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_grand_total_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_closing_keep_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_credit_sales_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_debit_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_deposit_in_bank_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_discover_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_cash_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_opening_grand_total_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_other_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_over_short_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_paidouts_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_pay_pal_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_required_cash_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cash_control_visa_and_mastercard_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cost_of_good_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "cost_of_units_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "customer_count": {
+        "nullable": true,
+        "type": "integer"
+      },
+      "drink_cost_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "factor": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "labor_hours_open_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_open_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_open_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_open_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_open_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_open_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_open_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_open_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_hours_worked_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_productivity_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "labor_sales_per_labor_hour_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_average_ticket_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_customer_count_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "metrics_factor_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "misc_cost_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "net_sales": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "productivity": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "sales_itemization_add_on_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_add_on_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_add_on_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_add_on_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_add_on_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_add_on_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_add_on_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_add_on_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_add_on_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_co_brand_sales_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_other_receipts_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_adj_sales_tax_and_fees_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_bottled_beverage_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_bottled_beverage_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cash_card_sales_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_catering_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_catering_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_chips_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_chips_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_cookies_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_cookies_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_coupons_discounts_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_drinks_refunds_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_refunds_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_drinks_voids_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_drinks_voids_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_footlong_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_footlong_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_fountain_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_fountain_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_hot_beverage_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_hot_beverage_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_coupons_discounts_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_misc_refunds_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_refunds_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_misc_voids_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_misc_voids_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_muffin_melt_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_muffin_melt_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_other_adjustments_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_adjustments_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_other_beverage_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_beverage_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_other_carrier_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_carrier_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_other_misc_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_other_misc_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_pizza_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_pizza_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_salad_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_salad_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_six_inch_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_six_inch_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_soups_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_soups_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_tax_and_fee_adjustments_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_three_inch_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_three_inch_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_total_drinks_sales_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_drinks_sales_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_total_misc_sales_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_misc_sales_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_total_subway_sales_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_subway_sales_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_total_units_sales_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_total_units_sales_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_coupons_discounts_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_unit_refunds_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_refunds_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "sales_itemization_unit_voids_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "sales_itemization_unit_voids_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_all_units_sold_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_catering_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_catering_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_drink_percentage_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_percentage_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_drink_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_employee_and_free_units_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_employee_and_free_units_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_footlong_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_footlong_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_muffin_melt_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_muffin_melt_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_other_carrier_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_other_carrier_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_pizza_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_pizza_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_salad_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_salad_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_six_inch_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_six_inch_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_percentage": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "unit_itemization_three_inch_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_three_inch_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_itemization_total_units_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "week_end_date"
+    ]
+  },
+  "stg_daily_sales": {
+    "columns": {
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "cash_card_total": {
+        "nullable": false,
+        "type": "numeric(18,4)"
+      },
+      "hours_worked": {
+        "nullable": false,
+        "type": "numeric(8,2)"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "net_sales": {
+        "nullable": false,
+        "type": "numeric(18,4)"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "tax": {
+        "nullable": false,
+        "type": "numeric(18,4)"
+      },
+      "third_party_sales": {
+        "nullable": false,
+        "type": "numeric(18,4)"
+      },
+      "third_party_transactions": {
+        "nullable": false,
+        "type": "integer"
+      },
+      "transactions": {
+        "nullable": false,
+        "type": "integer"
+      },
+      "units": {
+        "nullable": false,
+        "type": "integer"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "business_date"
+    ]
+  },
+  "stg_inventory_movement": {
+    "columns": {
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "delivery": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "inventory_item": {
+        "nullable": false,
+        "type": "text"
+      },
+      "item_category": {
+        "nullable": false,
+        "type": "text"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "total_cost": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "transfer": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_cost": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "unit_of_measure": {
+        "nullable": true,
+        "type": "text"
+      },
+      "waste": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "waste_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "business_date",
+      "inventory_item"
+    ]
+  },
+  "stg_inventory_movement_totals": {
+    "columns": {
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "metric_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "total_cost": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "waste_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "business_date",
+      "metric_name"
+    ]
+  },
+  "stg_no_sales": {
+    "columns": {
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "clerk_id": {
+        "nullable": false,
+        "type": "text"
+      },
+      "clerk_name": {
+        "nullable": true,
+        "type": "text"
+      },
+      "event_time": {
+        "nullable": false,
+        "type": "timestamp without time zone"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "no_sale_type": {
+        "nullable": false,
+        "type": "text"
+      },
+      "reason": {
+        "nullable": true,
+        "type": "text"
+      },
+      "reason_type": {
+        "nullable": true,
+        "type": "text"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "event_time",
+      "clerk_id",
+      "no_sale_type"
+    ]
+  },
+  "stg_paid_outs": {
+    "columns": {
+      "amount": {
+        "nullable": false,
+        "type": "numeric(18,4)"
+      },
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "clerk_id": {
+        "nullable": false,
+        "type": "text"
+      },
+      "clerk_name": {
+        "nullable": true,
+        "type": "text"
+      },
+      "comment": {
+        "nullable": true,
+        "type": "text"
+      },
+      "event_time": {
+        "nullable": false,
+        "type": "timestamp without time zone"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "reason": {
+        "nullable": false,
+        "type": "text"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "event_time",
+      "clerk_id",
+      "amount",
+      "reason"
+    ]
+  },
+  "stg_timeclock": {
+    "columns": {
+      "adj_amount": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "business_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "clerk_id": {
+        "nullable": false,
+        "type": "text"
+      },
+      "clock_in": {
+        "nullable": false,
+        "type": "timestamp without time zone"
+      },
+      "clock_out": {
+        "nullable": true,
+        "type": "timestamp without time zone"
+      },
+      "employee_name": {
+        "nullable": true,
+        "type": "text"
+      },
+      "hours_after_adj": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "hours_before_adj": {
+        "nullable": true,
+        "type": "numeric(8,4)"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "clerk_id",
+      "clock_in"
+    ]
+  },
+  "stg_uos_compliance": {
+    "columns": {
+      "completed_at": {
+        "nullable": true,
+        "type": "date"
+      },
+      "completion_status": {
+        "nullable": false,
+        "type": "text"
+      },
+      "course_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "employee_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "report_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "report_date",
+      "employee_name",
+      "course_name"
+    ]
+  },
+  "stg_wisr_inventory_items": {
+    "columns": {
+      "actual_percentage": {
+        "nullable": true,
+        "type": "numeric(12,6)"
+      },
+      "cost": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "delivered_qty": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "diff_percentage": {
+        "nullable": true,
+        "type": "numeric(12,6)"
+      },
+      "expected_percentage": {
+        "nullable": true,
+        "type": "numeric(12,6)"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "item_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "left_qty": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "open_qty": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "pos_difference": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "recorded_waste": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "used_qty": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "value_difference": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "week_end_date",
+      "item_name"
+    ]
+  },
+  "stg_wisr_weekly": {
+    "columns": {
+      "acg_adjusted_cost_of_goods_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_adjusted_cost_of_goods_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_adjusted_cost_of_goods_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_discount_value_pct_of_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_discount_value_pct_of_sales_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_discount_value_pct_of_sales_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_employee_discounts_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_employee_discounts_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_employee_discounts_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_employee_free_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_employee_free_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_employee_free_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_free_units_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_free_units_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_free_units_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_fvm_discounts_value_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_fvm_discounts_value_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_fvm_discounts_value_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_misc_and_drink_disc_value_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_misc_and_drink_disc_value_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_misc_and_drink_disc_value_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_other_discount_value_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_other_discount_value_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_other_discount_value_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_total_discount_value_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "acg_total_discount_value_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "acg_total_discount_value_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "average_ticket": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "cbost_bread_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_bread_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_bread_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_bread_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_bread_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_bread_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_bread_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_bread_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_fri": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_mon": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_sat": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_sun": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_thu": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_total": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_tue": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "cbost_cash_wed": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_boxed_meals_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_boxed_meals_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_dessert_platters_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_dessert_platters_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_giant_subs_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_giant_subs_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_sandwich_platters_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "csi_sandwich_platters_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "customer_count": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "dc_annual_ipc_patronage_actual_percent": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "dc_annual_ipc_patronage_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "dc_delivery_fee_actual_percent": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "dc_delivery_fee_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "dc_distribution_costs_actual_percent": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "dc_distribution_costs_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "dc_distributor_credits_actual_percent": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "dc_distributor_credits_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "factor": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_bread_carrier_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_bread_carrier_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_bread_carrier_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_bread_carrier_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_bread_carrier_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_cheese_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_cheese_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_cheese_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_cheese_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_cheese_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_cost_of_goods_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_cost_of_goods_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_cost_of_goods_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_cost_of_goods_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_cost_of_goods_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_distribution_cost_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_distribution_cost_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_distribution_cost_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_distribution_cost_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_distribution_cost_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_drinks_cost_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_drinks_cost_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_drinks_cost_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_drinks_cost_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_drinks_cost_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_meat_protein_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_meat_protein_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_meat_protein_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_meat_protein_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_meat_protein_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_misc_cost_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_misc_cost_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_misc_cost_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_misc_cost_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_misc_cost_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_papergoods_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_papergoods_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_papergoods_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_papergoods_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_papergoods_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_toppings_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_toppings_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_toppings_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_toppings_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_toppings_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_units_cost_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_units_cost_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_units_cost_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_units_cost_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_units_cost_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_veggies_actual_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_veggies_expected_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_veggies_percentage_diff": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ics_veggies_value_diff": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ics_veggies_value_used": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ingested_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "restaurant_number": {
+        "nullable": false,
+        "type": "text"
+      },
+      "ssi_balance_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_balance_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_catering_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_catering_sales_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_cost_of_goods_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_cost_of_goods_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_drink_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_drink_sales_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_electric_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_electric_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_faf_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_faf_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_financial_strength_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_financial_strength_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_garbage_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_garbage_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_gas_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_gas_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_insurance_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_insurance_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_labor_and_taxes_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_labor_and_taxes_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_laundry_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_laundry_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_loans_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_loans_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_local_advertising_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_local_advertising_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_misc_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_misc_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_misc_sales_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_misc_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_net_subway_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_net_subway_sales_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_operating_expenses_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_operating_expenses_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_rent_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_rent_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_repair_maintenance_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_repair_maintenance_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_royalty_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_royalty_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_telephone_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_telephone_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_total_expenses_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_total_expenses_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "ssi_unit_sales_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "ssi_unit_sales_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "total_inventory_value": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "units_per_customer": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_drinks_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_drinks_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "usi_footlong_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_footlong_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "usi_other_units_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_other_units_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "usi_pizza_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_pizza_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "usi_salads_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_salads_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "usi_six_inch_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_six_inch_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "usi_three_inch_and_muffin_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_three_inch_and_muffin_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "usi_total_units_percentage": {
+        "nullable": true,
+        "type": "numeric(10,6)"
+      },
+      "usi_total_units_quantity": {
+        "nullable": true,
+        "type": "numeric(18,4)"
+      },
+      "week_end_date": {
+        "nullable": false,
+        "type": "date"
+      }
+    },
+    "primary_key": [
+      "restaurant_number",
+      "week_end_date"
+    ]
+  }
+}
