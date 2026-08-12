@@ -8,11 +8,11 @@ the four-way status bucket: unverified / clean / flagged / escalated.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
+from subway_ops.calendar import previous_business_week
 from subway_ops.config import (
     VARIANCE_ESCALATED_USD,
     VARIANCE_FLAGGED_USD,
@@ -22,9 +22,20 @@ from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
 from subway_ops.transform.mart_recon_weekly import refresh
 
-TEST_STORE = "4092"
-WEEK_END = date(2026, 5, 5)  # a Tuesday
+# A synthetic restaurant number that can never collide with a real store.
+# ``_wipe`` hard-DELETEs every row for (TEST_STORE, WEEK_END); pointing these
+# tests at a live store destroys production history on every run. Seeded
+# is_active=false so the ingests' ``_active_store_numbers()`` can't pick it up.
+TEST_STORE = "T-RECON-TEST"
+
+# The last closed business week, so the seeded row always lands inside
+# ``refresh(weeks_back=2)``'s window (earliest = last_closed - 7 days). A
+# hardcoded date silently stops being refreshed two weeks after it is written,
+# and every assertion here then reads back None.
+WEEK_END = previous_business_week()[1]
+
 TEST_USER_EMAIL = "test-recon-user@example.com"
+TEST_FM_NAME = "TestFM"
 
 
 requires_db = pytest.mark.skipif(
@@ -68,18 +79,19 @@ def seeded_world(applied_migrations: None) -> Iterator[None]:
     execute_sql(
         """
         INSERT INTO ref_field_managers (name, email, is_active)
-        VALUES ('TestFM', 'testfm@example.com', true)
+        VALUES (:f, 'testfm@example.com', true)
         ON CONFLICT (name) DO NOTHING
-        """
+        """,
+        {"f": TEST_FM_NAME},
     )
     execute_sql(
         """
         INSERT INTO ref_stores
           (store_number, store_name, city, state, timezone, field_manager_name, is_active)
-        VALUES (:s, 'Test Store', 'Seattle', 'WA', 'America/Los_Angeles', 'TestFM', true)
+        VALUES (:s, 'Test Store', 'Seattle', 'WA', 'America/Los_Angeles', :f, false)
         ON CONFLICT (store_number) DO NOTHING
         """,
-        {"s": TEST_STORE},
+        {"s": TEST_STORE, "f": TEST_FM_NAME},
     )
     execute_sql(
         """
@@ -91,8 +103,13 @@ def seeded_world(applied_migrations: None) -> Iterator[None]:
     )
     _wipe()
     yield
+    # Teardown in FK order: the mart/staging rows go first (they reference
+    # ref_stores), then the store (it references ref_field_managers), then
+    # the manager. Leaving these behind pollutes the live reference tables.
     _wipe()
     execute_sql("DELETE FROM ref_users WHERE email = :e", {"e": TEST_USER_EMAIL})
+    execute_sql("DELETE FROM ref_stores WHERE store_number = :s", {"s": TEST_STORE})
+    execute_sql("DELETE FROM ref_field_managers WHERE name = :f", {"f": TEST_FM_NAME})
 
 
 def _seed_pos(amount: Decimal) -> None:
