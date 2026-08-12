@@ -5,6 +5,29 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0006 — The codex interview for chapters 03–11
+Task: T-0002 · Blocks: every spec in Phases A–E (D-017) · Raised: 2026-08-11
+Nine chapters of design authority exist only in the founder's head:
+measurement grains, targets, compensation, people lifecycle, safety/health
+records, scheduling and the hours custody chain, money reconciliation,
+recognition, and comms. Chapters 00–02 and 13 are harvested and
+authoritative; these cannot be derived from anything in the repo.
+The batch is written up at [INTERVIEW-codex-03-11.md](INTERVIEW-codex-03-11.md)
+— ~40 questions, choice-format with recommendations, answerable compressed
+in one sitting. Ordered so that 03, 04 and 06 come first: those three gate
+Phase A, which gates everything else.
+Options:
+  A) Answer the batch in one founder window; chapters are written from the
+     answers and promoted to authoritative as each completes.
+  B) Answer 03/04/06 only, unblock Phase A, and defer the rest until their
+     phase comes up — less context-switching, but the later chapters then
+     sit on the critical path of their own phase.
+Burst recommends: **A** — the questions are cheap to answer together and
+expensive to answer piecemeal, because several cross-reference each other
+(bonus basis depends on target basis; recognition rewards depend on whether
+crew are bonus-eligible).
+Status: OPEN
+
 ### B-0001 — The test suite runs against the production database
 Task: — · Blocks: all DB-backed tests · Raised: 2026-08-11
 There is no test database. `DATABASE_URL` points at live Supabase, so
