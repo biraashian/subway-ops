@@ -9,7 +9,8 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | Push `main` to origin — blocked by the sandbox permission classifier, not by git | Part 0 | 2026-08-11 |
 | Upload the cash drop reconciliation sheet — it is the domain source for `codex/09-MONEY-AND-RECONCILIATION/` | B-0002 | 2026-08-11 |
 | Name the third-party delivery platforms, card merchant/processor, and payroll provider | B-0003 | 2026-08-11 |
-| **Answer the codex interview** — 40 questions at `bench/INTERVIEW-codex-03-11.md`. Gates every spec in Phases A–E | B-0006 | 2026-08-11 |
+| **Drain 7 bench items from the interview residue** — B-0009 (a contradiction) gates SPEC-BON; B-0011 gates all of Phase C; B-0012 gates 3 reconcilers; B-0013 gates comms | B-0007…B-0013 | 2026-08-11 |
+| Upload the cash drop reconciliation sheet — the operating record for half of codex 09 | B-0002 | 2026-08-11 |
 
 ## Provisioning horizon (external, long-lead)
 | Item | Feeds | Status |
@@ -23,7 +24,9 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 ## Runway — spec pipeline (floor: 3 tasks spec-scoped ahead)
 | Spec | Component | Status | Open Qs | Tasks ready |
 |---|---|---|---|---|
-| — | blocked on the codex (D-017); chapters 00–02 and 13 are authoritative, 03–11 await B-0006 | — | 1 (B-0006) | — |
+| SPEC-PPL-001 | Employee roster + wages | codex 06 authoritative — ready to spec | — | Phase A |
+| SPEC-TGT-001 | Targets and budgets | codex 04 authoritative — ready to spec | 1 (B-0007, additive) | Phase A |
+| SPEC-KPI-* | The four grains | codex 03 authoritative — ready to spec | 1 (B-0008, scope) | Phase E |
 
 ## Merge queue — strict serial: pre-merge → approval → /close
 (empty)
@@ -33,7 +36,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 |---|---|---|---|---|
 | T-0000 | Install the Burst harness | — (bootstrap: installs the anchoring machinery) | merged | `main` |
 | T-0001 | Codex chapters 00–02, 13, and the codex gate | codex/ (harvest) | built, awaiting audit | `burst/part-2-codex` |
-| T-0002 | Codex chapters 03–11 | codex/ (interview) | blocked on B-0006 | — |
+| T-0002 | Codex chapters 03–11 | B-0006 (interview) | built, awaiting audit | `burst/part-2-codex-interview` |
 
 ## Backlog (written by /stubs)
 (run /stubs once `codex/12-PROMPTS/` exists)

@@ -31,15 +31,15 @@ has holes.
 | 00 | [INSTITUTION](00-INSTITUTION/README.md) — what this business is and who owns what | authoritative | harvested |
 | 01 | [CALENDAR](01-CALENDAR/README.md) — business day and week | authoritative | harvested |
 | 02 | [DATA-MODEL](02-DATA-MODEL/README.md) — table shapes, money, time, idempotency | authoritative | harvested |
-| 03 | MEASUREMENT — what a KPI means at each grain | not written | founder interview |
-| 04 | TARGETS-AND-BUDGETS — what a target is and who sets it | not written | founder interview |
-| 05 | COMPENSATION — bonus plan anatomy | not written | founder interview |
-| 06 | PEOPLE — roster lifecycle | not written | founder interview |
-| 07 | SAFETY-HEALTH-AND-RECORDS — what must be recorded, and for how long | not written | founder interview |
-| 08 | SCHEDULING-AND-HOURS — schedules, exceptions, the custody chain | not written | founder interview |
-| 09 | MONEY-AND-RECONCILIATION — every money path and its tolerance | not written | founder interview + B-0002 |
-| 10 | RECOGNITION — tasks, grading, the weekly awards | not written | founder interview |
-| 11 | COMMS — Discord as the single channel | not written | founder interview |
+| 03 | [MEASUREMENT](03-MEASUREMENT/README.md) — what a KPI means at each grain | authoritative | interview |
+| 04 | [TARGETS-AND-BUDGETS](04-TARGETS-AND-BUDGETS/README.md) — what a target is and who sets it | authoritative | interview |
+| 05 | [COMPENSATION](05-COMPENSATION/README.md) — bonus plan anatomy | draft (B-0009) | interview |
+| 06 | [PEOPLE](06-PEOPLE/README.md) — roster lifecycle | authoritative | interview |
+| 07 | [SAFETY-HEALTH-AND-RECORDS](07-SAFETY-HEALTH-AND-RECORDS/README.md) — what must be recorded, and for how long | authoritative | interview |
+| 08 | [SCHEDULING-AND-HOURS](08-SCHEDULING-AND-HOURS/README.md) — schedules, exceptions, the custody chain | draft (B-0011) | interview |
+| 09 | [MONEY-AND-RECONCILIATION](09-MONEY-AND-RECONCILIATION/README.md) — every money path and its tolerance | draft (B-0002, B-0012) | interview |
+| 10 | [RECOGNITION](10-RECOGNITION/README.md) — tasks, grading, the weekly awards | authoritative | interview |
+| 11 | [COMMS](11-COMMS/README.md) — Discord as the single channel | draft (B-0013) | interview |
 | 12 | PROMPTS — the dependency-ordered source queue | not written | derived from 00–11 |
 | 13 | BUILD — coding conventions | authoritative | harvested |
 
@@ -49,9 +49,11 @@ the bottom of `DECISIONS.md`. Those documents are retired to `legacy/` and are
 no longer authoritative — if they disagree with a chapter here, the chapter
 wins.
 
-Chapters 03–11 do not exist yet, and that is the honest state: the domain they
-describe has never been written down anywhere. It lives in the founder's head.
-D-017 blocks new specs until they are authored.
+Chapters 03–11 come from the founder interview of 2026-08-11 (B-0006). Six are
+authoritative. Four are draft, each blocked on a specific unanswered question
+rather than on general incompleteness — a chapter is authoritative only when
+**every** spec that would anchor to it can be written, and a draft names the one
+thing standing in the way. Nothing was filled in by inference (Rule 1).
 
 ## Gate
 
