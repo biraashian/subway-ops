@@ -6,11 +6,11 @@
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
 version:        1.0.0
-status:         planned
+status:         tasked
 owner:          amitoj
 inherits:       codex@2026-08-11
 source:         codex/06-PEOPLE (greenfield; reads the existing stg_timeclock)
-phase:          plan
+phase:          tasks
 interview:      6 Qs asked 2026-08-11, 6 decided — see §10
 bound_by:
   - codex/06-PEOPLE            # the whole chapter — this spec is its implementation
@@ -21,6 +21,7 @@ bound_by:
   - D-020                      # wages are hand-kept; FreshConnect has none
 open_questions: 2              # Q-007 (labor-dollar mart), Q-008/B-0021 (AC-019 grain)
 l1_plan:        design/PLAN-SPEC-PPL-001.md
+build_sheet:    T-0003 … T-0009 (7 tasks)
 ```
 
 ## 1 · Intent
@@ -338,16 +339,25 @@ EARS lines above · §9 fully covered.
 
 ## 9 · Traceability Matrix
 
-| Story | Requirement | Acceptance | Task | Test |
-|---|---|---|---|---|
-| US-001 | REQ-001 | AC-001…AC-004 | — | — |
-| US-003 | REQ-002 | AC-005…AC-010 | — | — |
-| US-002 | REQ-003 | AC-011…AC-017 | — | — |
-| US-004 | REQ-004 | AC-018…AC-021 | — | — |
-| US-005 | REQ-005 | AC-022…AC-025 | — | — |
-| US-003 | REQ-006 | AC-026…AC-031 | — | — |
+| Story | Requirement | Acceptance | Task |
+|---|---|---|---|
+| US-001 | REQ-001 | AC-001…AC-004 | T-0006 |
+| US-003 | REQ-002 | AC-005, AC-006 | T-0006 |
+| US-003 | REQ-002 | AC-007…AC-010 | T-0008 |
+| US-002 | REQ-003 | AC-011, AC-014 | T-0004 (schema), T-0007 (code) |
+| US-002 | REQ-003 | AC-012, AC-013, AC-015…AC-017 | T-0007 |
+| US-004 | REQ-004 | AC-018, AC-020 | T-0003 (mechanism), T-0009 (people) |
+| US-004 | REQ-004 | AC-019, AC-021 | T-0009 |
+| US-005 | REQ-005 | AC-022 | T-0004 |
+| US-005 | REQ-005 | AC-023, AC-025 | T-0008 |
+| US-005 | REQ-005 | AC-024 | T-0006 |
+| US-003 | REQ-006 | AC-026, AC-027, AC-029, AC-030 | T-0005 |
+| US-003 | REQ-006 | AC-028 | T-0006 |
+| US-003 | REQ-006 | AC-031 | T-0004 |
 
-Tasks and tests are filled by `/tasks`.
+Coverage verified both ways: 31 of 31 ACs land in at least one task; every task
+carries at least one AC; no task cites an AC this spec does not define. Tests
+are named in each task file.
 
 ## 10 · Open Questions & Assumptions
 
