@@ -535,7 +535,7 @@ assert_evidence_complete() {
         echo "evidence: INCOMPLETE — $missing item(s) missing"
         return 1
     fi
-    echo "evidence: journal + ledger present"
+    echo "evidence: journal present, decisions declared"
     return 0
 }
 

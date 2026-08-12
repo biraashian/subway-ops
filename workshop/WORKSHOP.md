@@ -31,7 +31,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 ## Tasks
 | Task | Title | Anchors | Status | Where |
 |---|---|---|---|---|
-| — | Part 1 harness install is pre-Burst scaffolding; it carries no T-id | — | in progress | `burst/part-1-harness` |
+| T-0000 | Install the Burst harness | — (bootstrap: installs the anchoring machinery) | merged | `main` |
 
 ## Backlog (written by /stubs)
 (run /stubs once `codex/12-PROMPTS/` exists)
