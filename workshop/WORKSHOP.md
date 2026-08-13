@@ -41,14 +41,14 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0000 | Install the Burst harness | — (bootstrap: installs the anchoring machinery) | merged | `main` |
 | T-0001 | Codex chapters 00–02, 13, and the codex gate | codex/ (harvest) | merged | `main` |
 | T-0002 | Codex chapters 03–11 | B-0006 (interview) | merged | `main` |
-| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 | queued — code done; needs its drift declaration + gate re-run | `forge/T-0003` |
+| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 | **queued — unblocked**; rebase onto main, observes no drift (D-028 §4), re-run gate | `forge/T-0003` |
 | T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | queued (needs T-0003) | — |
 | T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | queued | — |
 | T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 | queued (needs T-0003/4/5) | — |
 | T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 | queued (needs T-0004/5) | — |
 | T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | queued (needs T-0006/7) | — |
 | T-0009 | Completeness sweep, CLI, daily_pull wiring | AC-018…AC-021 | queued (needs T-0003/6/7) | — |
-| T-0010 | Schema drift becomes declared, not merely detected | D-024 · D-028 | **awaiting your review** (audit GREEN) | `forge/T-0010` |
+| T-0010 | Schema drift becomes declared, not merely detected | D-024 · D-028 | merged | `main` |
 | T-0011 | DB tests on containerised Postgres | D-025 | queued (founder-paired) | — |
 | T-0012 | Format the repo once, re-enable the gate line | D-027 | queued (run when nothing else is in flight) | — |
 

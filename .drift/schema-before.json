@@ -425,6 +425,53 @@
       "week_end_date"
     ]
   },
+  "ops_worklist_items": {
+    "columns": {
+      "assigned_role": {
+        "nullable": false,
+        "type": "text"
+      },
+      "created_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "due_date": {
+        "nullable": true,
+        "type": "date"
+      },
+      "id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "kind": {
+        "nullable": false,
+        "type": "text"
+      },
+      "resolved_at": {
+        "nullable": true,
+        "type": "timestamp with time zone"
+      },
+      "resolved_by": {
+        "nullable": true,
+        "type": "text"
+      },
+      "state": {
+        "nullable": false,
+        "type": "text"
+      },
+      "subject_ref": {
+        "nullable": false,
+        "type": "text"
+      },
+      "summary": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "id"
+    ]
+  },
   "raw_controlsheet": {
     "columns": {
       "fetched_at": {
