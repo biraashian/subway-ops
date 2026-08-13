@@ -9,7 +9,11 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | Push `main` to origin — blocked by the sandbox permission classifier, not by git | Part 0 | 2026-08-11 |
 | Upload the cash drop reconciliation sheet — it is the domain source for `codex/09-MONEY-AND-RECONCILIATION/` | B-0002 | 2026-08-11 |
 | Name the third-party delivery platforms, card merchant/processor, and payroll provider | B-0003 | 2026-08-11 |
-| **Drain 7 bench items from the interview residue** — B-0009 (a contradiction) gates SPEC-BON; B-0011 gates all of Phase C; B-0012 gates 3 reconcilers; B-0013 gates comms | B-0007…B-0013 | 2026-08-11 |
+| **B-0011** — the timecard exception taxonomy. Gates all of Phase C | B-0011 | 2026-08-11 |
+| **B-0012** — deposit ageing, royalty basis, invoice variance. Gates 3 reconcilers | B-0012 | 2026-08-11 |
+| **B-0013** — real-time vs cadence routing. Gates SPEC-COM | B-0013 | 2026-08-11 |
+| **B-0023** — crew scorecard weights and the payout cap. Gates SPEC-BON | B-0023 | 2026-08-13 |
+| **T-0011 is founder-paired** — infrastructure type, not built autonomously | D-025 | 2026-08-13 |
 | Upload the cash drop reconciliation sheet — the operating record for half of codex 09 | B-0002 | 2026-08-11 |
 
 ## Provisioning horizon (external, long-lead)
@@ -20,6 +24,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | Anthropic API key for receipt extraction | SPEC-CAP-001 | not started |
 | Monarch export cadence + format sample | SPEC-RCN-001 | not started |
 | Fly.io app for the new web surface | SPEC-APP-001 | not started |
+| `stg_timeclock` → TIMESTAMPTZ (B-0019) — must land before SPEC-SCH-003 | Phase C | decided, unminted (no anchor yet) |
 
 ## Runway — spec pipeline (floor: 3 tasks spec-scoped ahead)
 | Spec | Component | Status | Open Qs | Tasks ready |

@@ -1,14 +1,16 @@
 ---
 status: draft
 source: founder interview 2026-08-11 (B-0006 §5)
-blocked_by: B-0009
+blocked_by: B-0023
 ---
 
 # 05 — Compensation
 
-**Draft.** The manager structure is settled; the crew scorecard is not, because
-answer 5.2 and answer 3.1 disagree with each other. See the conflict below. No
-spec may anchor to this chapter until B-0009 resolves.
+**Draft.** The *structure* is now fully settled — B-0009 resolved the crew
+scorecard on 2026-08-13. What remains open is arithmetic: the scorecard's
+weights and the payout cap are numbers nobody has set (**B-0023**). A bonus
+spec cannot be written against "weighted" without the weights, so the chapter
+stays draft on those two numbers alone.
 
 ## Eligibility
 
@@ -28,31 +30,34 @@ for revenue bought with overtime.
 The gate threshold is the store's labor target for the period, per
 [04-TARGETS-AND-BUDGETS](../04-TARGETS-AND-BUDGETS/README.md).
 
-### Crew — weighted scorecard (5.2B) — **components open**
+### Crew — team-based weighted scorecard (5.2B, resolved by B-0009 → B)
 
-A weighted scorecard across several metrics rather than a single number.
+A crew member's scorecard combines **their store's result** with **their own
+throughput and training**:
 
-**Which metrics is unresolved (B-0009).** The interview's option text listed
-"sales / food / labor / training", but
-[03-MEASUREMENT](../03-MEASUREMENT/README.md) §3.1 says food cost, labor cost
-and sales totals are *invalid at employee grain* — an employee controls none of
-them. Both answers came from the same sitting and they cannot both stand.
+| Component | Grain | Source |
+|---|---|---|
+| Store sales attainment | store | [04-TARGETS](../04-TARGETS-AND-BUDGETS/README.md) |
+| Store food cost attainment | store | 04 |
+| Store labor attainment | store | 04 |
+| Own throughput | employee | [03-MEASUREMENT](../03-MEASUREMENT/README.md) §3.1 |
+| Own training compliance | employee | [07-RECORDS](../07-SAFETY-HEALTH-AND-RECORDS/README.md) |
 
-The three ways out, none of them assumed:
+This is what resolves the contradiction between answers 5.2 and 3.1. The
+interview named sales, food and labor as bonus components; 3.1 says those are
+invalid *at employee grain* because an employee controls none of them. Both
+stand, because the store metrics stay at **store** grain — the crew member
+**shares in** the store's result rather than being **measured on** it. Only
+throughput and training are attributed to the individual, and those are exactly
+the two things 03 permits there.
 
-- **A)** Crew scorecard uses only what 03 permits at employee grain — throughput
-  (units/labor hour, transactions/hour, average ticket) plus training
-  compliance. Internally consistent; narrow.
-- **B)** Crew scorecard is **team-based**: their store's sales / food / labor
-  attainment, plus their own throughput and training. Common in restaurants, and
-  consistent with 03 because the store metrics stay at store grain — the crew
-  member shares in the store's result rather than being measured on it
-  individually.
-- **C)** Revise 3.1 to admit these metrics at employee grain. Not recommended;
-  3.1's reasoning holds.
+The practical consequence is worth stating: a crew member's bonus moves when
+their store's food cost moves, even in a week they worked one shift. That is
+intended — it is a team incentive — but it must be explained that way when the
+plan is communicated, or it reads as arbitrary.
 
-Burst recommends **B**. It is the only option that pays crew on the things the
-interview named without attributing store economics to individuals.
+**Still open (B-0023):** the weights across those five components, and the
+payout cap. Both are numbers only the owner can set.
 
 ## Scale
 
@@ -60,8 +65,8 @@ interview named without attributing store economics to individuals.
 upward, linear to a cap.
 
 The floor exists so near-misses are not paid as hits; the slide exists so that
-99% is not treated the same as 60%. The cap prevents a single freak week from
-paying out unboundedly — its value is not yet set and belongs with B-0009.
+99% is not treated the same as 60%. The cap prevents a single freak period from
+paying out unboundedly — **its value is not yet set (B-0023)**.
 
 ## Period
 

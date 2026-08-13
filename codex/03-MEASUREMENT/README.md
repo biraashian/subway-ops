@@ -54,10 +54,17 @@ them **off the employee card**.
 
 That decision is respected here and the consequence is stated plainly: an
 employee's own page, and their manager's view of them, show throughput only.
-Whether the same numbers should exist as an office-and-owner-only
-loss-prevention view — never surfaced to the employee, never part of
-recognition or bonus — is a separate question and is open as **B-0008**. It is
-not assumed either way.
+
+**B-0008 decided (2026-08-13): the same numbers DO exist as an
+office-and-owner-only loss-prevention view.** Never surfaced to the employee,
+never shown to their store manager, never an input to recognition or bonus.
+
+The distinction is the point: what an employee is *judged* on and what the
+owner can *see* are different questions. Void and refund rates are a
+loss-prevention signal for the business, not a performance measure for a
+person — a high void rate is a reason to look, not a reason to score someone
+lower. Putting it on the employee card would make it a performance metric by
+placement alone, whatever the intent.
 
 ## Store grain
 

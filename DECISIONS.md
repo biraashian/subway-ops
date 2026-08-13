@@ -141,6 +141,59 @@ as the record of why the data layer looks the way it does.
 
 ---
 
+
+## D-024 — Schema drift is declared, not merely detected (was B-0022)
+- **Decision:** a task that intends to change the schema declares its expected
+  drift in `.drift/expected/T-####.txt`. The gate passes when observed drift
+  matches the declaration exactly, and fails on undeclared drift **or** on a
+  declaration that no longer matches. Recorded 2026-08-13.
+- **Reasoning:** the check as written exits 1 on any drift, so no migration
+  task could ever reach a green pre-merge — it blocked T-0003 on the first
+  task that touched a migration. The check's own message already said drift
+  "must be INTENDED"; it simply had no way to record that a human agreed.
+- **Ruled out:** tracing drift to migrations on the branch (automatic, but
+  blind to an ALTER a migration makes by accident — the case most worth
+  catching); demoting drift to a warning at pre-merge (removes the review
+  surface exactly where review happens).
+- **Consequences:** the declaration is a reviewable artifact in the diff. A
+  stale declaration reds the gate, so it cannot rot silently.
+- **Reopen if:** declarations become copy-paste noise rather than a read.
+
+## D-025 — Tests run against a containerised Postgres, never production (was B-0001)
+- **Decision:** DB-backed tests run against Postgres in a container, with
+  migrations applied per session. `DATABASE_URL` no longer points at Supabase
+  during a test run. Recorded 2026-08-13.
+- **Reasoning:** the tests need Postgres, not Supabase. Two real defects came
+  from the current arrangement — a test that hard-deleted a live store's
+  history on every run for three months, and DB-backed tests writing junk rows
+  into `ops_job_runs` that surface on the system status page.
+- **Ruled out:** a second Supabase project (a second cloud dependency, and a
+  bug in isolation still lands on production infra); schema-per-run inside the
+  existing database (same objection, cheaper).
+- **Consequences:** the synthetic-store and derived-date conventions in
+  codex 13 stay in force — they are cheap and they are the last line if the
+  container is ever bypassed.
+- **Reopen if:** container startup dominates the gate's runtime.
+
+## D-026 — The coverage floor holds at 75 until Streamlit retires (was B-0004)
+- **Decision:** the gate's coverage floor stays at 75%. Raise to 80% once the
+  Streamlit pages are retired under D-019. Recorded 2026-08-13.
+- **Reasoning:** measured 77–78% today; the whole gap is Streamlit page
+  modules at 21–43%, and those pages are being replaced. Covering them now is
+  work with a short half-life.
+- **Reopen if:** D-019's app reaches parity and the pages are deleted — raise
+  to 80 against what remains, in the same task that deletes them.
+
+## D-027 — The repo is formatted once, in a commit of its own (was B-0005)
+- **Decision:** one `refactor` task runs `ruff format .` across the repo,
+  commits the reformat alone with no behavioral change, and re-enables the
+  `ruff format --check` line in `scripts/verify.sh` in the same commit.
+  Recorded 2026-08-13.
+- **Reasoning:** 68 files would change, ~58 of them pre-existing. Formatting
+  incrementally leaves the gate line disabled for months while drift persists.
+  The diff is mechanical and `git diff -w` proves it changed nothing else.
+- **Reopen if:** never; after this the gate keeps it true.
+
 ## Pre-Burst build log (verbatim)
 
 The original dated entries from the pre-Burst build. Kept as-is: they record

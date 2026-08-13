@@ -5,7 +5,7 @@
 ```yaml
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
-version:        1.0.0
+version:        1.1.0
 status:         tasked
 owner:          amitoj
 inherits:       codex@2026-08-11
@@ -19,7 +19,7 @@ bound_by:
   - codex/03-MEASUREMENT       # the person is the employee grain
   - codex/08-SCHEDULING-AND-HOURS   # the 40-hour threshold (draft; only the threshold is used)
   - D-020                      # wages are hand-kept; FreshConnect has none
-open_questions: 2              # Q-007 (labor-dollar mart), Q-008/B-0021 (AC-019 grain)
+open_questions: 0              # Q-007 and Q-008 decided 2026-08-13 (B-0020, B-0021)
 l1_plan:        design/PLAN-SPEC-PPL-001.md
 build_sheet:    T-0003 … T-0009 (7 tasks)
 ```
@@ -190,10 +190,12 @@ Serves **US-004** · Governed by **codex/06-PEOPLE "A stub is incomplete"**
   - `AC-018` — WHEN a person becomes incomplete, the roster service SHALL open
     one `ops_worklist_items` row assigned to `office`, and SHALL NOT open a
     duplicate while one is already open for that person.
-  - `AC-019` — WHEN a labor-dollar aggregate includes hours from an incomplete
-    person, the roster service SHALL exclude those hours from the dollar total
-    and SHALL mark the aggregate `partially_costed` with a count of excluded
-    persons.
+  - `AC-019` — WHEN a **per-person, per-business-week** labor-dollar figure
+    includes hours from an incomplete person, the roster service SHALL exclude
+    those hours from the dollar total and SHALL mark that figure
+    `partially_costed` with a count of excluded persons. Store- and
+    territory-level rollups of `partially_costed` are the labor-dollar mart's
+    concern, not this spec's.
   - `AC-020` — WHEN the last missing field is supplied, the roster service
     SHALL resolve the open worklist item.
   - `AC-021` — WHILE a person is incomplete, the roster service SHALL still
@@ -383,9 +385,17 @@ are named in each task file.
   one-person-many-assignments rule: 25h at store A and 25h at store B is 10
   overtime hours, and the premium has to land somewhere. Candidates:
   chronological (the hours after the 40th, wherever worked), pro-rata by hours,
-  or wholly to the store where the crossing occurred. **Blocks the labor-dollar
-  mart, not this spec** — CON-005 returns a per-person weekly cost and NG-007
-  fences the allocation out. Raised as **B-0020**.
+  or wholly to the store where the crossing occurred. **DECIDED 2026-08-13 → A
+  (B-0020): chronological.** The premium lands on whichever store the person
+  was working when the hours past the 40th occurred, ordered by `clock_in`.
+  It is the only rule that survives a store manager asking "why is my store
+  carrying that?", and the data already supports it because `clock_in` orders
+  shifts across assignments.
+
+  Still fenced out of *this* spec by NG-007: `CON-005` returns a per-person
+  weekly figure, and the allocation is applied by the labor-dollar mart. The
+  decision is recorded here so that mart's spec inherits it rather than
+  re-deciding.
 
 **Assumptions**
 
@@ -398,9 +408,6 @@ are named in each task file.
   `business_date` — but codex 08's clock-versus-schedule comparison will, across
   a DST boundary.
 
-- `Q-008` — **What grain does AC-019's "labor-dollar aggregate" mark
-  `partially_costed` at?** codex 03 says a metric without a stated grain is a
-  gap. Read by the L1 plan as per person per business week, since `CON-005` is
-  the only aggregate this spec produces; store-level marking rides with the
-  labor-dollar mart. Blocks nothing — the design does not depend on the answer.
-  Raised as **B-0021**.
+- `Q-008` — **DECIDED 2026-08-13 → B (B-0021).** AC-019 now names its grain
+  explicitly: per person, per business week. Same behavior as the L1 plan
+  already assumed; the AC is no longer ambiguous to the next reader.
