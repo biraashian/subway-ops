@@ -5,6 +5,40 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0022 — The schema-drift gate blocks every schema_change task
+Task: T-0003 (halted) · Blocks: T-0003, T-0004, and every future migration · Raised: 2026-08-13
+`scripts/schema_snapshot.py --diff` returns exit 1 on ANY drift, and
+`verify.sh` treats a non-zero exit as a failed check. So a task whose
+whole purpose is to add a table can never reach a green pre-merge.
+
+The check's own message already knows this — it prints "Schema drift is
+not automatically wrong — a migration is supposed to change the schema.
+It must be INTENDED" — but it has no way to record that a human agreed,
+so it fails anyway. Right intent, wrong mechanism. My defect, introduced
+in T-0000.
+
+T-0003's code is complete: 12 tests, every AC verified individually,
+adhoc green, full suite 502 passed. The ONLY pre-merge failure is this.
+
+Options:
+  A) Acknowledgement file — the task declares its expected drift (e.g.
+     `.drift/expected/T-0003.txt`), the gate passes when observed drift
+     matches the declaration and fails when it does not. Keeps the check
+     adversarial: undeclared drift still reds, and a stale declaration
+     reds too.
+  B) Trace drift to migrations — the gate passes if every changed table
+     appears in a migration added on this branch. Fully automatic, no
+     declaration to maintain, but it cannot see an ALTER that a
+     migration makes by accident, which is precisely the case worth
+     catching.
+  C) Demote drift to a warning at pre-merge; assert only at post-merge.
+     Cheapest. Also removes the review surface exactly where review
+     happens, so a bad migration reaches main before anyone looks.
+Burst recommends: **A** — it keeps the property that made the check
+worth writing (drift must be looked at by a person) while letting the
+look happen once, in the task, instead of blocking forever.
+Status: OPEN
+
 ### B-0021 — AC-019 names no grain for `partially_costed`
 Task: SPEC-PPL-001 Q-008 · Blocks: nothing · Raised: 2026-08-11
 AC-019 says "a labor-dollar aggregate" is marked `partially_costed`.

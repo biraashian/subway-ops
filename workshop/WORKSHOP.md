@@ -6,6 +6,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 ## Needs you
 | What | Ref | Since |
 |---|---|---|
+| **Decide B-0022** — the schema-drift gate blocks every migration task. T-0003 is built and green except for this; T-0004 cannot start either | B-0022 | 2026-08-13 |
 | Push `main` to origin — blocked by the sandbox permission classifier, not by git | Part 0 | 2026-08-11 |
 | Upload the cash drop reconciliation sheet — it is the domain source for `codex/09-MONEY-AND-RECONCILIATION/` | B-0002 | 2026-08-11 |
 | Name the third-party delivery platforms, card merchant/processor, and payroll provider | B-0003 | 2026-08-11 |
