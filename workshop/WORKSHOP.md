@@ -12,6 +12,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | **B-0012** — deposit ageing, royalty basis, invoice variance. Gates 3 reconcilers | B-0012 | 2026-08-11 |
 | **B-0013** — real-time vs cadence routing. Gates SPEC-COM | B-0013 | 2026-08-11 |
 | **B-0023** — crew scorecard weights and the payout cap. Gates SPEC-BON | B-0023 | 2026-08-13 |
+| **B-0024** — does a drift declaration assert causation or accounting? Gates T-0010's merge and T-0003's resumption | B-0024 | 2026-08-13 |
 | **T-0011 is founder-paired** — infrastructure type, not built autonomously | D-025 | 2026-08-13 |
 | Upload the cash drop reconciliation sheet — the operating record for half of codex 09 | B-0002 | 2026-08-11 |
 
@@ -48,7 +49,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 | queued (needs T-0004/5) | — |
 | T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | queued (needs T-0006/7) | — |
 | T-0009 | Completeness sweep, CLI, daily_pull wiring | AC-018…AC-021 | queued (needs T-0003/6/7) | — |
-| T-0010 | Schema drift becomes declared, not merely detected | D-024 | **built, awaiting audit** | `forge/T-0010` |
+| T-0010 | Schema drift becomes declared, not merely detected | D-024 | **audit failed(B-0024)** | `forge/T-0010` |
 | T-0011 | DB tests on containerised Postgres | D-025 | queued (founder-paired) | — |
 | T-0012 | Format the repo once, re-enable the gate line | D-027 | queued (run when nothing else is in flight) | — |
 

@@ -5,6 +5,64 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0024 — Does a drift declaration assert causation or accounting?
+Task: T-0010 (audit failed) · Blocks: T-0010 merge, and T-0003's resumption · Raised: 2026-08-13
+
+**Specified.** D-024: "a task that intends to change the schema declares its
+expected drift in `.drift/expected/T-####.txt`", and its consequence line — "the
+declaration is a reviewable artifact in the diff". T-0010's own NOTES restate it:
+"a reader sees, in the diff, exactly which schema objects **the task intended to
+change**." Both read causation.
+
+**Observed.** T-0010 changes no schema, and ships `.drift/expected/T-0010.txt`
+declaring `+ table ops_worklist_items (10 columns)` — T-0003's table, live in the
+shared database because T-0003's migration `020` was applied during its build
+while T-0003 sits unmerged. To make that line honest the build redefined what the
+file asserts, from causation to "every schema difference between the baseline and
+the live database is accounted for", and wrote the new definition into
+`.drift/expected/README.md` as governing text. The journal states it plainly:
+"So I changed the definition rather than the declaration." That is a change to a
+recorded decision, made at build time — Rule 1 says bench it, not fill it. The
+mechanism itself is sound; only its meaning is undecided.
+
+**Two consequences, both reproduced against the delivered gate:**
+1. T-0010's post-merge rotates the baseline to include `ops_worklist_items`. When
+   T-0003 resumes and declares its own table — which T-0010's FORBIDDEN_ACTIONS
+   explicitly reserves for it — the line is declared but not observed → STALE →
+   RED. Verified: `--before schema-now --after schema-now --expected <T-0003
+   line>` exits 1. As delivered, T-0003 cannot do the thing it was told to do.
+2. Under the accounting reading T-0003 declares nothing, so the reviewable
+   artifact lands on the wrong task: T-0003's diff shows a migration and no
+   declaration, and T-0010's diff shows a table it never touched.
+
+Options:
+  A) **Ratify the accounting semantics** as an amendment to D-024, and write the
+     predecessor rule that is currently missing: a task inherits its unmerged
+     predecessor's drift, attributes it in a comment, and the declaration is
+     retired when the originating task merges. Cheap — the delivered code already
+     does this — but the T-0003 rule must be stated, because today it silently
+     forbids T-0003 from declaring its own table.
+  B) **Hold causation.** The declaration names only what the task changed, and
+     cross-task drift is handled by a second mechanism — the gate diffing against
+     the baseline plus the declarations still open on unmerged branches, or the
+     baseline rotating at build rather than at post-merge. Keeps D-024 as
+     recorded; costs a mechanism.
+  C) **Remove the cause.** Land D-025 (T-0011, containerised Postgres) before any
+     further migration task, so a build stops applying migrations to the shared
+     database and this class of drift stops existing. Correct at the root, but
+     T-0011 is founder-paired and T-0003/T-0004 wait on it.
+Burst recommends: **A**, with the T-0003 rule written down — the accounting
+reading is the one that still catches "a table appeared and nobody knows whose it
+is", which is the more alarming case, and the delivered mechanism already
+implements it. C is right underneath and does not conflict with A.
+[recommendation, not a decision]
+
+Also for the record, not a decision: `.drift/expected/T-0010.txt` is outside
+T-0010's DELIVERABLES (Rule 4). Whichever option is taken, that file's existence
+is part of it.
+
+Status: OPEN
+
 ### B-0023 — The crew scorecard weights and the payout cap
 Task: — · Blocks: codex 05 → all of SPEC-BON · Raised: 2026-08-13
 B-0009 settled the crew scorecard's STRUCTURE (team-based: store
