@@ -15,3 +15,4 @@ this file only points at it.
 | 2026-08-13 | repo | branch restructure — /bench cherry-picked to `main`; T-0003 and T-0010 rebased to one task each; board repaired | `main` | backup tags `backup/pre-restructure/*` |
 | 2026-08-13 | /bench | B-0024 → A; D-028 amends D-024 with the predecessor rule; T-0010 → queued for rework | `main` | DECISIONS.md · bench/BENCH.md |
 | 2026-08-13 | T-0010 | built (rework) — B-0024 folded; predecessor rule implemented and tested | `forge/T-0010` | journal/T-0010.md · test_logs/T-0010/ |
+| 2026-08-13 | /audit T-0010 | GREEN — 17/17 tests, 9 ACs re-exercised by hand, 5 fences clean, pre-merge re-run 0 at `a1b892b` | `forge/T-0010` | journal/T-0010.md · test_logs/T-0010/ |

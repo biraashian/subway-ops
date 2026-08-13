@@ -48,7 +48,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 | queued (needs T-0004/5) | — |
 | T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | queued (needs T-0006/7) | — |
 | T-0009 | Completeness sweep, CLI, daily_pull wiring | AC-018…AC-021 | queued (needs T-0003/6/7) | — |
-| T-0010 | Schema drift becomes declared, not merely detected | D-024 · D-028 | **built, awaiting audit** (rework) | `forge/T-0010` |
+| T-0010 | Schema drift becomes declared, not merely detected | D-024 · D-028 | **awaiting your review** (audit GREEN) | `forge/T-0010` |
 | T-0011 | DB tests on containerised Postgres | D-025 | queued (founder-paired) | — |
 | T-0012 | Format the repo once, re-enable the gate line | D-027 | queued (run when nothing else is in flight) | — |
 
