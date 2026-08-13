@@ -152,7 +152,7 @@ headline() {
         "ruff check")       h=$(grep -oE 'All checks passed!|Found [0-9]+ error' <<< "$out" | tail -1) ;;
         "invariants")       h=$(grep -oE '[0-9]+ passed, [0-9]+ failed' <<< "$out" | tail -1) ;;
         "schema snapshot")  h=$(grep -oE '[0-9]+ tables?, [0-9]+ columns?' <<< "$out" | tail -1) ;;
-        "schema drift")     h=$(grep -oE 'no drift|[0-9]+ change\(s\)' <<< "$out" | tail -1) ;;
+        "schema drift")     h=$(grep -oE 'no drift|drift matches declaration \([0-9]+ change\(s\), all declared\)|[0-9]+ UNDECLARED change\(s\)|[0-9]+ STALE declaration line\(s\)|[0-9]+ change\(s\)' <<< "$out" | head -2 | paste -sd' · ' -) ;;
         "drift_check.py")   h=$(grep -oE 'GREEN|RED|[0-9]+ errors?, [0-9]+ warnings?' <<< "$out" | tr '\n' ' ') ;;
         "verify-codex.sh (15 checks)")
                             h=$(grep -oE 'Passed: [0-9]+' <<< "$out" | tail -1)
@@ -642,9 +642,21 @@ if in_phase pre-merge; then
             "The snapshot step did not produce \`$SCHEMA_OUT\`, so there is nothing to diff against the baseline."
         failures+=("schema drift (no snapshot)")
     else
-        run_check "schema drift" \
-            "$RUN python '$SCHEMA_SNAPSHOT' --diff --before '$BASELINE' --after '$SCHEMA_OUT'" \
-            "$SCHEMA_SNAPSHOT"
+        # D-024: a task that intends to change the schema declares the change
+        # in .drift/expected/<T-id>.txt, and the gate checks the observed drift
+        # against that statement — undeclared drift fails, and so does a
+        # declaration that no longer matches. With no declaration the check
+        # behaves exactly as it did before: any drift is a failure.
+        DRIFT_DECL="$REPO_ROOT_DIR/.drift/expected/${TASK_ID}.txt"
+        if [[ -f "$DRIFT_DECL" ]]; then
+            run_check "schema drift" \
+                "$RUN python '$SCHEMA_SNAPSHOT' --diff --before '$BASELINE' --after '$SCHEMA_OUT' --expected '$DRIFT_DECL'" \
+                "$SCHEMA_SNAPSHOT"
+        else
+            run_check "schema drift" \
+                "$RUN python '$SCHEMA_SNAPSHOT' --diff --before '$BASELINE' --after '$SCHEMA_OUT'" \
+                "$SCHEMA_SNAPSHOT"
+        fi
     fi
 else
     note_skip "schema drift"

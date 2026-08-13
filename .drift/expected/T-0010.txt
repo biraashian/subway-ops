@@ -1,0 +1,16 @@
+# T-0010 — Schema drift becomes declared rather than merely detected (D-024)
+#
+# THIS TASK CHANGES NO SCHEMA. Its DELIVERABLES are scripts/schema_snapshot.py,
+# scripts/verify.sh, this directory's README, and a test file.
+#
+# The single line below is T-0003's table. Its migration (020_worklist.sql) was
+# applied to the shared database during T-0003's build, and T-0003 is committed
+# on forge/T-0003 but not yet merged — so the baseline, which rotates at the
+# previous task's post-merge, does not carry it yet.
+#
+# Declared rather than left undeclared because the file's job is that no schema
+# difference goes unaccounted for. Attribution belongs in a comment; the fact
+# belongs on the line. See this directory's README, "What the declaration
+# asserts", and B-0001 / D-025 for why a build applies migrations to production
+# at all.
++ table ops_worklist_items (10 columns)
