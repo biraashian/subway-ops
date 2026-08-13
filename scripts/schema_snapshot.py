@@ -114,9 +114,80 @@ def diff(before: dict[str, Any], after: dict[str, Any]) -> list[str]:
     return changes
 
 
+def parse_declaration(text: str) -> list[str]:
+    """Parse a `.drift/expected/T-####.txt` declaration into drift lines.
+
+    Blank lines and `#` comments are ignored, so a declaration can explain
+    itself to a reviewer — which is most of the point of having one.
+    """
+    lines = []
+    for raw in text.splitlines():
+        stripped = raw.split("#", 1)[0].strip()
+        if stripped:
+            lines.append(stripped)
+    return lines
+
+
+def compare_declaration(
+    observed: list[str], declared: list[str]
+) -> tuple[list[str], list[str]]:
+    """Return ``(undeclared, stale)`` drift lines.
+
+    ``undeclared`` — observed but not declared. The original protection: a
+    schema change nobody wrote down.
+
+    ``stale`` — declared but not observed. Equally a failure, and the reason
+    D-024 chose a declaration over a simple allowlist: a declaration that no
+    longer matches reality is *worse* than none, because it reads as
+    confirmation that someone looked.
+
+    Order-insensitive — a declaration is a set of facts, not a transcript.
+    """
+    obs, dec = set(observed), set(declared)
+    return sorted(obs - dec), sorted(dec - obs)
+
+
 def _load(path: Path) -> dict[str, Any]:
     data: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
     return data
+
+
+def _report_declared(changes: list[str], expected: Path) -> int:
+    """Declared-drift mode (D-024, amended by D-028). Returns an exit code.
+
+    The declaration accounts for every difference observed at gate time —
+    including drift inherited from an unmerged predecessor, which carries an
+    attributing comment. Undeclared drift fails as it always did; a stale line
+    fails too, and that is what retires an inherited declaration once its
+    predecessor merges.
+    """
+    if not expected.exists():
+        print(f"declaration not found: {expected}")
+        return 1
+
+    declared = parse_declaration(expected.read_text(encoding="utf-8"))
+    undeclared, stale = compare_declaration(changes, declared)
+
+    if not undeclared and not stale:
+        print(f"drift matches declaration ({len(changes)} change(s), all declared)")
+        return 0
+
+    if undeclared:
+        print(f"{len(undeclared)} UNDECLARED change(s) — not in {expected.name}:")
+        for line in undeclared:
+            print(f"  {line}")
+    if stale:
+        print(f"{len(stale)} STALE declaration line(s) — declared but not observed:")
+        for line in stale:
+            print(f"  {line}")
+    print(
+        f"\nEvery schema difference must be accounted for in {expected}, and "
+        "every declared line must still be true. An undeclared change is drift "
+        "nobody wrote down; a stale line is worse, because it reads as "
+        "confirmation that someone looked. If a line was inherited from a "
+        "predecessor that has now merged, retire it (D-028 rule 3)."
+    )
+    return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -125,12 +196,28 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--diff", action="store_true", help="compare two snapshots")
     parser.add_argument("--before", type=Path, help="baseline snapshot (with --diff)")
     parser.add_argument("--after", type=Path, help="current snapshot (with --diff)")
+    parser.add_argument(
+        "--expected",
+        type=Path,
+        help="declaration of intended drift (with --diff) — see .drift/expected/README.md",
+    )
     args = parser.parse_args(argv)
+
+    # --expected only means anything alongside --diff. Silently ignoring it
+    # would let `--expected <file>` without `--diff` look like a check that
+    # ran, which is the same vacuous-pass shape this gate exists to prevent.
+    if args.expected is not None and not args.diff:
+        parser.error("--expected requires --diff")
 
     if args.diff:
         if not args.before or not args.after:
             parser.error("--diff requires --before and --after")
         changes = diff(_load(args.before), _load(args.after))
+
+        if args.expected is not None:
+            return _report_declared(changes, args.expected)
+
+        # --- Undeclared mode: any drift is a failure ----------------------
         if not changes:
             print("no drift")
             return 0
@@ -139,8 +226,9 @@ def main(argv: list[str] | None = None) -> int:
             print(f"  {line}")
         print(
             "\nSchema drift is not automatically wrong — a migration is supposed "
-            "to change the schema. It must be INTENDED: every line above should "
-            "trace to a migration in this task, and the journal should say so."
+            "to change the schema. It must be INTENDED. Declare it in "
+            "`.drift/expected/T-####.txt` (D-024) and the gate will check the "
+            "change against your statement instead of refusing outright."
         )
         return 1
 
