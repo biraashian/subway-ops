@@ -5,6 +5,112 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0025 — Does `dismissed` suppress a re-open, or is dismissal advisory?
+Task: T-0003 (audit failed) · Blocks: REQ-004/AC-018, and T-0009's sweep · Raised: 2026-08-13
+
+**Specified.** AC-018: "SHALL NOT open a duplicate while one is already open for
+that person." Codex 02 names four states — `open` / `in_progress` / `resolved` /
+`dismissed` — and says nothing about which of them suppress a re-raise. T-0003's
+NOTES specify the mechanism ("a partial unique index on (kind, subject_ref) WHERE
+state IN ('open', 'in_progress')") but not its meaning for `dismissed`. The
+task's AC list requires re-opening after `resolved`
+(`test_open_item_creates_again_after_resolve`) and is silent on `dismissed`.
+
+**Observed.** `LIVE_STATES = ("open", "in_progress")` in
+`src/subway_ops/db/worklist.py`, and the same predicate on
+`uq_worklist_open_subject` in `020_worklist.sql`. So a dismissed item does not
+suppress anything. Reproduced against the delivered code:
+
+```
+open_item(...)  -> id 326
+UPDATE ... SET state='dismissed' WHERE id=326
+open_item(...)  -> id 327          # not None
+states for subject: ['dismissed', 'open']
+```
+
+`resolve_item` on a dismissed subject returns 0, so a dismissed item is also
+never closed out — it stays dismissed while a fresh `open` row accumulates
+beside it.
+
+The consequence lands on this table's first producer. T-0009's completeness
+sweep is idempotent by design and runs every cycle: office dismisses an
+`employee_incomplete` item, the next sweep re-raises it, and dismissal is inert
+for the one case AC-018 was written about. `dismissed` becomes a state nothing
+can reach durably.
+
+This is a Rule 1 fill, not a defect of reasoning — the choice is defensible, it
+was simply made at build time rather than benched, and the journal's 353 lines
+never mention `dismissed`. It is also encoded in an index inside an append-only
+migration, so reversing it costs migration `021`, which is why it wants deciding
+before merge rather than after.
+
+Options:
+  A) `dismissed` suppresses — add it to the index predicate and to `LIVE_STATES`,
+     so a dismissed subject stays quiet until someone explicitly reopens it —
+     dismissal means something, but a genuinely new occurrence of the same
+     problem stays invisible.
+  B) `dismissed` is advisory, as built — the sweep re-raises freely, nothing is
+     ever lost, and office has no way to silence a recurring item.
+  C) Dismissal carries a cool-off (`dismissed_until DATE`), suppressing for a
+     window — matches how a human means "not now", and costs another column plus
+     a policy for the default window.
+
+Burst recommends: A — under B the `dismissed` state has no observable effect for
+a swept producer, which is the only kind T-0003 has; C is A plus machinery that
+no spec has asked for yet.   [recommendation, not a decision]
+Status: OPEN
+
+### B-0026 — Are `resolved_at` / `resolved_by` part of the worklist shape?
+Task: T-0003 (audit failed) · Blocks: REQ-004/AC-020 · Raised: 2026-08-13
+
+**Specified.** Codex 02 "The worklist is the spine" states the shape as: "typed,
+role-assigned, with a state (`open` / `in_progress` / `resolved` / `dismissed`),
+a due date, and a reference back to whatever produced it." T-0003's NOTES restate
+that list and rest the whole task on its completeness — "codex 02 already defines
+the shape completely, so this is not invention" — which makes it a closed list,
+and the journal repeats the claim at line 24. The task's behavior line is
+`resolve_item(kind, subject_ref) -> int`.
+
+**Observed.** `020_worklist.sql` additionally creates `resolved_at TIMESTAMPTZ`
+and `resolved_by TEXT`, and `resolve_item` takes a third parameter:
+
+```
+def resolve_item(kind, subject_ref, *, resolved_by: str | None = None) -> int
+```
+
+Confirmed against the live table: 10 columns, the last two being `resolved_at`
+and `resolved_by`. Neither appears in codex 02's list nor anywhere in T-0003.
+`test_resolve_records_who_and_when` asserts on both, and it is not among the
+seven tests the task's ACCEPTANCE_CRITERIA names. No caller passes `resolved_by`
+— it defaults to `None`, so every row this system writes today leaves it NULL,
+and there is no producer that would populate it until a worklist UI exists
+(SPEC-APP-001, explicitly not this task).
+
+The audit gate treats gold-plating past the spec as RED even when the extra code
+is good, and this is the case it describes: two columns and a parameter that no
+governing document licenses. The journal is otherwise scrupulous about exactly
+this failure mode — it records catching and rejecting an invented
+`ref_roles` FK on the ground that "the reasonable-looking option is the dangerous
+one" — and never mentions these two columns at all. That silence is the finding
+more than the columns are.
+
+Options:
+  A) Ratify — amend codex 02's stated shape to include resolution audit fields,
+     via a `codex_update` task, and keep the migration as built — one codex line,
+     and the closed list becomes true again; blesses columns nothing populates.
+  B) Strip to the licensed shape before merge — drop both columns and the
+     parameter, re-raise when SPEC-APP-001 needs them — the record stays exact,
+     at the cost of a rebuild now and migration `021` later, since migrations are
+     append-only and the worklist screen will very likely want both.
+  C) Split — keep `resolved_at` as entailed by the `resolved` state, drop
+     `resolved_by` as an actor concept with no producer — smallest honest
+     surface; still needs A's codex amendment for `resolved_at`.
+
+Burst recommends: A — append-only migrations make B pay twice for columns
+SPEC-APP-001 will almost certainly require, and the value at stake here is the
+written record, not the two columns.   [recommendation, not a decision]
+Status: OPEN
+
 ### B-0024 — Does a drift declaration assert causation or accounting?
 Task: T-0010 (audit failed) · Blocks: T-0010 merge, and T-0003's resumption · Raised: 2026-08-13
 

@@ -41,7 +41,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0000 | Install the Burst harness | — (bootstrap: installs the anchoring machinery) | merged | `main` |
 | T-0001 | Codex chapters 00–02, 13, and the codex gate | codex/ (harvest) | merged | `main` |
 | T-0002 | Codex chapters 03–11 | B-0006 (interview) | merged | `main` |
-| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 | **queued — unblocked**; rebase onto main, observes no drift (D-028 §4), re-run gate | `forge/T-0003` |
+| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 | **audit failed (B-0025, B-0026)** — both ACs verified and hold; two Rule 1 fills in the schema, one behavioral (`dismissed`) | `forge/T-0003` |
 | T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | queued (needs T-0003) | — |
 | T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | queued | — |
 | T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 | queued (needs T-0003/4/5) | — |
