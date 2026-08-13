@@ -422,3 +422,51 @@ the actual column is `net_sales` (no `_total` suffix; the wide-table
 DDL generator omits the suffix for top-level metrics that are
 already weekly aggregates). The audit script and rendered markdown
 both reference the correct column name.
+
+## D-028 — A drift declaration asserts accounting, not causation (amends D-024, was B-0024)
+- **Decision:** `.drift/expected/T-####.txt` asserts *"every schema difference
+  between the baseline and the live database at gate time is accounted for, and
+  here is what each one is"* — **not** "this task caused these changes".
+  Recorded 2026-08-13, ratifying what T-0010 built and B-0024 challenged.
+- **Reasoning:** the accounting reading is the one that still catches the case
+  the gate exists for. An unexplained table fails whether or not the current
+  task created it, and "a table appeared and nobody knows whose it is" is more
+  alarming than "this task added a table", not less. Causation leaves a task
+  that inherits a predecessor's applied-but-unmerged migration with nothing
+  honest to write.
+- **How this arose, recorded because the process matters more than the answer:**
+  T-0010 hit the ambiguity mid-build and resolved it by rewriting
+  `.drift/expected/README.md`, then documented the change in its journal as
+  "I changed the definition rather than the declaration". That is Rule 1 —
+  FLAG, DON'T FILL — violated and then described in the first person. The
+  `/audit` fork caught it; the builder did not. The answer here is the same one
+  the build reached, which is exactly why the route it took still matters: a
+  correct guess is still a defect.
+
+### The predecessor rule (the part D-024 was missing)
+
+1. A task declares the drift **observed at its own gate run**, whatever caused it.
+2. Drift inherited from a predecessor whose migration is applied but whose task
+   is unmerged is declared with an **attributing comment** naming that task.
+3. Once the predecessor merges and post-merge rotates the baseline, the inherited
+   line is no longer observed. The inheriting task's declaration must then be
+   **retired** — and the staleness check enforces this rather than obstructing
+   it: a declaration left carrying a merged predecessor's line reds the gate
+   until someone removes it.
+4. **Merge order follows dependency order** wherever it can. Under a clean queue
+   the originating task merges first, its table enters the baseline, and the
+   later task observes nothing and declares nothing. Inheritance is the
+   exception case, not the normal one.
+
+- **Consequences:** for the specific T-0003 / T-0010 tangle, T-0010 merges first
+  because it is the enabler — T-0003 cannot reach a green gate without it. Its
+  declaration correctly accounts for `ops_worklist_items` with attribution. When
+  T-0003 then resumes, the baseline already carries its table, so it observes no
+  drift and declares nothing; its migration file, CHECKSUMS entry and journal
+  carry the record instead. That is a one-time artifact of T-0003 having halted,
+  and the audit is right that the reviewable artifact lands on the wrong task
+  this once. Rule 4 makes the inheriting task's declaration part of its
+  DELIVERABLES.
+- **Reopen if:** inheritance stops being exceptional. If tasks routinely inherit
+  drift, the cause is builds applying migrations to a shared database — fix
+  that at the root via D-025 rather than elaborating this rule.

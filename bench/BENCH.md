@@ -61,7 +61,22 @@ Also for the record, not a decision: `.drift/expected/T-0010.txt` is outside
 T-0010's DELIVERABLES (Rule 4). Whichever option is taken, that file's existence
 is part of it.
 
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** Accounting semantics ratified as
+**D-028**, amending D-024. The predecessor rule D-024 was missing is now
+written: a task declares the drift observed at its own gate run; inherited
+drift carries an attributing comment; the inherited line is retired once the
+predecessor merges (the staleness check enforces this rather than obstructing
+it); and merge order follows dependency order so inheritance stays exceptional.
+
+For this tangle specifically: T-0010 merges first because it is the enabler.
+T-0003 then observes no drift and declares nothing — its migration, CHECKSUMS
+entry and journal carry the record. The audit is right that the reviewable
+artifact lands on the wrong task this once; that is a one-time cost of T-0003
+having halted, and D-025 removes the cause rather than elaborating the rule.
+
+Rule 4: `.drift/expected/T-0010.txt` is added to T-0010's DELIVERABLES.
+T-0010 → `queued` for rework; the fix re-enters through build → audit, not
+from the bench.
 
 ### B-0023 — The crew scorecard weights and the payout cap
 Task: — · Blocks: codex 05 → all of SPEC-BON · Raised: 2026-08-13
