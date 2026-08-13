@@ -11,7 +11,6 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | **B-0011** — the timecard exception taxonomy. Gates all of Phase C | B-0011 | 2026-08-11 |
 | **B-0012** — deposit ageing, royalty basis, invoice variance. Gates 3 reconcilers | B-0012 | 2026-08-11 |
 | **B-0023** — crew scorecard weights and the payout cap. Gates SPEC-BON | B-0023 | 2026-08-13 |
-| **B-0027** — edit migration `020` in place, or correct it with a `021`? Blocks T-0003's rework and the whole PPL chain. One word answers it | B-0027 | 2026-08-13 |
 | **B-0028** — what cadence? D-031 settled which messages batch, not how often. Keeps codex 11 draft | B-0028 | 2026-08-13 |
 | **T-0011 is founder-paired** — infrastructure type, not built autonomously | D-025 | 2026-08-13 |
 
@@ -41,7 +40,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0000 | Install the Burst harness | — (bootstrap: installs the anchoring machinery) | merged | `main` |
 | T-0001 | Codex chapters 00–02, 13, and the codex gate | codex/ (harvest) | merged | `main` |
 | T-0002 | Codex chapters 03–11 | B-0006 (interview) | merged | `main` |
-| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 · D-029 · D-030 | **halted(B-0027)** — rework scoped (D-029 `dismissed` suppresses; D-030 drop `resolved_by`), blocked on whether 020 is edited or a 021 corrects it | `forge/T-0003` |
+| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 · D-029 · D-030 · D-032 | **queued — rework, unblocked**; edit `020` in place, drop/re-apply, `--update` | `forge/T-0003` |
 | T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | queued (needs T-0003) | — |
 | T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | queued | — |
 | T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 | queued (needs T-0003/4/5) | — |
@@ -51,6 +50,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0010 | Schema drift becomes declared, not merely detected | D-024 · D-028 | merged | `main` |
 | T-0011 | DB tests on containerised Postgres | D-025 | queued (founder-paired) | — |
 | T-0012 | Format the repo once, re-enable the gate line | D-027 | queued (run when nothing else is in flight) | — |
+| T-0013 | Append-only check measures against `main`, not the working tree | D-032 | queued (not blocking; run when the PPL chain gives room) | — |
 
 ## Backlog (written by /stubs)
 (run /stubs once `codex/12-PROMPTS/` exists)

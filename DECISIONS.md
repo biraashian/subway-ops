@@ -562,3 +562,55 @@ both reference the correct column name.
 - **Reopen if:** the Discord pilot in Lauren's territory shows crew missing
   time-critical information that is not a shift reminder. The pilot exists to
   find exactly that, and the budget can be spent a second time on evidence.
+
+## D-032 — Append-only binds at merge, not at application (was B-0027)
+- **Decision:** a migration that has been applied to the shared database but has
+  **not been merged to `main`** may be edited in place, on its own branch, by the
+  task that owns it. A migration that has reached `main` is frozen absolutely and
+  forever; a change to it is a new file, with no exception and no size threshold.
+  Decided 2026-08-13.
+- **The boundary, stated so it cannot be stretched:** the test is `main`, not
+  "applied somewhere", not "already run", not "it would be tidier". If
+  `git log main -- <migration>` returns anything, the file is closed. The
+  permission granted here covers exactly one situation — a task correcting its
+  own unmerged migration before that migration has ever been seen by the
+  integration branch.
+- **Reasoning:** the rule's own stated purpose, in
+  `check_migrations_append_only.py`, is that "a fresh environment built from the
+  migrations diverges from production" — the harm is a migration set that no
+  longer replays to the schema that exists. A fresh environment replays `main`.
+  Editing an unmerged file and re-applying it satisfies that purpose exactly.
+  Option B satisfies the rule's letter and defeats its purpose in the other
+  direction: `main` would carry a fix-up migration correcting a table introduced
+  two files earlier on the same unmerged branch — history honest about the
+  process and misleading about the design, permanently, for every future reader
+  trying to understand why the worklist index looks the way it does.
+- **Conditions the editing task must meet, all three:**
+  1. **Measure before dropping.** Confirm and record the row count of every
+     affected object. T-0003 qualifies because `ops_worklist_items` holds 0 rows
+     and has no producer; a table with rows in it is not covered by this decision
+     and goes back to the bench.
+  2. **Re-apply, so the live schema agrees with the edited file.** The whole
+     justification is that the migration set describes the schema that exists.
+     Leaving the shared database on the old shape would invert it.
+  3. **Regenerate `CHECKSUMS.txt`** via `--update`, and say in the journal which
+     migration was edited and why.
+- **The hole this exposes, recorded rather than left implicit:**
+  `write_manifest` regenerates the manifest unconditionally from disk, so
+  `--update` blesses an edit to *any* migration, including a merged one. Today
+  the append-only invariant catches only the person who edits and forgets to run
+  the documented command. This decision makes in-place editing a routine build
+  step, which turns an honor-system gap into a load-bearing one. **T-0013** fixes
+  it: the check compares against the manifest as it exists on `main`, so an
+  unmerged migration is free to change and a merged one cannot. Raised here
+  rather than folded into T-0003, because a task must not harden the check that
+  polices it — the same reasoning that produced the T-0003 halt in the first place.
+- **Consequences:** T-0003's rework edits `020_worklist.sql` in place, drops and
+  re-creates the live table, and re-runs `--update`. No `021`. The drift gate
+  (D-024, D-028) is the backstop: if the re-apply is incomplete, the pre-merge
+  snapshot disagrees with the baseline and reds.
+- **Reopen if:** it never needs reopening — D-025/T-0011 retires it. Once builds
+  run against a containerised Postgres, an unmerged migration is never applied to
+  anything shared, the two readings of "applied" stop coming apart, and this
+  decision becomes a dead letter describing a situation that can no longer occur.
+  That is the intended end state, not a regret.

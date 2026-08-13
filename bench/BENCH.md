@@ -43,7 +43,17 @@ satisfies it exactly, while B guarantees the opposite for every reader of `main`
 afterwards. The zero-row measurement is what makes A safe rather than merely
 convenient. Note this is my own halt-adjacent surface again, so it is benched
 rather than decided in the rework.   [recommendation, not a decision]
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** Append-only binds at **merge**, not at
+application: a task may edit its own unmerged migration in place, and a
+migration that has reached `main` is frozen absolutely, with no exception and no
+size threshold. Three conditions — measure rows before dropping, re-apply so the
+live schema agrees with the edited file, regenerate `CHECKSUMS.txt`. Policy
+recorded as **D-032**. T-0003's rework edits `020` and ships no `021`.
+Exposed by the decision and minted rather than filled: `--update` regenerates
+the manifest unconditionally, so it blesses an edit to *any* migration including
+a merged one — the invariant is honor-system exactly where D-032 now leans on
+it. Task **T-0013**, kept out of T-0003 because a task must not harden the check
+that polices it.
 
 ### B-0028 — "Cadence" is not yet a number
 Task: — · Blocks: codex 11 → authoritative, and every AC in SPEC-COM · Raised: 2026-08-13
