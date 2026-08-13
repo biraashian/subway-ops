@@ -112,12 +112,32 @@ trusted source.
 
 `ops_worklist_items` is the table the whole product converges on: typed,
 role-assigned, with a state (`open` / `in_progress` / `resolved` / `dismissed`),
-a due date, and a reference back to whatever produced it.
+a due date, a reference back to whatever produced it, and — once it leaves a
+live state — the time that happened.
 
 Every reconciliation exception, expiry nudge, ungraded task, and pending
 approval emits a row. One table, one screen, and the answer to "what needs a
 human today." A capability that detects a problem but emits no worklist item has
 not finished — it has produced a report.
+
+**Which states suppress a re-raise (D-029).** Producers are sweeps: they run
+every cycle and re-assert everything they still believe. So the state machine,
+not the producer, decides what stays quiet. `open` and `in_progress` suppress
+because the work is outstanding. **`dismissed` also suppresses** — a human
+looked and said no, and a sweep that re-raises it the same night has overruled
+them. `resolved` does **not** suppress: the problem was fixed, and if it recurs
+that is genuinely new work.
+
+Dismissal is therefore durable and needs an explicit reopen. The cost is
+accepted deliberately: a real new occurrence of a dismissed problem stays
+invisible until someone reopens it. The alternative — dismissal that a sweep
+undoes — is a button that does nothing, which is worse than no button.
+
+**Resolution timing, not resolution actors (D-030).** The shape carries *when* an
+item left a live state. It does not carry *who* did it. No producer can populate
+an actor today, and the worklist screen (SPEC-APP-001) is where that question
+becomes real; a nullable actor column filled by nobody reads as a record that
+someone was tracked when nothing was.
 
 ## API models forbid unknown fields
 

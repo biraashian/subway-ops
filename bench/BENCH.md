@@ -5,6 +5,66 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0027 — May T-0003 edit migration `020`, or must a `021` correct it?
+Task: T-0003 (rework) · Blocks: T-0003's rework, and every migration task until D-025 lands · Raised: 2026-08-13
+
+**Specified.** codex 02 and `tools/verify_invariants/check_migrations_append_only.py`
+both say: never edit a migration **after it has been applied**; a new change is a
+new file. The invariant's own docstring gives the reason — "the file no longer
+describes the schema that actually exists, so a fresh environment built from the
+migrations diverges from production."
+
+**Observed.** D-029 and D-030 both change `020_worklist.sql`: the index predicate
+gains `dismissed`, and `resolved_by` goes. `020` has been **applied to the live
+shared database** (during T-0003's build, per the D-025 defect) but has **never
+been merged to `main`**. So "applied" and "merged" come apart, and no document
+says which one the rule means. Two readings, materially different history.
+
+Measured, because it changes the stakes: `ops_worklist_items` currently holds
+**0 rows**. No producer exists — T-0009 is unbuilt — so nothing is at risk either
+way, and the question is about the record rather than about data.
+
+Options:
+  A) **Edit `020` in place**, drop the live table, re-apply the corrected
+     migration, re-run `--update`. `main` receives one honest migration
+     describing the table as it actually is. Reads the rule as "applied *on
+     `main`*", which is the only environment a fresh replay ever builds from.
+     Costs a hand-run `DROP TABLE` against the shared database.
+  B) **Ship `021` correcting `020`.** Literal reading of the rule as written.
+     `main` gains a permanent fix-up migration for a table introduced two files
+     earlier in the same unmerged branch — history that is honest about the
+     process and misleading about the design.
+  C) **Wait for T-0011/D-025** (containerised Postgres) and rebuild T-0003 on it,
+     where a build never touches production and the question dissolves. Correct
+     at the root; T-0011 is founder-paired and T-0003…T-0009 all wait.
+Burst recommends: **A** — the rule's stated purpose is that the migration set
+replays to the schema that exists, and editing an unmerged file plus re-applying
+satisfies it exactly, while B guarantees the opposite for every reader of `main`
+afterwards. The zero-row measurement is what makes A safe rather than merely
+convenient. Note this is my own halt-adjacent surface again, so it is benched
+rather than decided in the rework.   [recommendation, not a decision]
+Status: OPEN
+
+### B-0028 — "Cadence" is not yet a number
+Task: — · Blocks: codex 11 → authoritative, and every AC in SPEC-COM · Raised: 2026-08-13
+
+D-031 settled *which* messages batch — seven of the eight kinds. It did not
+settle **what cadence**, and codex 03's rule that a metric without a stated grain
+is a gap applies just as well to a notification without a stated period.
+
+For each of the seven: daily or weekly, and at what local hour. They plausibly
+differ — yesterday's numbers want a morning push, bonus standings probably weekly,
+certificate expiry is an ageing nudge that may want a lead time rather than a
+period at all. Store timezone matters: `STORE_TZ` already varies, so "8am" is a
+per-store question, not a global one.
+
+Burst recommends: no recommendation on the periods themselves — they are
+operational rhythm, and picking them is how a channel gets muted. One structural
+note offered for the answer: certificate expiry is the one kind whose natural
+form is a lead time ("30 days before"), and forcing it into a period would make
+it either noisy or late.
+Status: OPEN
+
 ### B-0025 — Does `dismissed` suppress a re-open, or is dismissal advisory?
 Task: T-0003 (audit failed) · Blocks: REQ-004/AC-018, and T-0009's sweep · Raised: 2026-08-13
 
@@ -58,7 +118,13 @@ Options:
 Burst recommends: A — under B the `dismissed` state has no observable effect for
 a swept producer, which is the only kind T-0003 has; C is A plus machinery that
 no spec has asked for yet.   [recommendation, not a decision]
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** `dismissed` suppresses. The index predicate
+and `LIVE_STATES` both become `('open', 'in_progress', 'dismissed')`; `resolved`
+still does not suppress. Dismissal is durable and needs an explicit reopen,
+which SPEC-APP-001 builds. Accepted cost recorded: a genuinely new occurrence of
+a dismissed problem stays invisible until someone reopens it. Policy recorded as
+**D-029**, and codex 02 now states which states suppress so no future producer
+re-derives it. T-0003 → rework.
 
 ### B-0026 — Are `resolved_at` / `resolved_by` part of the worklist shape?
 Task: T-0003 (audit failed) · Blocks: REQ-004/AC-020 · Raised: 2026-08-13
@@ -109,7 +175,14 @@ Options:
 Burst recommends: A — append-only migrations make B pay twice for columns
 SPEC-APP-001 will almost certainly require, and the value at stake here is the
 written record, not the two columns.   [recommendation, not a decision]
-Status: OPEN
+Status: **DECIDED 2026-08-13 → C** (against the recommendation). `resolved_at`
+stays and codex 02's stated shape now names it — it is entailed by the terminal
+state, and an item that resolved at no particular time is not a record.
+`resolved_by` is dropped, along with `resolve_item`'s undeclared parameter: no
+producer can populate an actor until SPEC-APP-001 exists, and a nullable column
+filled by nobody reads as attribution that was never tracked. Policy recorded as
+**D-030**; the column returns in SPEC-APP-001, with a producer, as a new
+migration. T-0003 → rework.
 
 ### B-0024 — Does a drift declaration assert causation or accounting?
 Task: T-0010 (audit failed) · Blocks: T-0010 merge, and T-0003's resumption · Raised: 2026-08-13
@@ -434,7 +507,15 @@ overtime message now reports something already past and has no urgency
 to preserve. The real question is volume, not technology: push eight
 kinds of message in real time and everyone mutes the channel, which is
 worse than no channel because it looks like communication.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** Shift reminders real-time; the other seven
+kinds on a cadence. Real-time is a budget with one occupant: a new notification
+is cadence by default, and promoting one is a founder decision recorded in codex
+11. Policy recorded as **D-031**; routing table written into codex 11 and
+`blocked_by: B-0013` lifted.
+**Interpretation flagged:** this item carried no lettered options, so "A" was
+read as the single marked recommendation. Nothing else in the item was labelled.
+One line to correct if that reads wrong.
+Residue: "cadence" is not yet a number — **B-0028**, which keeps codex 11 draft.
 
 ### B-0010 — Are I-9 and W-4 ours to hold?
 Task: T-0002 · Blocks: codex 07 record types (chapter otherwise authoritative) · Raised: 2026-08-11

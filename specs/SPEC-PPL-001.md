@@ -5,7 +5,7 @@
 ```yaml
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
-version:        1.1.0
+version:        1.2.0
 status:         tasked
 owner:          amitoj
 inherits:       codex@2026-08-11
@@ -19,7 +19,8 @@ bound_by:
   - codex/03-MEASUREMENT       # the person is the employee grain
   - codex/08-SCHEDULING-AND-HOURS   # the 40-hour threshold (draft; only the threshold is used)
   - D-020                      # wages are hand-kept; FreshConnect has none
-open_questions: 0              # Q-007 and Q-008 decided 2026-08-13 (B-0020, B-0021)
+open_questions: 0              # Q-007/Q-008 decided 2026-08-13 (B-0020, B-0021);
+                               # AC-018 amended 2026-08-13 by D-029 (B-0025)
 l1_plan:        design/PLAN-SPEC-PPL-001.md
 build_sheet:    T-0003 … T-0009 (7 tasks)
 ```
@@ -189,7 +190,11 @@ Serves **US-004** · Governed by **codex/06-PEOPLE "A stub is incomplete"**
 - **Acceptance criteria (EARS)**
   - `AC-018` — WHEN a person becomes incomplete, the roster service SHALL open
     one `ops_worklist_items` row assigned to `office`, and SHALL NOT open a
-    duplicate while one is already open for that person.
+    duplicate while an item for that person is in a suppressing state. Per
+    **D-029** the suppressing states are `open`, `in_progress` and `dismissed`;
+    `resolved` does not suppress, so a person who becomes incomplete again
+    raises a fresh item. Office dismissing an item is durable — the sweep does
+    not overrule it — and reopening is SPEC-APP-001's.
   - `AC-019` — WHEN a **per-person, per-business-week** labor-dollar figure
     includes hours from an incomplete person, the roster service SHALL exclude
     those hours from the dollar total and SHALL mark that figure
@@ -377,6 +382,17 @@ are named in each task file.
   matching WA/OR law. Folded into AC-016. B-0017 closed.
 - `Q-006` → **decided A.** Derive `First Last`, office may override. Folded
   into AC-026…AC-028. B-0018 closed.
+
+- `Q-009` → **decided A (B-0025) 2026-08-13.** Raised by the `/audit` of T-0003
+  rather than by the interview: AC-018 said "while one is already open" without
+  saying which of codex 02's four states count as open. `dismissed` now
+  suppresses alongside `open` and `in_progress`; `resolved` does not. Folded into
+  AC-018. Policy is **D-029**, because the state machine belongs to the worklist
+  table rather than to this spec.
+- `Q-010` → **decided C (B-0026) 2026-08-13.** Also from the T-0003 audit: the
+  worklist shape carries `resolved_at` but not `resolved_by`, and
+  `resolve_item(kind, subject_ref) -> int` takes no actor. Policy is **D-030**;
+  codex 02's stated shape was amended to match.
 
 **Still open:**
 

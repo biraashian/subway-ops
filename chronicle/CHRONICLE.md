@@ -17,3 +17,5 @@ this file only points at it.
 | 2026-08-13 | T-0010 | built (rework) — B-0024 folded; predecessor rule implemented and tested | `forge/T-0010` | journal/T-0010.md · test_logs/T-0010/ |
 | 2026-08-13 | /audit T-0010 | GREEN — 17/17 tests, 9 ACs re-exercised by hand, 5 fences clean, pre-merge re-run 0 at `a1b892b` | `forge/T-0010` | journal/T-0010.md · test_logs/T-0010/ |
 | 2026-08-13 | T-0010 | **merged** — audit green; post-merge clean; baseline rotated | `main` | test_logs/T-0010/T-0010-post-merge.md |
+| 2026-08-13 | /audit T-0003 | RED — both ACs hold and every fence is clean; two Rule 1 fills found: `dismissed` inert (B-0025) and two columns past the licensed shape (B-0026) | `forge/T-0003` | bench/BENCH.md |
+| 2026-08-13 | /bench | B-0025 → A, B-0026 → C, B-0013 → A; D-029…D-031; codex 02 and 11 amended; SPEC-PPL-001 → v1.2.0; residue B-0027, B-0028 | `main` | DECISIONS.md · bench/BENCH.md |

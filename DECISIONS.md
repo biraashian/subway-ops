@@ -470,3 +470,95 @@ both reference the correct column name.
 - **Reopen if:** inheritance stops being exceptional. If tasks routinely inherit
   drift, the cause is builds applying migrations to a shared database — fix
   that at the root via D-025 rather than elaborating this rule.
+
+## D-029 — `dismissed` suppresses a re-raise; `resolved` does not (was B-0025)
+- **Decision:** `ops_worklist_items` suppresses a new item for the same
+  `(kind, subject_ref)` while an existing one is `open`, `in_progress` **or
+  `dismissed`**. `resolved` does not suppress. Dismissal is durable and is undone
+  only by an explicit reopen. Decided 2026-08-13.
+- **Reasoning:** every producer of worklist items is a sweep — it runs each cycle
+  and re-asserts everything it still believes. Under the built behavior
+  (`dismissed` inert) office dismisses an `employee_incomplete` item and T-0009's
+  next sweep re-raises it, so dismissal accomplishes nothing for the only kind of
+  producer this table has. A control that the system silently undoes is worse
+  than no control: it teaches the operator that the worklist does not listen, and
+  the worklist's entire value is that a human's attention is respected.
+  `resolved` is the opposite case — the problem was fixed, and a recurrence is
+  genuinely new work that should surface.
+- **Accepted cost, stated plainly:** a real new occurrence of a dismissed problem
+  stays invisible until someone reopens the item. That is a live failure mode,
+  not a theoretical one, and it is preferred to a dismiss button that does
+  nothing. The reopen path is SPEC-APP-001's to build.
+- **How this arose:** T-0003 chose `LIVE_STATES = ("open", "in_progress")` at
+  build time and encoded it in a partial unique index. No document defined
+  `dismissed`'s meaning, so this was Rule 1 — FLAG, DON'T FILL — violated by
+  omission rather than by argument: the 353-line journal never mentions the state
+  at all. The `/audit` fork reproduced the consequence against the delivered
+  code. A defensible choice made silently is still a defect, and silence makes it
+  harder to catch than a bad choice made loudly.
+- **Consequences:** the index predicate in `020_worklist.sql` and `LIVE_STATES`
+  in `db/worklist.py` both change to three states, and a test asserting that a
+  dismissed subject stays quiet joins T-0003's required list. Codex 02 now states
+  which states suppress, so no future producer has to re-derive it.
+- **Reopen if:** a producer appears whose subjects genuinely recur as new
+  incidents rather than as the same standing problem — a per-shift exception, say,
+  rather than a per-person completeness gap. Durable dismissal is right for
+  standing problems and wrong for recurring events, and the second kind would
+  want a cool-off window (B-0025 option C) rather than this rule.
+
+## D-030 — The worklist records when resolution happened, not who did it (was B-0026)
+- **Decision:** `ops_worklist_items` carries `resolved_at TIMESTAMPTZ`, which
+  codex 02's shape now names explicitly. It does **not** carry `resolved_by`, and
+  `resolve_item` takes no actor parameter. Decided 2026-08-13.
+- **Reasoning:** `resolved_at` is entailed by the state itself — an item that
+  reached a terminal state without a time is a record that something happened but
+  not when, which no operational table should produce. An actor is a different
+  claim. Nothing in this system can populate one today: there is no worklist
+  screen, no producer passes it, and every row written would leave it NULL. A
+  nullable actor column filled by nobody is worse than an absent one, because it
+  reads as evidence that attribution was tracked when it never was.
+- **How this arose:** T-0003 shipped both columns plus an undeclared
+  `resolved_by` parameter, past a shape its own NOTES called complete ("codex 02
+  already defines the shape completely, so this is not invention"). The journal
+  is scrupulous about exactly this failure mode elsewhere — it records catching
+  and rejecting an invented `ref_roles` FK because "the reasonable-looking option
+  is the dangerous one" — and never mentions these two columns. Gold-plating past
+  the spec is RED at audit even when the extra code is good, and the finding here
+  is the silence more than the columns.
+- **Consequences:** `resolved_by` is dropped from the migration, from
+  `resolve_item`'s signature and from `test_resolve_records_who_and_when`, which
+  narrows to timing. Codex 02's stated shape gains the resolution time, so the
+  closed list is true again.
+- **Reopen if:** SPEC-APP-001 builds the worklist screen. A human clicking
+  "resolve" is a real actor with a real identity (D-018 gives every one of them a
+  Discord account), and at that point the column has a producer and earns its
+  place. It arrives then, in that spec, as a new migration.
+
+## D-031 — Real-time is a budget with one occupant (was B-0013)
+- **Decision:** shift reminders are real-time. Yesterday's numbers, schedule
+  publication, overtime notifications, task assignment, bonus standings,
+  reconciliation exceptions and certificate expiry all run on a cadence. Any new
+  notification is cadence by default; promoting one to real-time is a founder
+  decision recorded in codex 11, not a spec-level choice. Decided 2026-08-13,
+  closing question 11.1 from the B-0006 interview.
+- **Reasoning:** a shift reminder is the only message on the list whose value
+  expires and whose recipient has not yet acted. Every other kind reports
+  something already past — per codex 08 even overtime is detection rather than
+  prediction — and delivering it hours sooner changes nobody's behavior. The
+  binding constraint was never technology but volume: a system pushing eight
+  kinds of message in real time trains everyone to mute the channel, and a muted
+  channel is worse than no channel because it looks like communication while
+  carrying none. Framing real-time as a spent budget makes the next promotion an
+  explicit trade rather than an accumulation.
+- **Consequences:** codex 11's routing table is written and `blocked_by: B-0013`
+  is lifted. The chapter stays **draft** on B-0028 — "cadence" is not yet a
+  number, and SPEC-COM cannot write an acceptance criterion against "batched"
+  without knowing which kinds go daily, which weekly, and at what local hour.
+- **Recorded interpretation, flagged rather than assumed:** B-0013 carried no
+  lettered options; the founder answered "A". Taken to mean the single marked
+  recommendation — shift reminders real-time, everything else cadence — because
+  nothing else in the item was labelled. Say so if that reads wrong; it is one
+  line to correct here and in codex 11.
+- **Reopen if:** the Discord pilot in Lauren's territory shows crew missing
+  time-critical information that is not a shift reminder. The pilot exists to
+  find exactly that, and the budget can be spent a second time on evidence.

@@ -1,15 +1,17 @@
 ---
 status: draft
 source: founder interview 2026-08-11 (B-0006 §11)
-blocked_by: B-0013
+blocked_by: B-0028
 ---
 
 # 11 — Comms
 
 **Draft.** Question 11.1 — which notifications are real-time and which run on a
-cadence — was not answered. It is the routing table the whole comms layer reads,
-so no spec anchors here until B-0013 resolves. Structure and privacy are
-settled.
+cadence — is answered: see "The routing table" below (B-0013 → D-031). Structure,
+privacy and routing are settled. The chapter stays draft on one remaining gap:
+the routing table says *cadence* for seven of the eight message kinds without
+saying *what cadence* — **B-0028**. SPEC-COM cannot write an AC against "batched"
+alone, so that number is the last thing between this chapter and authoritative.
 
 Discord is the single staff channel (D-018). Nobody is on it yet, so every
 decision below is also a rollout decision.
@@ -89,21 +91,39 @@ territory — Lauren's three stores (10393, 24339, 26999) — before org-wide.
 Three stores is enough to learn whether crew actually read it, and small enough
 that abandoning it costs nothing.
 
-## What B-0013 needs to settle
+## The routing table
 
-Which of these are real-time, and which run on a cadence:
+Settled by B-0013 → **D-031**. One message kind is real-time. Every other kind
+batches.
 
-yesterday's numbers · schedule publication · shift reminders · overtime
-notifications · task assignment · bonus standings · reconciliation exceptions ·
-certificate expiry.
+| Message kind | Routing |
+|---|---|
+| Shift reminders | **real-time** |
+| Yesterday's numbers | cadence |
+| Schedule publication | cadence |
+| Overtime notifications | cadence |
+| Task assignment | cadence |
+| Bonus standings | cadence |
+| Reconciliation exceptions | cadence |
+| Certificate expiry | cadence |
 
-The proposal offered and not adopted: only shift reminders are real-time, and
-everything else is cadence — noting that per
-[08-SCHEDULING-AND-HOURS](../08-SCHEDULING-AND-HOURS/README.md) overtime is now
-detection rather than prediction, so an overtime message reports something that
-already happened and has no urgency to preserve.
+**Why only shift reminders.** A shift reminder is the one message whose value
+expires — it is useless after the shift starts, and it is addressed to someone
+who has not yet acted. Everything else on the list reports something that has
+already happened, and reporting it four hours sooner changes nobody's behavior.
+Per [08-SCHEDULING-AND-HOURS](../08-SCHEDULING-AND-HOURS/README.md), overtime is
+now detection rather than prediction, so even the overtime message describes a
+threshold already crossed.
 
-The thing that actually needs deciding is not the technology but the volume. A
-system that pushes eight kinds of message in real time trains everyone to mute
-the channel, and a muted channel is worse than no channel — it looks like
-communication while carrying none.
+**The reasoning that actually decided it was volume, not technology.** A system
+that pushes eight kinds of message in real time trains everyone to mute the
+channel, and a muted channel is worse than no channel — it looks like
+communication while carrying none. Real-time is a budget, and it is spent.
+
+**Consequence for every future capability.** A new notification is *cadence* by
+default. Promoting one to real-time spends from a budget that currently has one
+occupant, so it is a founder decision recorded here, not a spec-level choice.
+
+**What is still open.** "Cadence" is not yet a number. Which of the seven batch
+daily, which weekly, and at what local hour — that is **B-0028**, and it is what
+keeps this chapter draft.
