@@ -11,3 +11,4 @@ this file only points at it.
 | 2026-08-11 | PLAN-SPEC-PPL-001 | L1 design — 11 modules, 7 tasks forecast, constitution check clean | `main` | design/PLAN-SPEC-PPL-001.md |
 | 2026-08-12 | SPEC-PPL-001 | tasked — 7 anchored tasks T-0003…T-0009, 31/31 AC coverage | `main` | tasks/T-0003.md … T-0009.md |
 | 2026-08-13 | T-0003 | halted(B-0022) — code complete, 12 tests green, blocked by a gate defect | `forge/T-0003` | journal/T-0003.md · test_logs/T-0003/ |
+| 2026-08-13 | /bench | 12 decided, 1 raised (B-0023); D-024…D-027; T-0010…T-0012 minted; T-0003 unhalted | `main` | bench/BENCH.md · DECISIONS.md |

@@ -39,11 +39,10 @@ get the same number just because they sell the same sandwiches.
 Net sales · food cost % · labor hours · labor dollars · transactions · average
 ticket.
 
-**This list is assumed, not confirmed.** It was stated as the interview's
-default for question 4.5 and not explicitly answered. It is recorded as
-**B-0007** and should be confirmed before `ref_targets` ships. The risk is low
-and additive — a metric added later is a nullable column and a backfill — but
-the list is not a founder decision yet and is not presented as one.
+**Confirmed 2026-08-13 (B-0007).** These six and no others. A seventh metric
+later is a nullable column and a backfill, so the list is extensible without
+rework — but it is now a decision rather than an assumption, and
+`ref_targets` ships with exactly these columns.
 
 Note that **labor dollars** depends on wages, which do not exist in Fresh
 Connect at all. See [06-PEOPLE](../06-PEOPLE/README.md) — `ref_employee_wages`

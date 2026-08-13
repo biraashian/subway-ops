@@ -5,6 +5,23 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0023 — The crew scorecard weights and the payout cap
+Task: — · Blocks: codex 05 → all of SPEC-BON · Raised: 2026-08-13
+B-0009 settled the crew scorecard's STRUCTURE (team-based: store
+sales/food/labor + own throughput + own training). It did not settle the
+arithmetic, and a bonus spec cannot be written against "weighted"
+without the weights.
+Two numbers are needed:
+  (a) **Weights** across the five components. They must sum to 1. The
+      split between store-driven and self-driven components is the real
+      decision — heavily store-weighted makes it a team bonus, heavily
+      self-weighted makes the team components decorative.
+  (b) **The payout cap** — the ceiling on the sliding scale above the
+      90% floor, so a freak period cannot pay out unboundedly.
+Burst recommends: no recommendation on either. Both are compensation
+policy, not design, and a plausible-looking guess here is money.
+Status: OPEN
+
 ### B-0022 — The schema-drift gate blocks every schema_change task
 Task: T-0003 (halted) · Blocks: T-0003, T-0004, and every future migration · Raised: 2026-08-13
 `scripts/schema_snapshot.py --diff` returns exit 1 on ANY drift, and
@@ -37,7 +54,10 @@ Options:
 Burst recommends: **A** — it keeps the property that made the check
 worth writing (drift must be looked at by a person) while letting the
 look happen once, in the task, instead of blocking forever.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** Acknowledgement file: a task declares
+expected drift in `.drift/expected/T-####.txt`; the gate passes on an exact
+match and fails on undeclared drift or a stale declaration. Policy recorded as
+**D-024**. Gate fix is **T-0010**; T-0003 then declares its drift and re-runs.
 
 ### B-0021 — AC-019 names no grain for `partially_costed`
 Task: SPEC-PPL-001 Q-008 · Blocks: nothing · Raised: 2026-08-11
@@ -51,7 +71,9 @@ its own store/week aggregate from the person-week flags. B) Amend AC-019
 to name the grain explicitly.
 Burst recommends: **B** — same behavior, but the AC stops being ambiguous
 to the next reader. Cosmetic, do it whenever the spec is next touched.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → B.** AC-019 now names its grain: per person,
+per business week. Same behavior the L1 plan assumed; the AC is no longer
+ambiguous. SPEC-PPL-001 → v1.1.0, open_questions 0.
 
 ### B-0020 — Which store bears the overtime premium?
 Task: SPEC-PPL-001 Q-007 · Blocks: the labor-dollar mart, not SPEC-PPL-001 · Raised: 2026-08-11
@@ -69,7 +91,10 @@ and it is the only rule that survives someone asking "why is my store
 carrying that?"
 SPEC-PPL-001 is unblocked regardless: CON-005 returns a per-person weekly
 cost and NG-007 fences the allocation out.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** Chronological: the premium lands on
+whichever store the person was working for the hours past the 40th, ordered by
+`clock_in`. Folded into codex 06 and SPEC-PPL-001 Q-007. Applied by the
+labor-dollar mart; `CON-005` still returns a per-person weekly figure.
 
 ### B-0014 — How is a (store, clerk_id) resolved to a person?
 Task: SPEC-PPL-001 Q-001 · Blocks: REQ-002, US-003, every employee grain · Raised: 2026-08-11
@@ -161,7 +186,11 @@ bites.
 Options: A) Leave it; document the deviation in codex 02 as a known
 exception.  B) Migrate both columns to TIMESTAMPTZ before Phase C.
 Burst recommends: **B**, timed before SPEC-SCH-003, not now.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → B.** Migrate `stg_timeclock.clock_in` and
+`clock_out` to `TIMESTAMPTZ` before Phase C — specifically before SPEC-SCH-003,
+whose clock-vs-schedule comparison is where a naive timestamp bites across a
+DST boundary. Not minted as a task yet: Rule 2 needs an anchor, and SPEC-SCH
+does not exist. Queued on the board as a Phase C prerequisite.
 
 ### B-0009 — Crew bonus scorecard: 5.2 and 3.1 contradict each other
 Task: T-0002 · Blocks: codex 05 → all of SPEC-BON · Raised: 2026-08-11
@@ -176,7 +205,12 @@ training — the store metrics stay at store grain, so 03 holds.
 C) Revise 3.1 to admit these at employee grain.
 Burst recommends: **B** — the only option that pays crew on the things
 5.2 named without attributing store economics to an individual.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → B.** Team-based: a crew scorecard combines
+their STORE's sales/food/labor attainment with their OWN throughput and
+training. Resolves the 5.2 / 3.1 contradiction — the store metrics stay at
+store grain, so the crew member shares in the result rather than being measured
+on it. Folded into codex 05. **Chapter 05 stays draft**: the weights and the
+payout cap are numbers nobody has set — now **B-0023**.
 
 ### B-0011 — The timecard exception taxonomy is undecided
 Task: T-0002 · Blocks: codex 08 → all of SPEC-SCH, Phase C · Raised: 2026-08-11
@@ -235,7 +269,14 @@ Modelling it as another credential row gets both wrong.
 Options: A) Out of scope — payroll holds them.  B) In scope, with their
 own retention rule and separate storage.
 Burst recommends: **A** unless payroll is not already holding them.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → B** (against the recommendation). I-9 and W-4
+are ours to hold, under their own rules: the I-9 retains for three years from
+hire or one year from termination, whichever is later — which can be SHORTER
+than the seven years applied to everything else — and both are stored
+separately from the personnel file, office and owner only, excluded from the
+inspection packet. The W-4 carries an SSN and is never rendered in any list,
+export or notification. Folded into codex 07, with the termination consequence
+noted in codex 06.
 
 ### B-0007 — Confirm which metrics carry a target
 Task: T-0002 · Blocks: SPEC-TGT-001 (ref_targets columns) · Raised: 2026-08-11
@@ -246,7 +287,9 @@ and additive — a metric added later is a nullable column and a backfill
 — but silence on a stated default is weak consent and Rule 1 says flag
 rather than fill.
 Burst recommends: confirm the six as listed.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** The six confirmed: net sales, food cost %,
+labor hours, labor dollars, transactions, average ticket. Folded into codex 04,
+which no longer calls the list assumed.
 
 ### B-0008 — Should loss-prevention by employee exist as an office-only view?
 Task: T-0002 · Blocks: nothing (Phase E scope question) · Raised: 2026-08-11
@@ -260,7 +303,11 @@ the employee, never part of recognition or bonus.  B) Do not build it;
 Burst recommends: **A** — the decision in 3.1 is about what an employee
 is *judged* on, which is a different question from what the owner can
 *see*. But this is deliberately asked rather than assumed.
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** Void / refund / discount rates by employee
+exist as an office-and-owner-only loss-prevention view — never on the employee
+card, never shown to their store manager, never an input to recognition or
+bonus. Folded into codex 03: what an employee is judged on and what the owner
+can see are different questions.
 
 ### B-0006 — The codex interview for chapters 03–11
 Task: T-0002 · Blocks: every spec in Phases A–E (D-017) · Raised: 2026-08-11
@@ -306,7 +353,9 @@ Options:
      cheapest, but a bug in the isolation still lands on production infra.
 Burst recommends: **B** — the tests only need Postgres, not Supabase, and a
 container removes the production blast radius entirely.   [recommendation]
-Status: OPEN
+Status: **DECIDED 2026-08-13 → B.** Postgres in a container for DB-backed
+tests; migrations per session. Policy recorded as **D-025**. Task **T-0011**
+(infrastructure — founder-paired per the ceremony tiering).
 
 ### B-0002 — The cash drop reconciliation sheet is the missing domain source
 Task: — · Blocks: `codex/09-MONEY-AND-RECONCILIATION/`, SPEC-RCN-002 · Raised: 2026-08-11
@@ -333,7 +382,10 @@ Options:
   B) Build format-agnostic importers first and calibrate on a real file later
      — more rework, but unblocks Phase B's shape.
 Burst recommends: **A**.   [recommendation]
-Status: OPEN
+Status: **DECIDED 2026-08-13 — confirmed from the interview.** Card processor
+FreedomPay; Amex settled separately; ezCater for catering; DoorDash, GrubHub
+and UberEats for delivery. No payroll provider is needed — D-022 made payroll a
+locked report that office keys in. Six settlement sources, each its own ingest.
 
 ### B-0004 — The coverage floor
 Task: — · Blocks: `scripts/verify.sh` reaching its designed bar · Raised: 2026-08-11
@@ -349,7 +401,9 @@ Options:
      so covering them now is work with a short half-life.
   B) Raise to 80 now and backfill page tests.
 Burst recommends: **A**.   [recommendation]
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** Floor holds at 75% until the Streamlit
+pages are retired under D-019, then raise to 80% against what remains, in the
+same task that deletes them. Policy recorded as **D-026**.
 
 ### B-0005 — The repo has never been `ruff format`ed
 Task: — · Blocks: the `ruff format --check` line in the gate · Raised: 2026-08-11
@@ -365,4 +419,6 @@ Options:
      line cannot be re-enabled for months and formatting drift persists.
 Burst recommends: **A** — the diff is mechanical and `git diff -w` verifies
 it changed nothing but whitespace.   [recommendation]
-Status: OPEN
+Status: **DECIDED 2026-08-13 → A.** One `refactor` task runs `ruff format .`,
+commits the reformat alone, and re-enables the gate line in the same commit.
+Policy recorded as **D-027**. Task **T-0012**.

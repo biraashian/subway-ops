@@ -64,6 +64,18 @@ Effective-dated on the same principle as targets: a raise inserts a row, never
 updates one. A week's labor dollars resolve against the rate in force that week,
 so a March raise cannot rewrite February's labor cost.
 
+**Overtime allocation across stores (B-0020 → A, 2026-08-13).** Because a
+person is one record across stores, someone at 25 hours in each of two stores
+is at 50 hours and owed 10 hours of premium — and that premium has to land on
+some store's labor cost. It lands **chronologically**: on whichever store the
+person was working for the hours past the 40th, ordered by `clock_in`.
+
+Pro-rata was rejected as matching no individual shift, and charging the store
+where the crossing happened was rejected as punishing whoever scheduled last.
+Chronological is the only rule that answers a store manager asking why their
+store is carrying it. The allocation is applied by the labor-dollar mart, not
+by the costing function, which returns a per-person weekly figure.
+
 A wage rate is visible to **office and owner only**. It never reaches a store
 manager's view of their crew, and never reaches Discord — see
 [11-COMMS](../11-COMMS/README.md).
@@ -96,7 +108,9 @@ the ladder in [00-INSTITUTION](../00-INSTITUTION/README.md).
 - Their page becomes read-only rather than disappearing, because the records on
   it — training, orientation, certificates — are exactly what an inspector or an
   employment claim asks for after someone has left.
-- Retention is **7 years** — see
+- Retention is **7 years** for most record types — but the I-9 follows a
+  later-of rule (three years from hire, or one year from termination) and can
+  therefore expire *before* the rest of the file. See
   [07-SAFETY-HEALTH-AND-RECORDS](../07-SAFETY-HEALTH-AND-RECORDS/README.md).
 
 Nothing is deleted on termination. Per

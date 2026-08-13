@@ -16,26 +16,45 @@ record, a spec pins behaviour to it directly.
 | Safety orientation | attestation | annually |
 | Health / hygiene orientation | attestation | annually |
 | Harassment training | attestation | annually |
+| **I-9** | employment eligibility | no — see below |
+| **W-4** | tax withholding | on change |
 
 Each is a row against the **person**, not an assignment — a food handler card
 does not stop being valid because someone picked up a shift at another store.
 
-**I-9 and W-4 are excluded pending B-0010.** They were in the interview's
-starting list, answered "everything you said", but the list itself flagged them
-as probably belonging to payroll rather than here — so the answer is genuinely
-ambiguous and this chapter does not resolve it.
+## I-9 and W-4 are in scope, under their own rules (B-0010 → B)
 
-The reason it matters rather than being pedantry: an I-9 has its own federal
-retention rule (three years after hire or one year after termination, whichever
-is later — *not* the seven years below), and it is conventionally stored
-**separately** from the personnel file so that an audit of I-9s does not expose
-everything else. Building it as just another credential row would get both
-wrong. It stays out until decided.
+Decided 2026-08-13. They are held here, **not** by payroll. But they are not
+just two more credential rows, and modelling them that way would get two things
+wrong at once.
+
+**The I-9 has its own retention rule.** Three years after the hire date, or one
+year after termination, whichever is **later** — not the seven years below. For
+a long-tenured employee that is *shorter* than seven years; for someone who
+left after six months it is *longer* than one. A single retention constant
+cannot express it, so the record type carries its own rule and the renewal
+machinery computes from both dates.
+
+**The I-9 must be stored separately from the personnel file.** The reason is
+practical: an I-9 audit is entitled to see I-9s and nothing else. If they sit
+in the same store as food handler cards and training records, producing the
+I-9s means either exposing the rest or doing manual extraction under time
+pressure. A separate bucket with its own access rule makes the audit response a
+query rather than a scramble.
+
+The same separation applies to the W-4, which carries a Social Security number
+— the single most sensitive field in this system. **A W-4 is never rendered in
+any list, export, packet or notification.** It is retrievable individually, by
+office and owner only, and every retrieval is logged.
+
+Neither appears in the inspection packet below. A health inspector has no claim
+on either, and a packet that included them would hand over more than was
+asked.
 
 ## Retention: 7 years
 
-**Seven years after termination** (7.2), applied uniformly to the record types
-above.
+**Seven years after termination** (7.2) — applied to every record type above
+**except the I-9**, which follows the later-of rule stated in its own section.
 
 Records are retained, never deleted, per
 [06-PEOPLE](../06-PEOPLE/README.md). Nothing in the current design purges at
@@ -48,6 +67,10 @@ side effect.
 
 The employee · their store manager · their **field manager** · office · the
 owner (7.3, A and B).
+
+**Except I-9 and W-4: office and owner only.** A store manager has no reason to
+see an employment-eligibility document or a Social Security number, and the
+narrower rule costs nothing because neither is needed to run a shift.
 
 Not other crew. Not `readonly` — the mentor/lender view sees no personally
 identifying employee data at all, per
