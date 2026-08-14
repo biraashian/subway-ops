@@ -41,9 +41,9 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0000 | Install the Burst harness | — (bootstrap: installs the anchoring machinery) | merged | `main` |
 | T-0001 | Codex chapters 00–02, 13, and the codex gate | codex/ (harvest) | merged | `main` |
 | T-0002 | Codex chapters 03–11 | B-0006 (interview) | merged | `main` |
-| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 · D-029 · D-030 · D-032 | **awaiting your review** — /audit GREEN (rework); 14/14 tests, fences clean, pre-merge 0 @ `7c3fc8e` | `forge/T-0003` |
-| T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | **awaiting your review** — /audit GREEN; 21/21 tests, fences clean, pre-merge 0 @ `1682692` | `forge/T-0004` |
-| T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | queued | — |
+| T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 · D-029 · D-030 · D-032 | **merged** | `main` |
+| T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | **merged** | `main` |
+| T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | **queued — critical path**; T-0006 and T-0007 both wait on it | — |
 | T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 | queued (needs T-0003/4/5) | — |
 | T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 | queued (needs T-0004/5) | — |
 | T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | queued (needs T-0006/7) | — |

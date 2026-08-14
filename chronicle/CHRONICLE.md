@@ -25,3 +25,4 @@ this file only points at it.
 | 2026-08-13 | T-0003 | **merged** — audit green; post-merge clean; baseline rotated; T-0003 and T-0010 declarations retired (D-028 §3) | `main` | test_logs/T-0003/T-0003-post-merge.md |
 | 2026-08-13 | T-0004 | built — people schema: 4 tables + widened ref_users.role; 21 tests; drift declared (4 tables); B-0029 raised — the gate cannot see a constraint change | `forge/T-0004` | journal/T-0004.md · test_logs/T-0004/ |
 | 2026-08-13 | /audit T-0004 | GREEN — 21/21 tests, AC-011/AC-014/AC-022/AC-031 and 6 §6 edges re-exercised by hand against the live schema; 5 fences clean; `log_id` is the one addition past §5 and it is disclosed; pre-merge re-run 0 at `1682692` | `forge/T-0004` | journal/T-0004.md · test_logs/T-0004/ |
+| 2026-08-13 | T-0004 | **merged** — audit green; post-merge clean; baseline rotated; declaration retired (D-028 §3); board's stale T-0003 row repaired | `main` | test_logs/T-0004/T-0004-post-merge.md |

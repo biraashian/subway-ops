@@ -335,6 +335,45 @@
       "week_end_date"
     ]
   },
+  "ops_employee_identity_log": {
+    "columns": {
+      "action": {
+        "nullable": false,
+        "type": "text"
+      },
+      "actor": {
+        "nullable": false,
+        "type": "text"
+      },
+      "assignment_id": {
+        "nullable": true,
+        "type": "bigint"
+      },
+      "at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "from_employee_id": {
+        "nullable": true,
+        "type": "bigint"
+      },
+      "log_id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "reason": {
+        "nullable": false,
+        "type": "text"
+      },
+      "to_employee_id": {
+        "nullable": true,
+        "type": "bigint"
+      }
+    },
+    "primary_key": [
+      "log_id"
+    ]
+  },
   "ops_job_runs": {
     "columns": {
       "error_text": {
@@ -682,6 +721,128 @@
     },
     "primary_key": [
       "id"
+    ]
+  },
+  "ref_employee_assignments": {
+    "columns": {
+      "assignment_id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "clerk_id": {
+        "nullable": false,
+        "type": "text"
+      },
+      "employee_id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "is_active": {
+        "nullable": false,
+        "type": "boolean"
+      },
+      "normalized_name": {
+        "nullable": true,
+        "type": "text"
+      },
+      "observed_name": {
+        "nullable": true,
+        "type": "text"
+      },
+      "role": {
+        "nullable": false,
+        "type": "text"
+      },
+      "store_number": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "assignment_id"
+    ]
+  },
+  "ref_employee_wages": {
+    "columns": {
+      "effective_date": {
+        "nullable": false,
+        "type": "date"
+      },
+      "employee_id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "hourly_rate": {
+        "nullable": false,
+        "type": "numeric(12,4)"
+      },
+      "set_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "set_by": {
+        "nullable": false,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "employee_id",
+      "effective_date"
+    ]
+  },
+  "ref_employees": {
+    "columns": {
+      "created_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "discord_user_id": {
+        "nullable": true,
+        "type": "text"
+      },
+      "display_name": {
+        "nullable": false,
+        "type": "text"
+      },
+      "display_name_is_manual": {
+        "nullable": false,
+        "type": "boolean"
+      },
+      "employee_id": {
+        "nullable": false,
+        "type": "bigint"
+      },
+      "hire_date": {
+        "nullable": true,
+        "type": "date"
+      },
+      "is_active": {
+        "nullable": false,
+        "type": "boolean"
+      },
+      "merged_into": {
+        "nullable": true,
+        "type": "bigint"
+      },
+      "phone": {
+        "nullable": true,
+        "type": "text"
+      },
+      "termination_date": {
+        "nullable": true,
+        "type": "date"
+      },
+      "updated_at": {
+        "nullable": false,
+        "type": "timestamp with time zone"
+      },
+      "user_email": {
+        "nullable": true,
+        "type": "text"
+      }
+    },
+    "primary_key": [
+      "employee_id"
     ]
   },
   "ref_field_managers": {
