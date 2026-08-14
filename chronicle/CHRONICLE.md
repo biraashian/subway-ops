@@ -20,3 +20,5 @@ this file only points at it.
 | 2026-08-13 | /audit T-0003 | RED — both ACs hold and every fence is clean; two Rule 1 fills found: `dismissed` inert (B-0025) and two columns past the licensed shape (B-0026) | `forge/T-0003` | bench/BENCH.md |
 | 2026-08-13 | /bench | B-0025 → A, B-0026 → C, B-0013 → A; D-029…D-031; codex 02 and 11 amended; SPEC-PPL-001 → v1.2.0; residue B-0027, B-0028 | `main` | DECISIONS.md · bench/BENCH.md |
 | 2026-08-13 | /bench | B-0027 → A; D-032 — append-only binds at merge, not at application; T-0013 minted for the `--update` hole it exposed; T-0003 unblocked for rework | `main` | DECISIONS.md · tasks/T-0013.md |
+| 2026-08-13 | T-0003 | built (rework) — B-0025/B-0026 folded; `dismissed` suppresses, `resolved_by` dropped, `020` edited in place per D-032; 14 tests, drift declared, pre-merge 0 | `forge/T-0003` | journal/T-0003.md · test_logs/T-0003/ |
+| 2026-08-13 | /audit T-0003 | GREEN — 14/14 tests, AC-018/AC-020 and D-029/D-030/D-032 re-exercised by hand against the live schema, 4 fences clean, pre-merge re-run 0 at `7c3fc8e` | `forge/T-0003` | journal/T-0003.md · test_logs/T-0003/ |
