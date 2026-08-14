@@ -451,10 +451,6 @@
         "nullable": true,
         "type": "timestamp with time zone"
       },
-      "resolved_by": {
-        "nullable": true,
-        "type": "text"
-      },
       "state": {
         "nullable": false,
         "type": "text"

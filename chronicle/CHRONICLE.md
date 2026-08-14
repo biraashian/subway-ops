@@ -22,3 +22,4 @@ this file only points at it.
 | 2026-08-13 | /bench | B-0027 → A; D-032 — append-only binds at merge, not at application; T-0013 minted for the `--update` hole it exposed; T-0003 unblocked for rework | `main` | DECISIONS.md · tasks/T-0013.md |
 | 2026-08-13 | T-0003 | built (rework) — B-0025/B-0026 folded; `dismissed` suppresses, `resolved_by` dropped, `020` edited in place per D-032; 14 tests, drift declared, pre-merge 0 | `forge/T-0003` | journal/T-0003.md · test_logs/T-0003/ |
 | 2026-08-13 | /audit T-0003 | GREEN — 14/14 tests, AC-018/AC-020 and D-029/D-030/D-032 re-exercised by hand against the live schema, 4 fences clean, pre-merge re-run 0 at `7c3fc8e` | `forge/T-0003` | journal/T-0003.md · test_logs/T-0003/ |
+| 2026-08-13 | T-0003 | **merged** — audit green; post-merge clean; baseline rotated; T-0003 and T-0010 declarations retired (D-028 §3) | `main` | test_logs/T-0003/T-0003-post-merge.md |

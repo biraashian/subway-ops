@@ -346,21 +346,21 @@ EARS lines above · §9 fully covered.
 
 ## 9 · Traceability Matrix
 
-| Story | Requirement | Acceptance | Task |
-|---|---|---|---|
-| US-001 | REQ-001 | AC-001…AC-004 | T-0006 |
-| US-003 | REQ-002 | AC-005, AC-006 | T-0006 |
-| US-003 | REQ-002 | AC-007…AC-010 | T-0008 |
-| US-002 | REQ-003 | AC-011, AC-014 | T-0004 (schema), T-0007 (code) |
-| US-002 | REQ-003 | AC-012, AC-013, AC-015…AC-017 | T-0007 |
-| US-004 | REQ-004 | AC-018, AC-020 | T-0003 (mechanism), T-0009 (people) |
-| US-004 | REQ-004 | AC-019, AC-021 | T-0009 |
-| US-005 | REQ-005 | AC-022 | T-0004 |
-| US-005 | REQ-005 | AC-023, AC-025 | T-0008 |
-| US-005 | REQ-005 | AC-024 | T-0006 |
-| US-003 | REQ-006 | AC-026, AC-027, AC-029, AC-030 | T-0005 |
-| US-003 | REQ-006 | AC-028 | T-0006 |
-| US-003 | REQ-006 | AC-031 | T-0004 |
+| Story | Requirement | Acceptance | Task | Status |
+|---|---|---|---|---|
+| US-001 | REQ-001 | AC-001…AC-004 | T-0006 | queued |
+| US-003 | REQ-002 | AC-005, AC-006 | T-0006 | queued |
+| US-003 | REQ-002 | AC-007…AC-010 | T-0008 | queued |
+| US-002 | REQ-003 | AC-011, AC-014 | T-0004 (schema), T-0007 (code) | queued |
+| US-002 | REQ-003 | AC-012, AC-013, AC-015…AC-017 | T-0007 | queued |
+| US-004 | REQ-004 | AC-018, AC-020 | T-0003 (mechanism), T-0009 (people) | **T-0003 merged 2026-08-13** — mechanism only; the people half is T-0009 |
+| US-004 | REQ-004 | AC-019, AC-021 | T-0009 | queued |
+| US-005 | REQ-005 | AC-022 | T-0004 | queued |
+| US-005 | REQ-005 | AC-023, AC-025 | T-0008 | queued |
+| US-005 | REQ-005 | AC-024 | T-0006 | queued |
+| US-003 | REQ-006 | AC-026, AC-027, AC-029, AC-030 | T-0005 | queued |
+| US-003 | REQ-006 | AC-028 | T-0006 | queued |
+| US-003 | REQ-006 | AC-031 | T-0004 | queued |
 
 Coverage verified both ways: 31 of 31 ACs land in at least one task; every task
 carries at least one AC; no task cites an AC this spec does not define. Tests
