@@ -50,24 +50,53 @@ CREATE TABLE IF NOT EXISTS ops_worklist_items (
                    CHECK (state IN ('open', 'in_progress', 'resolved', 'dismissed')),
 
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    resolved_at    TIMESTAMPTZ,
-    resolved_by    TEXT
+
+    -- When the item left a live state. Named in codex 02's shape per D-030:
+    -- an item that reached a terminal state at no particular time is a record
+    -- that something happened but not when.
+    --
+    -- There is deliberately NO `resolved_by`. An actor is a different claim,
+    -- and nothing in this system can make it today — there is no worklist
+    -- screen and no producer passes one, so every row would leave it NULL. A
+    -- nullable actor column filled by nobody reads as evidence that
+    -- attribution was tracked when it never was. It arrives with
+    -- SPEC-APP-001, which has a human clicking a button, as a new migration.
+    resolved_at    TIMESTAMPTZ
 );
 
--- AC-018's "SHALL NOT open a duplicate while one is already open" enforced in
--- the database rather than by a SELECT-then-INSERT in Python. Two concurrent
--- callers racing on the same subject would both see "no open item" and both
--- insert; a partial unique index makes the second one fail instead.
+-- AC-018's "SHALL NOT open a duplicate while an item is in a suppressing
+-- state" enforced in the database rather than by a SELECT-then-INSERT in
+-- Python. Two concurrent callers racing on the same subject would both see
+-- "nothing suppressing" and both insert; a partial unique index makes the
+-- second one fail instead.
 --
--- Partial on the two live states so that resolving an item frees the subject
--- to raise a fresh one later — a wage supplied and then removed must be able
--- to reopen.
+-- **The predicate is the decision, not an optimisation (D-029).** Three states
+-- suppress:
+--   open, in_progress — the work is outstanding.
+--   dismissed         — a human looked and said no.
+-- `resolved` is absent on purpose: the problem was fixed, and a recurrence is
+-- genuinely new work that should surface. A wage supplied and then removed
+-- must be able to raise a fresh item.
+--
+-- `dismissed` is here because every producer of worklist items is a SWEEP: it
+-- runs each cycle and re-asserts everything it still believes. Without this
+-- state in the predicate, office dismisses an item and T-0009's next sweep
+-- re-raises it the same night, so dismissal is a button that does nothing —
+-- worse than no button, because it teaches the operator that the worklist does
+-- not listen. Accepted cost, recorded in D-029: a genuinely new occurrence of a
+-- dismissed problem stays invisible until someone reopens it explicitly.
 CREATE UNIQUE INDEX IF NOT EXISTS uq_worklist_open_subject
     ON ops_worklist_items (kind, subject_ref)
-    WHERE state IN ('open', 'in_progress');
+    WHERE state IN ('open', 'in_progress', 'dismissed');
 
--- The worklist screen's primary read: everything open for my role, oldest due
--- first. Partial for the same reason — resolved items are history, not work.
+-- The worklist screen's primary read: everything outstanding for my role,
+-- oldest due first.
+--
+-- This predicate is deliberately NOT the same as the one above, and the
+-- difference is not an oversight. Suppression asks "may a new item be raised?"
+-- — dismissed says no. This index asks "what needs a human today?" — dismissed
+-- says no to that as well, but by being absent rather than present. A dismissed
+-- item is neither work nor a slot to be refilled; it belongs in neither read.
 CREATE INDEX IF NOT EXISTS idx_worklist_role_due
     ON ops_worklist_items (assigned_role, due_date)
     WHERE state IN ('open', 'in_progress');

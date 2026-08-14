@@ -22,9 +22,23 @@ from subway_ops.db.connection import execute_sql
 
 log = structlog.get_logger(__name__)
 
-#: States in which an item still represents outstanding work. The partial
-#: unique index in migration 020 is defined over exactly these, so this tuple
-#: and that index must agree.
+#: States in which an existing item suppresses a new one for the same subject.
+#: The partial unique index ``uq_worklist_open_subject`` in migration 020 is
+#: defined over exactly these, so this tuple and that index must agree — and so
+#: must the ``WHERE`` clause on ``open_item``'s ``ON CONFLICT``, which Postgres
+#: uses to infer which partial index it is talking about.
+#:
+#: ``dismissed`` is here per D-029: producers are sweeps, so without it a
+#: dismissal is undone by the next cycle.
+SUPPRESSING_STATES: tuple[str, ...] = ("open", "in_progress", "dismissed")
+
+#: States that ``resolve_item`` closes out. Deliberately NOT the same tuple.
+#:
+#: D-029 makes dismissal durable and "undone only by an explicit reopen", so
+#: resolving a subject must not quietly clear a dismissed item — that would
+#: undo the dismissal by a side door, and the reopen path belongs to
+#: SPEC-APP-001. The two tuples answer different questions: one is "may a new
+#: item be raised?", the other is "what does resolution close?"
 LIVE_STATES: tuple[str, ...] = ("open", "in_progress")
 
 
@@ -36,11 +50,13 @@ def open_item(
     summary: str,
     due_date: date | None = None,
 ) -> int | None:
-    """Open a worklist item for ``(kind, subject_ref)``, unless one is live.
+    """Open a worklist item for ``(kind, subject_ref)``, unless one suppresses.
 
-    Returns the new item's id, or ``None`` when a live item already exists for
-    that subject — AC-018's "SHALL NOT open a duplicate while one is already
-    open for that person".
+    Returns the new item's id, or ``None`` when a suppressing item already
+    exists for that subject — AC-018's "SHALL NOT open a duplicate while an item
+    for that person is in a suppressing state". Per D-029 those states are
+    ``open``, ``in_progress`` and ``dismissed``; a ``resolved`` item suppresses
+    nothing, so a subject that goes bad again raises a fresh item.
 
     The no-duplicate rule is enforced by the partial unique index in migration
     020, not by a read-then-write here. ``ON CONFLICT DO NOTHING`` against that
@@ -49,7 +65,8 @@ def open_item(
 
     A ``None`` return is an ordinary outcome, not a failure. Callers that sweep
     a whole population (see ``people.completeness``) will get ``None`` for every
-    subject that already has an item, which is exactly the desired quiet.
+    subject that already has an item, which is exactly the desired quiet — and
+    for a dismissed subject that quiet is the point, not a side effect.
     """
     rows = execute_sql(
         """
@@ -57,7 +74,7 @@ def open_item(
             (kind, subject_ref, assigned_role, summary, due_date)
         VALUES (:kind, :subject_ref, :assigned_role, :summary, :due_date)
         ON CONFLICT (kind, subject_ref)
-            WHERE state IN ('open', 'in_progress')
+            WHERE state IN ('open', 'in_progress', 'dismissed')
             DO NOTHING
         RETURNING id
         """,
@@ -83,7 +100,7 @@ def open_item(
     return item_id
 
 
-def resolve_item(kind: str, subject_ref: str, *, resolved_by: str | None = None) -> int:
+def resolve_item(kind: str, subject_ref: str) -> int:
     """Resolve every live item for ``(kind, subject_ref)``. Returns the count.
 
     AC-020's "WHEN the last missing field is supplied, the roster service SHALL
@@ -95,6 +112,18 @@ def resolve_item(kind: str, subject_ref: str, *, resolved_by: str | None = None)
     written as a set operation anyway so that a historical duplicate, if one
     ever predated the index, cannot leave a straggler behind.
 
+    **A dismissed item is not resolved here**, which is why this reads
+    ``LIVE_STATES`` and not ``SUPPRESSING_STATES``. D-029 makes dismissal
+    durable and undone only by an explicit reopen; clearing it as a side effect
+    of the underlying problem being fixed would be that reopen happening by
+    accident, without anyone deciding it. The consequence is deliberate and
+    recorded: a dismissed subject stays quiet even after the problem is fixed
+    and later recurs, until a human reopens it.
+
+    There is no actor parameter (D-030). ``resolved_at`` records when; nothing
+    in this system can honestly say who until SPEC-APP-001 builds the screen
+    where a human clicks the button.
+
     Resolved items are never deleted (codex/00-INSTITUTION: nothing is deleted).
     They stay as the record that the work was done and when.
     """
@@ -102,14 +131,13 @@ def resolve_item(kind: str, subject_ref: str, *, resolved_by: str | None = None)
         """
         UPDATE ops_worklist_items
            SET state       = 'resolved',
-               resolved_at = now(),
-               resolved_by = :resolved_by
+               resolved_at = now()
          WHERE kind = :kind
            AND subject_ref = :subject_ref
            AND state IN ('open', 'in_progress')
         RETURNING id
         """,
-        {"kind": kind, "subject_ref": subject_ref, "resolved_by": resolved_by},
+        {"kind": kind, "subject_ref": subject_ref},
     )
     count = len(rows)
     if count:
@@ -118,6 +146,5 @@ def resolve_item(kind: str, subject_ref: str, *, resolved_by: str | None = None)
             kind=kind,
             subject_ref=subject_ref,
             count=count,
-            resolved_by=resolved_by,
         )
     return count

@@ -94,6 +94,53 @@ def test_open_item_suppressed_while_in_progress(clean_worklist: None) -> None:
 
 
 @requires_db
+def test_dismissed_suppresses_a_new_item(clean_worklist: None) -> None:
+    """D-029 — dismissal is durable; a sweep never overrules it.
+
+    This is the test whose absence was the T-0003 audit's first finding. Every
+    producer of worklist items is a sweep that re-asserts its beliefs each
+    cycle, so if `dismissed` did not suppress, office dismissing an item would
+    accomplish nothing — T-0009's next run would raise it again the same night.
+    """
+    first = open_item(
+        kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="first"
+    )
+    assert first is not None
+    execute_sql(
+        "UPDATE ops_worklist_items SET state = 'dismissed' "
+        "WHERE kind = :k AND subject_ref = :s",
+        {"k": KIND, "s": SUBJECT},
+    )
+
+    again = open_item(
+        kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="the sweep"
+    )
+    assert again is None, "a dismissal a sweep can undo is a button that does nothing"
+    assert _states(SUBJECT) == ["dismissed"], "no second row beside the dismissal"
+
+
+@requires_db
+def test_resolve_does_not_clear_a_dismissal(clean_worklist: None) -> None:
+    """D-029 — dismissal is undone *only* by an explicit reopen.
+
+    The subtle half of the same decision, and the reason `LIVE_STATES` and
+    `SUPPRESSING_STATES` are two tuples rather than one. If resolving cleared a
+    dismissed item, then fixing the underlying problem would silently un-dismiss
+    it — a reopen nobody decided on. The accepted cost is recorded in D-029: the
+    subject stays quiet afterwards until a human reopens it.
+    """
+    open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="a")
+    execute_sql(
+        "UPDATE ops_worklist_items SET state = 'dismissed' "
+        "WHERE kind = :k AND subject_ref = :s",
+        {"k": KIND, "s": SUBJECT},
+    )
+
+    assert resolve_item(KIND, SUBJECT) == 0, "resolution must not reach a dismissal"
+    assert _states(SUBJECT) == ["dismissed"]
+
+
+@requires_db
 def test_open_item_creates_again_after_resolve(clean_worklist: None) -> None:
     """Resolved is not suppressed forever — a subject can go bad again."""
     open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="first")
@@ -123,16 +170,32 @@ def test_resolve_item_on_absent_subject_returns_zero(clean_worklist: None) -> No
 
 
 @requires_db
-def test_resolve_records_who_and_when(clean_worklist: None) -> None:
+def test_resolve_records_when(clean_worklist: None) -> None:
+    """D-030 — the table records WHEN resolution happened, not who did it.
+
+    The second assertion is the load-bearing one: `resolved_by` must not exist.
+    An actor column that no producer populates reads as attribution that was
+    tracked when it never was, so its absence is a property to hold rather than
+    a thing that merely happens to be missing today.
+    """
     open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="a")
-    resolve_item(KIND, SUBJECT, resolved_by="office@example.com")
+    resolve_item(KIND, SUBJECT)
     rows = execute_sql(
-        "SELECT resolved_by, resolved_at IS NOT NULL FROM ops_worklist_items "
+        "SELECT resolved_at IS NOT NULL FROM ops_worklist_items "
         "WHERE kind = :k AND subject_ref = :s",
         {"k": KIND, "s": SUBJECT},
     )
-    assert rows[0][0] == "office@example.com"
-    assert rows[0][1] is True
+    assert rows[0][0] is True
+
+    cols = execute_sql(
+        "SELECT column_name FROM information_schema.columns "
+        "WHERE table_name = 'ops_worklist_items'"
+    )
+    names = {r[0] for r in cols}
+    assert "resolved_at" in names
+    assert "resolved_by" not in names, (
+        "D-030 — no actor column until SPEC-APP-001 has a producer for it"
+    )
 
 
 @requires_db

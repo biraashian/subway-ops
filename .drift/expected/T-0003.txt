@@ -1,0 +1,33 @@
+# T-0003 — ops_worklist_items and the generic worklist helper
+#
+# One line, and it is a REMOVAL, which is worth a reader's full attention: this
+# task drops a column from a table that already exists in the baseline.
+#
+# Why the table is already in the baseline. T-0003's migration 020 was applied
+# to the shared database during its first build, then T-0003 halted on B-0022.
+# T-0010 merged first (D-028 rule 4: merge order follows dependency order) and
+# its post-merge rotated the baseline to include the table as it stood then —
+# ten columns, `resolved_by` among them.
+#
+# Why the column goes. The T-0003 audit found `resolved_at` and `resolved_by`
+# past the shape codex 02 states and this task's own NOTES call complete.
+# B-0026 → C, recorded as D-030: `resolved_at` stays and codex 02 now names it;
+# `resolved_by` goes, along with `resolve_item`'s undeclared actor parameter.
+# Nothing in this system can populate an actor until SPEC-APP-001 builds the
+# screen where a human clicks the button, so every row would have left it NULL —
+# a column that reads as attribution nobody ever tracked.
+#
+# How the removal was performed, since a dropped column is the change class this
+# gate exists to make someone look at. Per D-032, append-only binds at merge and
+# migration 020 has never reached `main`, so `020_worklist.sql` was edited in
+# place rather than corrected by a `021`. D-032's three conditions were met and
+# are evidenced in journal/T-0003.md: the table was re-measured at 0 rows before
+# anything was dropped, the table was dropped and the corrected migration
+# re-applied so the live schema agrees with the file, and CHECKSUMS.txt was
+# regenerated. The index predicate also widened to three states under D-029;
+# that is not listed below because the snapshot compares tables and columns.
+#
+# This declaration retires when T-0003 merges and post-merge rotates the
+# baseline (D-028 rule 3).
+
+- ops_worklist_items.resolved_by REMOVED
