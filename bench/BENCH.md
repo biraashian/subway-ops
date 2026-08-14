@@ -5,6 +5,54 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0029 — The drift check cannot see a constraint change
+Task: T-0004 (found during build; does not block it) · Blocks: nothing today · Raised: 2026-08-13
+
+**Observed.** Migration `021_people.sql` drops and re-creates
+`ref_users_role_check`, widening who may hold an account on the admin surface
+from three roles to six. `schema_snapshot.py --diff` reports **four** changes,
+all of them new tables, and says nothing about the constraint. Reproduced: the
+declaration matches at four lines and the gate is green with the ALTER entirely
+unmentioned.
+
+The snapshot captures tables and columns. A `CHECK`, a `UNIQUE`, a foreign key,
+an index predicate, a `NOT NULL` — none of them appear. So a migration can widen
+an access-control constraint, drop a uniqueness guarantee, or remove a foreign
+key on an existing table and produce zero drift lines.
+
+**Why this matters more than it looks.** B-0022 chose option A over option B
+specifically because B "cannot see an ALTER that a migration makes by accident,
+which is precisely the case worth catching". Option A was adopted to preserve
+that property, and it does not have it either — for a different reason, at a
+different layer. The declared-drift mechanism is sound; what it is declared
+*over* is narrower than the review it is meant to support. T-0003's own
+`dismissed` fix widened an index predicate, and that produced no drift line
+either.
+
+Not urgent: 021's constraint change is intentional, tested both ways
+(`test_ref_users_role_accepts_the_six_roles`, and a rejection test pinning
+`shift_lead` as deliberately absent), and described in the declaration prose. The
+gap is that the *next* one might not be.
+
+Options:
+  A) **Extend the snapshot to constraints and indexes** — CHECK, UNIQUE, FK,
+     PK, NOT NULL, index definitions. The declaration format already handles
+     arbitrary lines. Costs a noisier first diff and a one-time baseline rotation
+     that will show every existing constraint as "added".
+  B) **Constraints only, not indexes** — constraints are contracts, indexes are
+     performance. Smaller diff, but T-0003's suppression predicate lives in a
+     partial index and is genuinely semantic, so this would miss it.
+  C) **Leave it; rely on the migration diff for constraint review.** Cheapest,
+     and honest about what the check is for — but it means the gate's green is
+     narrower than a reader will assume, which is the failure mode B-0022 was
+     raised about in the first place.
+Burst recommends: **A**, timed with or after T-0013 rather than now — both are
+harness-hardening found by leaning on the harness, both touch checks that police
+builds, and neither should be done by a task the check is currently gating. Note
+C's specific danger: three separate times now, a check has been believed to cover
+something it did not.   [recommendation, not a decision]
+Status: OPEN
+
 ### B-0027 — May T-0003 edit migration `020`, or must a `021` correct it?
 Task: T-0003 (rework) · Blocks: T-0003's rework, and every migration task until D-025 lands · Raised: 2026-08-13
 
