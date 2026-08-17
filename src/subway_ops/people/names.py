@@ -47,9 +47,11 @@ def normalize_name(raw: str) -> str:
 
 
 def _capitalize_token(token: str) -> str:
-    """Upper-case the first character, lower-case the rest. ``BIR`` -> ``Bir``."""
-    if not token:
-        return token
+    """Upper-case the first character, lower-case the rest. ``BIR`` -> ``Bir``.
+
+    Only ever called on tokens from ``str.split()``, which never yields an empty
+    string, so there is no empty-input guard to write.
+    """
     return token[0].upper() + token[1:].lower()
 
 
