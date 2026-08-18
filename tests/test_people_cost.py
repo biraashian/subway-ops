@@ -1,9 +1,9 @@
 """Tests for weekly cost — SPEC-PPL-001 AC-015, AC-016, AC-017, CON-005.
 
 The overtime boundary tests are PURE and need no database, which is the point of
-factoring ``split_weekly_hours`` and ``cost_hours`` out of the query. The
-DB-backed half exercises the join to ``stg_timeclock`` and the two uncosted
-conditions.
+factoring ``allocate_overtime`` and ``cost_hours`` out of the query. The
+DB-backed half exercises the join to ``stg_timeclock``, the two uncosted
+conditions, and the per-shift rate resolution D-036 requires.
 """
 
 from __future__ import annotations
@@ -22,12 +22,33 @@ from subway_ops.config import (
 )
 from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
-from subway_ops.people.cost import WeekCost, cost_hours, cost_week, split_weekly_hours
+from subway_ops.people.cost import (
+    WeekCost,
+    allocate_overtime,
+    cost_hours,
+    cost_week,
+)
 from subway_ops.people.wages import record_wage
 
 MARK = "t0007-cost-selftest"
 CLERK_A = "t0007:clerk-a"
 CLERK_B = "t0007:clerk-b"
+
+
+def _weekly_split(total: Decimal) -> tuple[Decimal, Decimal]:
+    """Weekly regular/overtime totals for a single-shift week.
+
+    D-036 replaced the one-rate-per-week split with a per-shift chronological
+    allocation, so the weekly totals are now a SUM over shifts rather than a
+    function of the total. This keeps the boundary cases expressed as weekly
+    figures, which is how AC-016 states them.
+    """
+    allocation = allocate_overtime([total])
+    return (
+        sum((r for r, _ in allocation), Decimal("0")),
+        sum((o for _, o in allocation), Decimal("0")),
+    )
+
 
 requires_db = pytest.mark.skipif(
     not settings.database_url, reason="DB integration test: needs DATABASE_URL"
@@ -58,7 +79,7 @@ class TestSplitWeeklyHours:
         itself, and a ``>=`` in place of ``>`` would pay a premium on an hour
         nobody is owed one for — on 250 people, every week, forever.
         """
-        assert split_weekly_hours(Decimal(total)) == (
+        assert _weekly_split(Decimal(total)) == (
             Decimal(regular),
             Decimal(overtime),
         )
@@ -69,7 +90,7 @@ class TestSplitWeeklyHours:
     def test_split_preserves_total_hours(self) -> None:
         """Nothing is lost or invented in the split, at any magnitude."""
         for total in ("0", "13.37", "40", "40.0001", "99.9999"):
-            regular, overtime = split_weekly_hours(Decimal(total))
+            regular, overtime = _weekly_split(Decimal(total))
             assert regular + overtime == Decimal(total)
 
 
@@ -355,3 +376,190 @@ def test_week_cost_is_frozen(worker: tuple[int, list[str]]) -> None:
     assert isinstance(result, WeekCost)
     with pytest.raises(Exception, match=r"frozen|immutable|cannot assign"):
         result.dollars = Decimal("1")  # type: ignore[misc]
+
+
+# ===========================================================================
+#  D-036 — per-shift rates, and the chronological 40-hour line
+# ===========================================================================
+
+
+class TestAllocateOvertime:
+    """Pure. Which shifts carry the premium — Q-007's clock_in ordering."""
+
+    def test_the_line_can_fall_through_the_middle_of_a_shift(self) -> None:
+        allocation = allocate_overtime([Decimal("20"), Decimal("25"), Decimal("10")])
+        assert allocation == [
+            (Decimal("20"), Decimal("0")),
+            (Decimal("20"), Decimal("5")),
+            (Decimal("0"), Decimal("10")),
+        ]
+
+    def test_exactly_forty_leaves_the_next_shift_wholly_overtime(self) -> None:
+        assert allocate_overtime([Decimal("40"), Decimal("5")]) == [
+            (Decimal("40"), Decimal("0")),
+            (Decimal("0"), Decimal("5")),
+        ]
+
+    def test_under_forty_is_all_regular(self) -> None:
+        assert allocate_overtime([Decimal("10"), Decimal("29.99")]) == [
+            (Decimal("10"), Decimal("0")),
+            (Decimal("29.99"), Decimal("0")),
+        ]
+
+    def test_allocation_preserves_every_hour(self) -> None:
+        shifts = [Decimal("13.5"), Decimal("9"), Decimal("22.25"), Decimal("8")]
+        allocation = allocate_overtime(shifts)
+        assert sum(r + o for r, o in allocation) == sum(shifts)
+        assert sum(r for r, _ in allocation) == Decimal("40")
+
+    def test_order_matters_and_that_is_the_point(self) -> None:
+        """Reversing the week moves which shift carries the premium.
+
+        Under one weekly rate this was invisible. Under D-036 each shift may be
+        priced differently, so the ORDER decides which rate the premium
+        multiplies — which is exactly why Q-007's clock_in ordering had to be
+        the answer rather than something chosen here.
+        """
+        forward = allocate_overtime([Decimal("35"), Decimal("15")])
+        backward = allocate_overtime([Decimal("15"), Decimal("35")])
+        assert forward == [(Decimal("35"), Decimal("0")), (Decimal("5"), Decimal("10"))]
+        assert backward == [(Decimal("15"), Decimal("0")), (Decimal("25"), Decimal("10"))]
+
+
+@requires_db
+def test_midweek_raise_prices_each_shift_at_its_own_rate(
+    worker: tuple[int, list[str]],
+) -> None:
+    """AC-012a / D-036 — the defect this rework exists to fix.
+
+    10h before a mid-week raise at $10 and 10h after at $30 is $400. The old
+    code resolved one rate at week_finish and returned $600 — every pre-raise
+    hour paid at the post-raise rate, a 50% overstatement, with is_costed True.
+    """
+    employee_id, stores = worker
+    week_start, _ = business_week_of(business_date_now())
+    raise_day = week_start + timedelta(days=3)
+
+    _punch(stores[0], CLERK_A, week_start, after_adj="10.00")
+    _punch(stores[0], CLERK_A, raise_day, after_adj="10.00")
+
+    record_wage(
+        employee_id=employee_id,
+        effective_date=week_start - timedelta(days=1),
+        hourly_rate=Decimal("10.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+    record_wage(
+        employee_id=employee_id,
+        effective_date=raise_day,
+        hourly_rate=Decimal("30.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+
+    result = cost_week(employee_id, week_start)
+    assert result.is_costed is True
+    assert result.dollars == Decimal("400.0000"), "10h x $10 + 10h x $30"
+    assert result.dollars != Decimal("600.0000"), "the pre-rework answer"
+
+
+@requires_db
+def test_midweek_cut_is_not_backdated_either(worker: tuple[int, list[str]]) -> None:
+    """The mirror case — a rate CUT must not re-price the hours before it.
+
+    Pinned separately because the two failure directions are not symmetric in
+    consequence: an overstatement inflates labor cost and gets noticed, an
+    understatement quietly flatters the store's numbers.
+    """
+    employee_id, stores = worker
+    week_start, _ = business_week_of(business_date_now())
+    cut_day = week_start + timedelta(days=3)
+
+    _punch(stores[0], CLERK_A, week_start, after_adj="10.00")
+    _punch(stores[0], CLERK_A, cut_day, after_adj="10.00")
+
+    record_wage(
+        employee_id=employee_id,
+        effective_date=week_start - timedelta(days=1),
+        hourly_rate=Decimal("30.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+    record_wage(
+        employee_id=employee_id,
+        effective_date=cut_day,
+        hourly_rate=Decimal("10.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+
+    result = cost_week(employee_id, week_start)
+    assert result.dollars == Decimal("400.0000"), "10h x $30 + 10h x $10"
+
+
+@requires_db
+def test_a_shift_with_no_rate_in_force_makes_the_week_uncosted(
+    worker: tuple[int, list[str]],
+) -> None:
+    """Per-shift pricing makes this per shift — e.g. someone hired mid-week.
+
+    The first shift predates every wage row, so its rate is unknown. A partial
+    dollar figure would understate the week rather than admit it cannot say.
+    """
+    employee_id, stores = worker
+    week_start, _ = business_week_of(business_date_now())
+    hire_day = week_start + timedelta(days=2)
+
+    _punch(stores[0], CLERK_A, week_start, after_adj="8.00")
+    _punch(stores[0], CLERK_A, hire_day, after_adj="8.00")
+    record_wage(
+        employee_id=employee_id,
+        effective_date=hire_day,
+        hourly_rate=Decimal("20.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+
+    result = cost_week(employee_id, week_start)
+    assert result.is_costed is False
+    assert result.dollars is None
+    assert result.regular_hours == Decimal("16.00"), "hours still reported (AC-021)"
+
+
+@requires_db
+def test_overtime_premium_uses_the_rate_of_the_shift_that_crossed_forty(
+    worker: tuple[int, list[str]],
+) -> None:
+    """D-036 + Q-007 together — the premium follows the shift, not the week.
+
+    35h at $10, then 15h at $20 after a raise. The 40-hour line falls 5h into
+    the second shift: 35h + 5h regular, 10h overtime, all of the overtime at the
+    NEW rate because those hours were worked after the raise.
+        35*10 + 5*20 + 10*20*1.5 = 350 + 100 + 300 = 750
+    """
+    employee_id, stores = worker
+    week_start, _ = business_week_of(business_date_now())
+    raise_day = week_start + timedelta(days=2)
+
+    _punch(stores[0], CLERK_A, week_start, after_adj="35.00")
+    _punch(stores[0], CLERK_A, raise_day, after_adj="15.00")
+    record_wage(
+        employee_id=employee_id,
+        effective_date=week_start - timedelta(days=1),
+        hourly_rate=Decimal("10.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+    record_wage(
+        employee_id=employee_id,
+        effective_date=raise_day,
+        hourly_rate=Decimal("20.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+
+    result = cost_week(employee_id, week_start)
+    assert result.regular_hours == Decimal("40.00")
+    assert result.overtime_hours == Decimal("10.00")
+    assert result.dollars == Decimal("750.0000")

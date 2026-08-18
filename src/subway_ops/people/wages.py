@@ -116,10 +116,11 @@ def rate_in_force(employee_id: int, on: date) -> Decimal | None:
     into a labor-cost mart and understates it invisibly. `None` forces the
     caller to decide, which is what INV-008 and AC-017 are for.
 
-    Note what is NOT here: no ``actor_role`` guard. CON-002 specifies this
-    signature exactly, and INV-006 ("a wage rate is readable only by office and
-    owner") is therefore not enforced at this boundary — see the journal. Adding
-    an unspecified parameter would be structure past the licensed shape.
+    **Unguarded on purpose (D-037).** CON-002 specifies this signature exactly:
+    no actor, because this is the internal resolver that marts and ``cost_week``
+    call, and neither has a human actor to name. The guarded human-facing read
+    is ``read_wage`` (CON-006). This is now a fence rather than a judgment call —
+    T-0007's FORBIDDEN_ACTIONS forbid adding a guard here.
     """
     rows = execute_sql(
         """
@@ -135,3 +136,39 @@ def rate_in_force(employee_id: int, on: date) -> Decimal | None:
     if not rows:
         return None
     return Decimal(rows[0][0])
+
+
+def read_wage(employee_id: int, on: date, *, actor_role: str) -> Decimal | None:
+    """The guarded human-facing wage read. CON-006, AC-013, INV-006.
+
+    Same resolution as :func:`rate_in_force` — the rate in force on ``on``, or
+    ``None`` — with the role check AC-013 requires.
+
+    **Why this exists as a second function (D-037).** AC-013 and INV-006 both
+    describe a *read*, and CON-002 gave the read no actor to check: the contract
+    forbade the shape the acceptance criterion required, a contradiction inside
+    one REQ. Splitting the two uses resolves it without pushing a role parameter
+    into every mart. ``rate_in_force`` stays the internal resolver; this is the
+    entry point a view, an API handler, or anything with a human behind it must
+    call.
+
+    **What this does not do, stated so nobody assumes otherwise.**
+    ``cost_week`` is unguarded, and a caller holding both its ``dollars`` and
+    its hours recovers the rate by division. That is accepted rather than
+    overlooked (D-037): a guard on ``cost_week`` would be theatre, so INV-006 is
+    scoped to say the library's guarded accessor is this one and a human-facing
+    surface must either come through here or enforce the role itself.
+
+    Raises:
+        PermissionError: ``actor_role`` is not ``office`` or ``owner``. The
+            message names the role and the employee and never the rate — AC-013's
+            second clause, and an exception message is a response body the
+            moment it reaches a log. Note the rate is not even *read* before the
+            refusal, so there is nothing to leak.
+    """
+    if actor_role not in WAGE_ROLES:
+        raise PermissionError(
+            f"role {actor_role!r} may not read wages for employee {employee_id}; "
+            f"wages are restricted to {sorted(WAGE_ROLES)}"
+        )
+    return rate_in_force(employee_id, on)

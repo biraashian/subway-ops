@@ -7,6 +7,7 @@ hardcoded date (codex/13-BUILD/CONVENTIONS.md).
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Iterator
 from datetime import timedelta
 from decimal import Decimal
@@ -17,7 +18,12 @@ from subway_ops.calendar import business_date_now
 from subway_ops.config import settings
 from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
-from subway_ops.people.wages import WAGE_ROLES, rate_in_force, record_wage
+from subway_ops.people.wages import (
+    WAGE_ROLES,
+    rate_in_force,
+    read_wage,
+    record_wage,
+)
 
 MARK = "t0007-wages-selftest"
 
@@ -240,7 +246,13 @@ def test_permission_error_body_contains_no_rate(person: int) -> None:
         )
     body = f"{caught.value!r} {caught.value!s}"
     assert "47.1234" not in body
-    assert "47" not in body
+    assert str(secret_rate) not in body
+    # NOT `assert "47" not in body`. That was the original assertion and it
+    # failed the gate at 0a1e02e: `body` also carries the employee_id, which is
+    # BIGSERIAL and climbs forever, so the test broke the moment that id
+    # happened to contain "47" — nothing to do with the rate. An assertion
+    # broader than the property it is testing fails on unrelated data, and a
+    # test that cries wolf gets muted.
 
 
 @requires_db
@@ -293,3 +305,85 @@ def test_zero_and_negative_rate_rejected(person: int, bad: str) -> None:
         "SELECT count(*) FROM ref_employee_wages WHERE employee_id = :e", {"e": person}
     )
     assert rows[0][0] == 0
+
+
+# --- CON-006 — the guarded read (D-037) ------------------------------------
+
+
+@requires_db
+@pytest.mark.parametrize("role", ["crew", "shift_lead", "store_manager", "field_manager"])
+def test_read_wage_refuses_a_non_office_role(person: int, role: str) -> None:
+    """AC-013 / CON-006 — the READ that AC-013 actually names is now guarded.
+
+    Before D-037 this had no code path at all: AC-013 described a read and
+    CON-002 gave it no actor to check, so every test claiming to cover AC-013
+    was in fact exercising a write.
+    """
+    record_wage(
+        employee_id=person,
+        effective_date=business_date_now(),
+        hourly_rate=Decimal("18.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+    with pytest.raises(PermissionError, match="may not read wages"):
+        read_wage(person, business_date_now(), actor_role=role)
+
+
+@requires_db
+def test_read_wage_error_never_contains_the_rate(person: int) -> None:
+    """AC-013 clause 2 — and here the rate is never even read before refusing."""
+    secret_rate = Decimal("61.5432")
+    record_wage(
+        employee_id=person,
+        effective_date=business_date_now(),
+        hourly_rate=secret_rate,
+        set_by=MARK,
+        actor_role="office",
+    )
+    with pytest.raises(PermissionError) as caught:
+        read_wage(person, business_date_now(), actor_role="crew")
+    body = f"{caught.value!r} {caught.value!s}"
+    assert str(secret_rate) not in body
+    assert "61.5432" not in body
+
+
+@requires_db
+def test_read_wage_returns_the_rate_for_a_permitted_role(person: int) -> None:
+    """The guard must not break the read for the roles that may have it."""
+    record_wage(
+        employee_id=person,
+        effective_date=business_date_now(),
+        hourly_rate=Decimal("23.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+    for role in sorted(WAGE_ROLES):
+        assert read_wage(person, business_date_now(), actor_role=role) == Decimal("23.0000")
+
+
+@requires_db
+def test_read_wage_returns_none_for_an_absent_rate(person: int) -> None:
+    """INV-007 survives the guard — absent is still None, never Decimal("0")."""
+    assert read_wage(person, business_date_now(), actor_role="office") is None
+
+
+@requires_db
+def test_rate_in_force_stays_unguarded_for_marts(person: int) -> None:
+    """D-037, pinned deliberately — this is a decision, not an oversight.
+
+    ``rate_in_force`` takes no actor and must keep taking none: it is the
+    internal resolver for marts and for ``cost_week``, neither of which has a
+    human actor to name. If someone later adds a guard here, this test fails and
+    sends them to D-037 rather than letting the two accessors quietly merge.
+    """
+    assert "actor_role" not in inspect.signature(rate_in_force).parameters
+
+    record_wage(
+        employee_id=person,
+        effective_date=business_date_now(),
+        hourly_rate=Decimal("19.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+    assert rate_in_force(person, business_date_now()) == Decimal("19.0000")

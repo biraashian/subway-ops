@@ -9,8 +9,9 @@ deliberately separated from the query. The boundary cases that matter — 40.00
 exactly, 40.01, hours summed across two stores — are the ones most worth
 testing, and none of them should need a database to test.
 
-Anchors: AC-015 (hours basis), AC-016 (overtime split), AC-017 (uncosted
-shifts), CON-005 (the returned shape), INV-007 (an absent rate is None).
+Anchors: AC-012a (per-shift rate resolution), AC-015 (hours basis), AC-016
+(overtime split), AC-017 (uncosted shifts), CON-005 (the returned shape),
+INV-007 (an absent rate is None).
 """
 
 from __future__ import annotations
@@ -51,24 +52,6 @@ class WeekCost:
     is_costed: bool
 
 
-def split_weekly_hours(total_hours: Decimal) -> tuple[Decimal, Decimal]:
-    """Split summed weekly hours into (regular, overtime). AC-016. Pure.
-
-    The split is on the person's SUMMED hours for the business week — not per
-    shift and not per store. That is the whole reason this takes a single total
-    rather than a list of shifts: someone who worked 25 hours at each of two
-    stores is at 50 hours and owed 10 hours of premium, and no store-scoped
-    view would ever produce that number.
-
-    Exactly at the threshold is all regular. ``40`` is not "beyond 40", and the
-    boundary is where this would be got wrong silently, so it is stated here
-    and pinned by test rather than left to the reader of a ``>`` sign.
-    """
-    if total_hours <= OVERTIME_THRESHOLD_HOURS:
-        return (total_hours, Decimal("0"))
-    return (OVERTIME_THRESHOLD_HOURS, total_hours - OVERTIME_THRESHOLD_HOURS)
-
-
 def cost_hours(regular_hours: Decimal, overtime_hours: Decimal, rate: Decimal) -> Decimal:
     """Dollars for a regular/overtime split at ``rate``. AC-016. Pure.
 
@@ -83,8 +66,38 @@ def cost_hours(regular_hours: Decimal, overtime_hours: Decimal, rate: Decimal) -
     return regular_hours * rate + overtime_hours * rate * OVERTIME_MULTIPLIER
 
 
+def allocate_overtime(
+    shift_hours: list[Decimal],
+) -> list[tuple[Decimal, Decimal]]:
+    """Split each shift's hours into (regular, overtime), chronologically. Pure.
+
+    ``shift_hours`` must already be ordered by ``clock_in``. Returns one
+    (regular, overtime) pair per shift, in the same order.
+
+    **Why per shift rather than one weekly split (D-036).** Each shift may be
+    priced at a different rate now, so it is no longer enough to know that 10 of
+    50 hours were overtime — we have to know *which* 10. Q-007 answers that and
+    was decided long before this arose: the overtime hours are "the hours after
+    the 40th, wherever worked, ordered by ``clock_in``". This walks the week in
+    that order and lets the 40-hour line fall wherever it falls, including
+    through the middle of a single shift.
+
+    Only Q-007's ORDERING is used here. Its attribution of the premium to a
+    particular store stays fenced out by NG-007, and ``cost_week`` still returns
+    a per-person weekly figure.
+    """
+    allocation: list[tuple[Decimal, Decimal]] = []
+    running = Decimal("0")
+    for hours in shift_hours:
+        remaining_regular = OVERTIME_THRESHOLD_HOURS - running
+        regular = Decimal("0") if remaining_regular <= 0 else min(hours, remaining_regular)
+        allocation.append((regular, hours - regular))
+        running += hours
+    return allocation
+
+
 def cost_week(employee_id: int, week_end: date) -> WeekCost:
-    """Cost one person's business week. CON-005.
+    """Cost one person's business week. CON-005, AC-012a.
 
     ``week_end`` is any date inside the wanted week; ``business_week_of``
     resolves the Wed-Tue span (codex 01). Never ``timedelta(days=7)`` — the
@@ -93,30 +106,35 @@ def cost_week(employee_id: int, week_end: date) -> WeekCost:
 
     Hours come from ``stg_timeclock.hours_after_adj`` (AC-015, B-0016): the
     POS's own final word. 1,369 of 19,089 rows differ from ``hours_before_adj``,
-    and each difference is already somebody's decision — discarding them would
-    mean re-making 1,369 decisions by hand.
+    and each difference is already somebody's decision.
 
-    Two conditions make the week uncosted, and both produce ``dollars=None``
+    **Each shift is priced at the rate in force on its own ``business_date``**
+    (AC-012a, D-036). Pricing the whole week at one date's rate was the defect
+    this replaced: a raise landing mid-week paid every hour before it at the new
+    rate, overstating the week by 50% on a measured probe while ``is_costed``
+    stayed True. A rate is resolved once per distinct business date in the week
+    — at most seven lookups — rather than once per shift, since two shifts on
+    the same day cannot have different rates.
+
+    Two conditions make the week uncosted, both producing ``dollars=None``
     rather than a zero (CON-005, INV-007):
 
-    * **No rate in force.** A person with no wage row costs nothing knowable,
-      and ``Decimal("0")`` would flow into a mart and understate labor cost
-      invisibly. That is INV-008's whole point: excluded and marked, never
-      silently free.
+    * **Any shift with no rate in force.** Under per-shift pricing this is now
+      per shift rather than per week: a person hired mid-week has no rate for
+      the days before they were hired, and a partial figure would understate
+      the week rather than admit it does not know.
     * **Any shift with NULL ``hours_after_adj``.** AC-017 treats that shift as
-      uncosted; because its hours are unknown, the person's weekly total is
-      unknown, and therefore so is whether they crossed 40. A partial figure
-      here would be confidently wrong in the one place overtime is decided.
+      uncosted; because its hours are unknown, so is the weekly total, and so is
+      where the 40-hour line falls for every other shift.
 
     The hours that WERE observed are still returned and still split, so an
     hours-based metric keeps working (AC-021) while the dollar figure abstains.
     """
     week_start, week_finish = business_week_of(week_end)
 
-    rows = execute_sql(
+    shifts = execute_sql(
         """
-        SELECT COALESCE(SUM(t.hours_after_adj), 0) AS observed_hours,
-               COUNT(*) FILTER (WHERE t.hours_after_adj IS NULL) AS null_shifts
+        SELECT t.business_date, t.hours_after_adj
           FROM stg_timeclock t
           JOIN ref_employee_assignments a
             ON a.store_number = t.restaurant_number
@@ -124,6 +142,7 @@ def cost_week(employee_id: int, week_end: date) -> WeekCost:
          WHERE a.employee_id    = :employee_id
            AND t.business_date >= :week_start
            AND t.business_date <= :week_finish
+         ORDER BY t.clock_in, t.business_date
         """,
         {
             "employee_id": employee_id,
@@ -132,18 +151,18 @@ def cost_week(employee_id: int, week_end: date) -> WeekCost:
         },
     )
 
-    observed_hours = Decimal(rows[0][0] or 0)
-    null_shifts = int(rows[0][1] or 0)
+    null_shifts = sum(1 for row in shifts if row[1] is None)
+    hours = [Decimal(row[1]) for row in shifts if row[1] is not None]
+    allocation = allocate_overtime(hours)
+    regular_hours = sum((r for r, _ in allocation), Decimal("0"))
+    overtime_hours = sum((o for _, o in allocation), Decimal("0"))
 
-    regular_hours, overtime_hours = split_weekly_hours(observed_hours)
-    rate = rate_in_force(employee_id, week_finish)
-
-    if rate is None or null_shifts:
+    def _uncosted(reason: str) -> WeekCost:
         log.info(
             "week_not_costed",
             employee_id=employee_id,
             week_start=week_start.isoformat(),
-            reason="no_rate_in_force" if rate is None else "null_hours_present",
+            reason=reason,
             null_shifts=null_shifts,
         )
         return WeekCost(
@@ -153,9 +172,29 @@ def cost_week(employee_id: int, week_end: date) -> WeekCost:
             is_costed=False,
         )
 
+    if null_shifts:
+        return _uncosted("null_hours_present")
+
+    # One lookup per distinct business date, not per shift.
+    rates: dict[date, Decimal | None] = {}
+    for row in shifts:
+        business_date = row[0]
+        if business_date not in rates:
+            rates[business_date] = rate_in_force(employee_id, business_date)
+
+    if any(rate is None for rate in rates.values()):
+        return _uncosted("no_rate_in_force")
+
+    dollars = Decimal("0")
+    dated = [row[0] for row in shifts]
+    for business_date, (regular, overtime) in zip(dated, allocation, strict=True):
+        rate = rates[business_date]
+        assert rate is not None  # guarded immediately above
+        dollars += cost_hours(regular, overtime, rate)
+
     return WeekCost(
         regular_hours=regular_hours,
         overtime_hours=overtime_hours,
-        dollars=cost_hours(regular_hours, overtime_hours, rate),
+        dollars=dollars,
         is_costed=True,
     )
