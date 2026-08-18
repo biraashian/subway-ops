@@ -35,9 +35,7 @@ def last_data_refresh() -> pd.Timestamp | None:
     """The newest ``refreshed_at`` across ``mart_store_daily``."""
     engine = cached_engine()
     with engine.connect() as conn:
-        row = conn.execute(
-            text("SELECT MAX(refreshed_at) FROM mart_store_daily")
-        ).first()
+        row = conn.execute(text("SELECT MAX(refreshed_at) FROM mart_store_daily")).first()
     if row is None or row[0] is None:
         return None
     return pd.Timestamp(row[0])
@@ -97,9 +95,10 @@ def portfolio_trend(weeks: int, store_filter: tuple[str, ...]) -> pd.DataFrame:
         return pd.DataFrame(columns=["week_end_date", "net_sales"])
     engine = cached_engine()
     with engine.connect() as conn:
-        return pd.read_sql_query(
-            text(
-                """
+        return (
+            pd.read_sql_query(
+                text(
+                    """
                 SELECT week_end_date, SUM(net_sales_total) AS net_sales
                 FROM mart_store_weekly
                 WHERE restaurant_number = ANY(:stores)
@@ -107,10 +106,13 @@ def portfolio_trend(weeks: int, store_filter: tuple[str, ...]) -> pd.DataFrame:
                 ORDER BY week_end_date DESC
                 LIMIT :weeks
                 """
-            ),
-            conn,
-            params={"stores": list(store_filter), "weeks": weeks},
-        ).iloc[::-1].reset_index(drop=True)
+                ),
+                conn,
+                params={"stores": list(store_filter), "weeks": weeks},
+            )
+            .iloc[::-1]
+            .reset_index(drop=True)
+        )
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
@@ -217,9 +219,7 @@ def wisr_inventory_items(store_number: str, week_end: date) -> pd.DataFrame:
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
-def cash_drops_with_deposits(
-    store_number: str, start: date, end: date
-) -> pd.DataFrame:
+def cash_drops_with_deposits(store_number: str, start: date, end: date) -> pd.DataFrame:
     """Cash-drop events alongside the per-day ``deposit_in_bank`` they
     relate to.
 
@@ -281,10 +281,7 @@ def list_field_managers() -> list[str]:
     engine = cached_engine()
     with engine.connect() as conn:
         rows = conn.execute(
-            text(
-                "SELECT name FROM ref_field_managers "
-                "WHERE is_active = true ORDER BY name"
-            )
+            text("SELECT name FROM ref_field_managers WHERE is_active = true ORDER BY name")
         ).all()
     return [str(r[0]) for r in rows]
 
@@ -300,10 +297,7 @@ def fm_name_for_email(email: str) -> str | None:
     engine = cached_engine()
     with engine.connect() as conn:
         row = conn.execute(
-            text(
-                "SELECT name FROM ref_field_managers "
-                "WHERE lower(email) = lower(:e)"
-            ),
+            text("SELECT name FROM ref_field_managers WHERE lower(email) = lower(:e)"),
             {"e": email},
         ).first()
     return None if row is None else str(row[0])
@@ -421,9 +415,7 @@ def recon_review_table(
         )
 
 
-def save_variance_entries(
-    rows: list[dict[str, object]], *, entered_by: str
-) -> int:
+def save_variance_entries(rows: list[dict[str, object]], *, entered_by: str) -> int:
     """UPSERT a batch of variance entries on (restaurant_number, week_end_date).
 
     Each ``rows`` dict must carry ``restaurant_number``, ``week_end_date``,
@@ -486,9 +478,7 @@ def delete_variance_entries(keys: list[tuple[str, date]]) -> int:
         params[f"w{i}"] = week
     sql = (
         "DELETE FROM ops_variance_entries WHERE "
-        "(restaurant_number, week_end_date) IN ("
-        + ", ".join(clauses)
-        + ")"
+        "(restaurant_number, week_end_date) IN (" + ", ".join(clauses) + ")"
     )
     engine = cached_engine()
     with engine.begin() as conn:
@@ -572,9 +562,7 @@ def distinct_job_names() -> list[str]:
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
-def get_compliance_summary(
-    report_date: date, store_filter: tuple[str, ...] | None
-) -> pd.DataFrame:
+def get_compliance_summary(report_date: date, store_filter: tuple[str, ...] | None) -> pd.DataFrame:
     """Per-store uOS training compliance % for the latest report on/before
     ``report_date``.
 
@@ -640,9 +628,7 @@ def get_compliance_summary(
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
-def get_store_compliance_detail(
-    store_number: str, report_date: date
-) -> pd.DataFrame:
+def get_store_compliance_detail(store_number: str, report_date: date) -> pd.DataFrame:
     """Per-employee, per-course detail for one store + report date.
 
     Caller is expected to pass the ``latest_report_date`` it got from
@@ -672,9 +658,7 @@ def get_store_compliance_detail(
 
 
 @st.cache_data(ttl=CACHE_TTL_SECONDS)
-def get_store_compliance_trend(
-    store_number: str, weeks: int
-) -> pd.DataFrame:
+def get_store_compliance_trend(store_number: str, weeks: int) -> pd.DataFrame:
     """Weekly compliance % trend for one store, last ``weeks`` report dates.
 
     Returned chronologically so an Altair line chart renders left-to-

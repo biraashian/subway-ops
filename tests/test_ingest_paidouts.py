@@ -34,10 +34,7 @@ from subway_ops.ingest.paidouts import (
 )
 
 FIXTURE_PATH = (
-    Path(__file__).resolve().parent
-    / "fixtures"
-    / "recorded"
-    / "paid_outs_and_no_sales.json"
+    Path(__file__).resolve().parent / "fixtures" / "recorded" / "paid_outs_and_no_sales.json"
 )
 
 
@@ -136,10 +133,12 @@ def _mock_client(payload: dict[str, Any]) -> MagicMock:
 
 
 def _expected_no_sales_rows(payload: dict[str, Any]) -> int:
-    return len({
-        (e["restaurantNumber"], e["time"], e["clerkId"], e["noSaleType"])
-        for e in payload["data"]["noSales"]
-    })
+    return len(
+        {
+            (e["restaurantNumber"], e["time"], e["clerkId"], e["noSaleType"])
+            for e in payload["data"]["noSales"]
+        }
+    )
 
 
 @requires_db_and_fixture
@@ -156,9 +155,7 @@ def test_ingest_writes_no_sales_rows(
     expected_paid_outs = len(fixture_payload["data"]["paidOuts"])
     assert written == expected_no_sales + expected_paid_outs > 0
 
-    rows = execute_sql(
-        "SELECT count(*) FROM stg_no_sales WHERE restaurant_number = '4092'"
-    )
+    rows = execute_sql("SELECT count(*) FROM stg_no_sales WHERE restaurant_number = '4092'")
     assert rows[0][0] == expected_no_sales
 
 
@@ -175,22 +172,16 @@ def test_cash_drops_view_filters_by_subtype(
     expected_drops = sum(
         1 for e in fixture_payload["data"]["noSales"] if e["noSaleType"] == "cash drop"
     )
-    rows = execute_sql(
-        "SELECT count(*) FROM stg_cash_drops WHERE restaurant_number = '4092'"
-    )
+    rows = execute_sql("SELECT count(*) FROM stg_cash_drops WHERE restaurant_number = '4092'")
     assert rows[0][0] == expected_drops
 
 
 @requires_db_and_fixture
-def test_ingest_is_idempotent(
-    fixture_payload: dict[str, Any], seeded_store_4092: None
-) -> None:
+def test_ingest_is_idempotent(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
     client = _mock_client(fixture_payload)
     first = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)
     second = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)
     assert first == second
 
-    rows = execute_sql(
-        "SELECT count(*) FROM stg_no_sales WHERE restaurant_number = '4092'"
-    )
+    rows = execute_sql("SELECT count(*) FROM stg_no_sales WHERE restaurant_number = '4092'")
     assert rows[0][0] == _expected_no_sales_rows(fixture_payload)

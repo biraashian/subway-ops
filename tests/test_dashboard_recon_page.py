@@ -136,8 +136,10 @@ def test_diff_rows_emits_delete_when_actual_cleared() -> None:
 def test_recent_week_ends_returns_n_tuesdays_descending() -> None:
     out = recent_week_ends(4, today=date(2026, 5, 13))
     assert out == [
-        date(2026, 5, 12), date(2026, 5, 5),
-        date(2026, 4, 28), date(2026, 4, 21),
+        date(2026, 5, 12),
+        date(2026, 5, 5),
+        date(2026, 4, 28),
+        date(2026, 4, 21),
     ]
 
 
@@ -191,14 +193,12 @@ def seeded_world(applied_migrations: None) -> Iterator[None]:
         {"e": TEST_USER},
     )
     execute_sql(
-        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s AND week_end_date = :w",
         {"s": TEST_STORE, "w": WEEK_END},
     )
     yield
     execute_sql(
-        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s AND week_end_date = :w",
         {"s": TEST_STORE, "w": WEEK_END},
     )
     execute_sql("DELETE FROM ref_users WHERE email = :e", {"e": TEST_USER})
@@ -232,13 +232,25 @@ def test_save_variance_entries_inserts_with_audit(seeded_world: None) -> None:
 @requires_db
 def test_save_variance_entries_updates_existing_row(seeded_world: None) -> None:
     save_variance_entries(
-        [{"restaurant_number": TEST_STORE, "week_end_date": WEEK_END,
-          "actual_bank_deposit": Decimal("1000.00"), "note": None}],
+        [
+            {
+                "restaurant_number": TEST_STORE,
+                "week_end_date": WEEK_END,
+                "actual_bank_deposit": Decimal("1000.00"),
+                "note": None,
+            }
+        ],
         entered_by=TEST_USER,
     )
     save_variance_entries(
-        [{"restaurant_number": TEST_STORE, "week_end_date": WEEK_END,
-          "actual_bank_deposit": Decimal("1234.56"), "note": "corrected"}],
+        [
+            {
+                "restaurant_number": TEST_STORE,
+                "week_end_date": WEEK_END,
+                "actual_bank_deposit": Decimal("1234.56"),
+                "note": "corrected",
+            }
+        ],
         entered_by=TEST_USER,
     )
     rows = execute_sql(
@@ -257,8 +269,14 @@ def test_save_variance_entries_updates_existing_row(seeded_world: None) -> None:
 def test_save_variance_entries_requires_entered_by() -> None:
     with pytest.raises(ValueError, match="entered_by is required"):
         save_variance_entries(
-            [{"restaurant_number": TEST_STORE, "week_end_date": WEEK_END,
-              "actual_bank_deposit": Decimal("1000.00"), "note": None}],
+            [
+                {
+                    "restaurant_number": TEST_STORE,
+                    "week_end_date": WEEK_END,
+                    "actual_bank_deposit": Decimal("1000.00"),
+                    "note": None,
+                }
+            ],
             entered_by="",
         )
 
@@ -271,8 +289,14 @@ def test_save_variance_entries_no_op_on_empty() -> None:
 @requires_db
 def test_delete_variance_entries_removes_targeted_rows(seeded_world: None) -> None:
     save_variance_entries(
-        [{"restaurant_number": TEST_STORE, "week_end_date": WEEK_END,
-          "actual_bank_deposit": Decimal("1234.00"), "note": None}],
+        [
+            {
+                "restaurant_number": TEST_STORE,
+                "week_end_date": WEEK_END,
+                "actual_bank_deposit": Decimal("1234.00"),
+                "note": None,
+            }
+        ],
         entered_by=TEST_USER,
     )
     deleted = delete_variance_entries([(TEST_STORE, WEEK_END)])

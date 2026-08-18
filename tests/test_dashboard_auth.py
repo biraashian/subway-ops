@@ -59,14 +59,17 @@ def test_visible_stores_owner_sees_everything() -> None:
     user = _user(role="owner", assigned=("4092",))
     assert "owner" in ALL_STORE_ROLES
     assert visible_stores(user, ["4092", "17967", "26529"]) == [
-        "4092", "17967", "26529",
+        "4092",
+        "17967",
+        "26529",
     ]
 
 
 def test_visible_stores_field_manager_filtered_to_assigned() -> None:
     user = _user(role="field_manager", assigned=("4092", "17967"))
     assert visible_stores(user, ["4092", "17967", "26529", "39969"]) == [
-        "4092", "17967",
+        "4092",
+        "17967",
     ]
 
 

@@ -33,11 +33,7 @@ def configure_logging(*, force_json: bool | None = None) -> None:
     ``force_json`` overrides the env-based default — handy for tests that
     want to lock in one renderer regardless of ``APP_ENV``.
     """
-    json_output = (
-        force_json
-        if force_json is not None
-        else (settings.app_env == "prod")
-    )
+    json_output = force_json if force_json is not None else (settings.app_env == "prod")
 
     shared_processors: list[Any] = [
         # Inject standard envelope keys before the renderer sees them so

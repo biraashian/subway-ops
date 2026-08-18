@@ -60,61 +60,118 @@ FOOTER_COL = "total"  # captures total OR average from the model
 
 
 CASH_CONTROL_FIELDS: tuple[tuple[str, bool], ...] = (
-    ("closingGrandTotal", False), ("openingGrandTotal", False),
-    ("adjustments", False), ("adjustedProceeds", False),
-    ("openingCash", False), ("paidouts", False), ("creditSales", False),
-    ("requiredCash", False), ("actualCash", False), ("overShort", False),
-    ("closingKeep", False), ("depositInBank", False), ("cashcards", False),
-    ("debit", False), ("visaAndMastercard", False), ("discover", False),
-    ("americanExpress", False), ("cateringCallCenter", False),
-    ("other", False), ("payPal", False), ("cashRoundingAdjustment", False),
+    ("closingGrandTotal", False),
+    ("openingGrandTotal", False),
+    ("adjustments", False),
+    ("adjustedProceeds", False),
+    ("openingCash", False),
+    ("paidouts", False),
+    ("creditSales", False),
+    ("requiredCash", False),
+    ("actualCash", False),
+    ("overShort", False),
+    ("closingKeep", False),
+    ("depositInBank", False),
+    ("cashcards", False),
+    ("debit", False),
+    ("visaAndMastercard", False),
+    ("discover", False),
+    ("americanExpress", False),
+    ("cateringCallCenter", False),
+    ("other", False),
+    ("payPal", False),
+    ("cashRoundingAdjustment", False),
 )
 
 BREAD_FIELDS: tuple[tuple[str, bool], ...] = (
-    ("opening", False), ("delivered", False), ("credits", False),
-    ("left", False), ("used", False), ("sold", False), ("overShort", False),
-    ("breadLeft", False), ("breadOverShort", False),
-    ("flatbreadLeft", False), ("flatbreadOverShort", False),
-    ("saladLeft", False), ("saladOverShort", False),
-    ("muffinLeft", False), ("muffinOverShort", False),
-    ("pizzaLeft", False), ("pizzaOverShort", False),
-    ("otherLeft", False), ("otherOverShort", False),
+    ("opening", False),
+    ("delivered", False),
+    ("credits", False),
+    ("left", False),
+    ("used", False),
+    ("sold", False),
+    ("overShort", False),
+    ("breadLeft", False),
+    ("breadOverShort", False),
+    ("flatbreadLeft", False),
+    ("flatbreadOverShort", False),
+    ("saladLeft", False),
+    ("saladOverShort", False),
+    ("muffinLeft", False),
+    ("muffinOverShort", False),
+    ("pizzaLeft", False),
+    ("pizzaOverShort", False),
+    ("otherLeft", False),
+    ("otherOverShort", False),
 )
 
 LABOR_FIELDS: tuple[tuple[str, bool], ...] = (
-    ("hoursOpen", False), ("hoursWorked", False),
-    ("productivity", False), ("salesPerLaborHour", False),
+    ("hoursOpen", False),
+    ("hoursWorked", False),
+    ("productivity", False),
+    ("salesPerLaborHour", False),
 )
 
 METRICS_FIELDS: tuple[tuple[str, bool], ...] = (
-    ("factor", False), ("customerCount", False), ("averageTicket", False),
+    ("factor", False),
+    ("customerCount", False),
+    ("averageTicket", False),
 )
 
 # salesItemization: most fields include a percentage, five do not (see the
 # live-fixture exploration in Task 1.3 / api_field_coverage.md).
 SALES_ITEMIZATION_FIELDS: tuple[tuple[str, bool], ...] = (
-    ("totalSubwaySales", True), ("footlong", True), ("sixInch", True),
-    ("threeInch", True), ("muffinMelt", True), ("salad", True),
-    ("pizza", True), ("otherCarrier", True), ("addOn", True),
-    ("catering", True), ("unitCouponsDiscounts", True),
-    ("unitRefunds", True), ("unitVoids", True), ("totalUnitsSales", True),
-    ("fountain", True), ("bottledBeverage", True), ("hotBeverage", True),
-    ("otherBeverage", True), ("drinksCouponsDiscounts", True),
-    ("drinksRefunds", True), ("drinksVoids", True),
-    ("totalDrinksSales", True), ("chips", True), ("cookies", True),
-    ("soups", True), ("otherMisc", True), ("miscCouponsDiscounts", True),
-    ("miscRefunds", True), ("miscVoids", True), ("totalMiscSales", True),
-    ("cashCardSales", False), ("adjSalesTaxAndFees", False),
-    ("taxAndFeeAdjustments", True), ("adjOtherReceipts", False),
-    ("adjCoBrandSales", False), ("otherAdjustments", True),
+    ("totalSubwaySales", True),
+    ("footlong", True),
+    ("sixInch", True),
+    ("threeInch", True),
+    ("muffinMelt", True),
+    ("salad", True),
+    ("pizza", True),
+    ("otherCarrier", True),
+    ("addOn", True),
+    ("catering", True),
+    ("unitCouponsDiscounts", True),
+    ("unitRefunds", True),
+    ("unitVoids", True),
+    ("totalUnitsSales", True),
+    ("fountain", True),
+    ("bottledBeverage", True),
+    ("hotBeverage", True),
+    ("otherBeverage", True),
+    ("drinksCouponsDiscounts", True),
+    ("drinksRefunds", True),
+    ("drinksVoids", True),
+    ("totalDrinksSales", True),
+    ("chips", True),
+    ("cookies", True),
+    ("soups", True),
+    ("otherMisc", True),
+    ("miscCouponsDiscounts", True),
+    ("miscRefunds", True),
+    ("miscVoids", True),
+    ("totalMiscSales", True),
+    ("cashCardSales", False),
+    ("adjSalesTaxAndFees", False),
+    ("taxAndFeeAdjustments", True),
+    ("adjOtherReceipts", False),
+    ("adjCoBrandSales", False),
+    ("otherAdjustments", True),
 )
 
 UNIT_ITEMIZATION_FIELDS: tuple[tuple[str, bool], ...] = (
-    ("footlong", True), ("sixInch", True), ("threeInch", True),
-    ("muffinMelt", True), ("salad", True), ("pizza", True),
-    ("otherCarrier", True), ("catering", True),
-    ("employeeAndFreeUnits", True), ("totalUnits", False),
-    ("allUnitsSold", False), ("drink", True),
+    ("footlong", True),
+    ("sixInch", True),
+    ("threeInch", True),
+    ("muffinMelt", True),
+    ("salad", True),
+    ("pizza", True),
+    ("otherCarrier", True),
+    ("catering", True),
+    ("employeeAndFreeUnits", True),
+    ("totalUnits", False),
+    ("allUnitsSold", False),
+    ("drink", True),
     ("drinkPercentage", False),  # day values ARE percentages; footer is average
 )
 
@@ -281,10 +338,7 @@ def _active_store_numbers() -> list[str]:
     engine = get_engine()
     with engine.connect() as conn:
         rows = conn.execute(
-            text(
-                "SELECT store_number FROM ref_stores "
-                "WHERE is_active = true ORDER BY store_number"
-            )
+            text("SELECT store_number FROM ref_stores WHERE is_active = true ORDER BY store_number")
         ).all()
     return [str(r[0]) for r in rows]
 

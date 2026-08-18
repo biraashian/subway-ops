@@ -21,8 +21,10 @@ def kpi_card(
 ) -> None:
     """Render a small KPI block. ``in_target=None`` skips the colour band."""
     color = (
-        COLOR_IN_TARGET if in_target is True
-        else COLOR_OFF_TARGET if in_target is False
+        COLOR_IN_TARGET
+        if in_target is True
+        else COLOR_OFF_TARGET
+        if in_target is False
         else COLOR_NEUTRAL
     )
     st.markdown(

@@ -197,9 +197,7 @@ def _render_grid() -> None:
         },
         key="sys_status_grid",
     )
-    csv_download_button(
-        df, filename="ops_job_runs.csv", key="sys_status_csv"
-    )
+    csv_download_button(df, filename="ops_job_runs.csv", key="sys_status_csv")
 
 
 def main() -> None:

@@ -138,9 +138,7 @@ def load_credentials(
     return creds
 
 
-def _refresh_if_needed(
-    creds: Credentials, *, token_path: Path | None = None
-) -> Credentials:
+def _refresh_if_needed(creds: Credentials, *, token_path: Path | None = None) -> Credentials:
     """Refresh access token in-place if expired; write back when local."""
     if creds.valid:
         return creds
@@ -189,9 +187,7 @@ def _decode_body(part: dict[str, Any]) -> str:
     if not data:
         return ""
     padded = data + "=" * (-len(data) % 4)
-    return base64.urlsafe_b64decode(padded.encode("ascii")).decode(
-        "utf-8", errors="replace"
-    )
+    return base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8", errors="replace")
 
 
 def _header(headers: list[dict[str, str]], name: str) -> str:
@@ -290,11 +286,15 @@ class GmailClient:
         page_token: str | None = None
         while len(messages) < max_results:
             page_size = min(100, max_results - len(messages))
-            req = self._service.users().messages().list(
-                userId=self._user_id,
-                q=query,
-                maxResults=page_size,
-                pageToken=page_token,
+            req = (
+                self._service.users()
+                .messages()
+                .list(
+                    userId=self._user_id,
+                    q=query,
+                    maxResults=page_size,
+                    pageToken=page_token,
+                )
             )
             resp = req.execute()
             for m in resp.get("messages", []) or []:

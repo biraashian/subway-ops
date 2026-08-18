@@ -150,13 +150,9 @@ class FreshConnectClient:
 
     def _retry_policy(self) -> Retrying:
         return Retrying(
-            retry=retry_if_exception_type(
-                (ServerError, httpx.ConnectError, httpx.ReadTimeout)
-            ),
+            retry=retry_if_exception_type((ServerError, httpx.ConnectError, httpx.ReadTimeout)),
             stop=stop_after_attempt(self.max_retries),
-            wait=wait_exponential_jitter(
-                initial=self.retry_initial_wait, max=self.retry_max_wait
-            ),
+            wait=wait_exponential_jitter(initial=self.retry_initial_wait, max=self.retry_max_wait),
             reraise=True,
         )
 
@@ -189,9 +185,7 @@ class FreshConnectClient:
         if resp.status_code == 403:
             raise ForbiddenError("FreshConnect 403 Forbidden", status_code=403)
         if resp.status_code == 404:
-            raise NotFoundError(
-                f"FreshConnect 404 Not Found: {resp.url}", status_code=404
-            )
+            raise NotFoundError(f"FreshConnect 404 Not Found: {resp.url}", status_code=404)
         if resp.status_code == 429:
             raise RateLimitError(
                 "FreshConnect 429 — daily call quota exhausted. "
@@ -243,24 +237,17 @@ class FreshConnectClient:
             if isinstance(item, dict):
                 num = item.get("restaurantNumber") or item.get("storeNumber")
                 if num is None:
-                    raise FreshConnectError(
-                        f"/Restaurants item missing restaurantNumber: {item!r}"
-                    )
+                    raise FreshConnectError(f"/Restaurants item missing restaurantNumber: {item!r}")
                 out.append(str(num))
             else:
                 out.append(str(item))
         return out
 
-    def get_daily_sales_summary(
-        self, store_numbers: list[str], start: date, end: date
-    ) -> Any:
+    def get_daily_sales_summary(self, store_numbers: list[str], start: date, end: date) -> Any:
         """GET /DailySalesSummary. Max 20 stores, max 50 days (inclusive)."""
         _validate_limits("DailySalesSummary", store_numbers, start, end, 20, 50)
         stores = _join(store_numbers)
-        path = (
-            f"/DailySalesSummary/{stores}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        path = f"/DailySalesSummary/{stores}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
     def get_control_sheet(self, store_numbers: list[str], week_end: date) -> Any:
@@ -270,28 +257,18 @@ class FreshConnectClient:
         path = f"/controlsheet/{stores}/{_fmt(week_end)}"
         return self._request("GET", path)
 
-    def get_paidouts_and_no_sales(
-        self, store_numbers: list[str], start: date, end: date
-    ) -> Any:
+    def get_paidouts_and_no_sales(self, store_numbers: list[str], start: date, end: date) -> Any:
         """GET /PaidOutsAndNoSales. Max 20 stores, max 31 days."""
         _validate_limits("PaidOutsAndNoSales", store_numbers, start, end, 20, 31)
         stores = _join(store_numbers)
-        path = (
-            f"/PaidOutsAndNoSales/{stores}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        path = f"/PaidOutsAndNoSales/{stores}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
-    def get_inventory_movement(
-        self, store_numbers: list[str], start: date, end: date
-    ) -> Any:
+    def get_inventory_movement(self, store_numbers: list[str], start: date, end: date) -> Any:
         """GET /InventoryMovement. Max 20 stores, max 50 days."""
         _validate_limits("InventoryMovement", store_numbers, start, end, 20, 50)
         stores = _join(store_numbers)
-        path = (
-            f"/InventoryMovement/{stores}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        path = f"/InventoryMovement/{stores}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
     def get_wisr(self, store_numbers: list[str], week_end: date) -> Any:
@@ -301,68 +278,39 @@ class FreshConnectClient:
         path = f"/Wisr/{stores}/{_fmt(week_end)}"
         return self._request("GET", path)
 
-    def get_daily_timeclock(
-        self, store_numbers: list[str], start: date, end: date
-    ) -> Any:
+    def get_daily_timeclock(self, store_numbers: list[str], start: date, end: date) -> Any:
         """GET /DailyTimeclock. Max 10 stores, max 30 days."""
         _validate_limits("DailyTimeclock", store_numbers, start, end, 10, 30)
         stores = _join(store_numbers)
-        path = (
-            f"/DailyTimeclock/{stores}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        path = f"/DailyTimeclock/{stores}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
-    def get_third_party_daily(
-        self, store_numbers: list[str], start: date, end: date
-    ) -> Any:
+    def get_third_party_daily(self, store_numbers: list[str], start: date, end: date) -> Any:
         """GET /ThirdPartyDailySalesSummary. Max 20 stores, max 30 days."""
-        _validate_limits(
-            "ThirdPartyDailySalesSummary", store_numbers, start, end, 20, 30
-        )
+        _validate_limits("ThirdPartyDailySalesSummary", store_numbers, start, end, 20, 30)
         stores = _join(store_numbers)
-        path = (
-            f"/ThirdPartyDailySalesSummary/{stores}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        path = f"/ThirdPartyDailySalesSummary/{stores}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
-    def get_transaction_details(
-        self, store_number: str, start: date, end: date
-    ) -> Any:
+    def get_transaction_details(self, store_number: str, start: date, end: date) -> Any:
         """GET /TransactionDetails. Single store, max 14 days. Heaviest endpoint."""
         _validate_single_store("TransactionDetails", store_number)
-        _validate_limits(
-            "TransactionDetails", [store_number], start, end, 1, 14
-        )
-        path = (
-            f"/TransactionDetails/{store_number}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        _validate_limits("TransactionDetails", [store_number], start, end, 1, 14)
+        path = f"/TransactionDetails/{store_number}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
-    def get_tips_details(
-        self, store_number: str, start: date, end: date
-    ) -> Any:
+    def get_tips_details(self, store_number: str, start: date, end: date) -> Any:
         """GET /TipsDetails. Single store, max 14 days."""
         _validate_single_store("TipsDetails", store_number)
         _validate_limits("TipsDetails", [store_number], start, end, 1, 14)
-        path = (
-            f"/TipsDetails/{store_number}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        path = f"/TipsDetails/{store_number}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
-    def get_waste_bread_credits(
-        self, store_numbers: list[str], start: date, end: date
-    ) -> Any:
+    def get_waste_bread_credits(self, store_numbers: list[str], start: date, end: date) -> Any:
         """GET /WasteBreadCredits. Max 10 stores, max 20 days."""
         _validate_limits("WasteBreadCredits", store_numbers, start, end, 10, 20)
         stores = _join(store_numbers)
-        path = (
-            f"/WasteBreadCredits/{stores}"
-            f"/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
-        )
+        path = f"/WasteBreadCredits/{stores}/startDate/{_fmt(start)}/endDate/{_fmt(end)}"
         return self._request("GET", path)
 
 

@@ -86,10 +86,7 @@ def _existing_message_ids(message_ids: Iterable[str]) -> set[str]:
     engine = get_engine()
     with engine.connect() as conn:
         rows = conn.execute(
-            text(
-                "SELECT gmail_message_id FROM raw_uos_emails "
-                "WHERE gmail_message_id = ANY(:ids)"
-            ),
+            text("SELECT gmail_message_id FROM raw_uos_emails WHERE gmail_message_id = ANY(:ids)"),
             {"ids": ids},
         ).all()
     return {str(r[0]) for r in rows}
@@ -177,9 +174,7 @@ def _upsert_compliance(
 # ---------------------------------------------------------------------------
 
 
-def _fetch_attachments(
-    client: GmailClient, msg: Message
-) -> list[tuple[str, str, bytes]]:
+def _fetch_attachments(client: GmailClient, msg: Message) -> list[tuple[str, str, bytes]]:
     """Pull bytes for every attachment on the message."""
     out: list[tuple[str, str, bytes]] = []
     for att in msg.attachments:
@@ -279,9 +274,7 @@ def ingest_recent(
         all_unparsed: list[UnparsedRow] = []
         notes: list[dict[str, Any]] = []
         for m in new_messages:
-            written, skipped, report = _process_message(
-                gc, m, known_stores=known_stores
-            )
+            written, skipped, report = _process_message(gc, m, known_stores=known_stores)
             total_written += written
             total_skipped += skipped
             all_unparsed.extend(report.unparsed_rows)
@@ -304,8 +297,7 @@ def ingest_recent(
             # doesn't bloat ops_job_runs.metadata beyond a useful
             # debugging level.
             meta["unparsed_sample"] = [
-                {"reason": r.reason, "raw": r.raw}
-                for r in all_unparsed[:50]
+                {"reason": r.reason, "raw": r.raw} for r in all_unparsed[:50]
             ]
             meta["unparsed_count"] = len(all_unparsed)
 

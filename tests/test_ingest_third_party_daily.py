@@ -108,11 +108,13 @@ def _expected_daily(payload: dict[str, Any]) -> int:
 
 
 def _expected_providers(payload: dict[str, Any]) -> int:
-    return len({
-        (r["restaurantNumber"], r["date"][:10], p["provider"])
-        for r in payload["data"]
-        for p in r["providers"]
-    })
+    return len(
+        {
+            (r["restaurantNumber"], r["date"][:10], p["provider"])
+            for r in payload["data"]
+            for p in r["providers"]
+        }
+    )
 
 
 @requires_db_and_fixture
@@ -129,9 +131,7 @@ def test_ingest_writes_daily_and_provider_rows(
     expected_providers = _expected_providers(fixture_payload)
     assert written == expected_daily + expected_providers
 
-    daily = execute_sql(
-        "SELECT count(*) FROM stg_3p_daily WHERE restaurant_number = '4092'"
-    )
+    daily = execute_sql("SELECT count(*) FROM stg_3p_daily WHERE restaurant_number = '4092'")
     providers = execute_sql(
         "SELECT count(*) FROM stg_3p_daily_provider WHERE restaurant_number = '4092'"
     )
@@ -140,9 +140,7 @@ def test_ingest_writes_daily_and_provider_rows(
 
 
 @requires_db_and_fixture
-def test_ingest_is_idempotent(
-    fixture_payload: dict[str, Any], seeded_store_4092: None
-) -> None:
+def test_ingest_is_idempotent(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
     client = _mock_client(fixture_payload)
     first = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)
     second = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)

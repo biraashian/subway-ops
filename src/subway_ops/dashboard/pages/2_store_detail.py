@@ -122,27 +122,39 @@ def _daily_trend_tab(store: str) -> None:
     c1, c2 = st.columns(2)
     with c1:
         chart = _line_chart(
-            df, x="business_date", y="net_sales",
-            title="Net sales ($)", y_format="$,.0f",
+            df,
+            x="business_date",
+            y="net_sales",
+            title="Net sales ($)",
+            y_format="$,.0f",
         )
         st.altair_chart(chart, width="stretch")
     with c2:
         chart = _line_chart(
-            df, x="business_date", y="transactions", title="Transactions",
+            df,
+            x="business_date",
+            y="transactions",
+            title="Transactions",
         )
         st.altair_chart(chart, width="stretch")
     c3, c4 = st.columns(2)
     with c3:
         chart = _line_chart(
-            df, x="business_date", y="sales_per_labor_hour",
-            title="Sales / labor hour ($)", y_format="$,.0f",
+            df,
+            x="business_date",
+            y="sales_per_labor_hour",
+            title="Sales / labor hour ($)",
+            y_format="$,.0f",
         )
         st.altair_chart(chart, width="stretch")
     with c4:
         chart = _line_chart(
-            df, x="business_date", y="food_cost_pct",
+            df,
+            x="business_date",
+            y="food_cost_pct",
             title=f"Food cost % (target {float(TARGET_FOOD_COST_STORE):.0%})",
-            y_format="%", target=float(TARGET_FOOD_COST_STORE),
+            y_format="%",
+            target=float(TARGET_FOOD_COST_STORE),
         )
         st.altair_chart(chart, width="stretch")
 
@@ -166,27 +178,39 @@ def _weekly_history_tab(store: str) -> None:
     c1, c2 = st.columns(2)
     with c1:
         chart = _line_chart(
-            df, x="week_end_date", y="net_sales_total",
-            title="Net sales ($)", y_format="$,.0f",
+            df,
+            x="week_end_date",
+            y="net_sales_total",
+            title="Net sales ($)",
+            y_format="$,.0f",
         )
         st.altair_chart(chart, width="stretch")
     with c2:
         chart = _line_chart(
-            df, x="week_end_date", y="transactions_total", title="Transactions",
+            df,
+            x="week_end_date",
+            y="transactions_total",
+            title="Transactions",
         )
         st.altair_chart(chart, width="stretch")
     c3, c4 = st.columns(2)
     with c3:
         chart = _line_chart(
-            df, x="week_end_date", y="food_cost_actual_pct",
-            title="Food cost %", y_format="%",
+            df,
+            x="week_end_date",
+            y="food_cost_actual_pct",
+            title="Food cost %",
+            y_format="%",
             target=float(TARGET_FOOD_COST_STORE),
         )
         st.altair_chart(chart, width="stretch")
     with c4:
         chart = _line_chart(
-            df, x="week_end_date", y="labor_cost_pct",
-            title="Labor cost %", y_format="%",
+            df,
+            x="week_end_date",
+            y="labor_cost_pct",
+            title="Labor cost %",
+            y_format="%",
             target=float(TARGET_LABOR_COST_STORE),
         )
         st.altair_chart(chart, width="stretch")
@@ -300,17 +324,12 @@ def _training_tab(store: str) -> None:
     trend = get_store_compliance_trend(store, TRAINING_TREND_WEEKS)
     if not trend.empty:
         chart_df = trend.copy()
-        chart_df["compliance_pct"] = pd.to_numeric(
-            chart_df["compliance_pct"], errors="coerce"
-        )
+        chart_df["compliance_pct"] = pd.to_numeric(chart_df["compliance_pct"], errors="coerce")
         chart = _line_chart(
             chart_df,
             x="report_date",
             y="compliance_pct",
-            title=(
-                f"Compliance % (green ≥ "
-                f"{float(COMPLIANCE_GREEN_MIN):.0%})"
-            ),
+            title=(f"Compliance % (green ≥ {float(COMPLIANCE_GREEN_MIN):.0%})"),
             y_format="%",
             target=float(COMPLIANCE_GREEN_MIN),
         )
@@ -348,8 +367,7 @@ def _training_tab(store: str) -> None:
     if not overdue.empty:
         st.subheader("Overdue items")
         overdue["days_overdue"] = (
-            pd.Timestamp(report_date)
-            - pd.to_datetime(overdue["completed_at"], errors="coerce")
+            pd.Timestamp(report_date) - pd.to_datetime(overdue["completed_at"], errors="coerce")
         ).dt.days
         overdue["days_overdue"] = overdue["days_overdue"].fillna("—")
         ordered = overdue[

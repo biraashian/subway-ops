@@ -57,10 +57,15 @@ _SECTION_PREFIX = {
 
 # adjustedCostOfGoods.<field>: 3 cols each (quantity, value, percentage)
 _ACG_FIELDS = (
-    "free_units", "employee_free", "employee_discounts",
-    "other_discount_value", "fvm_discounts_value",
-    "misc_and_drink_disc_value", "total_discount_value",
-    "discount_value_pct_of_sales", "adjusted_cost_of_goods",
+    "free_units",
+    "employee_free",
+    "employee_discounts",
+    "other_discount_value",
+    "fvm_discounts_value",
+    "misc_and_drink_disc_value",
+    "total_discount_value",
+    "discount_value_pct_of_sales",
+    "adjusted_cost_of_goods",
 )
 _ACG_SUFFIXES: tuple[tuple[str, str], ...] = (
     ("quantity", "NUMERIC(12,4)"),
@@ -70,8 +75,16 @@ _ACG_SUFFIXES: tuple[tuple[str, str], ...] = (
 
 # inventoryCategoriesSummary.<field>: 5 cols each
 _ICS_FIELDS = (
-    "cheese", "meat_protein", "bread_carrier", "veggies", "toppings",
-    "papergoods", "units_cost", "drinks_cost", "misc_cost", "cost_of_goods",
+    "cheese",
+    "meat_protein",
+    "bread_carrier",
+    "veggies",
+    "toppings",
+    "papergoods",
+    "units_cost",
+    "drinks_cost",
+    "misc_cost",
+    "cost_of_goods",
     "distribution_cost",
 )
 _ICS_SUFFIXES: tuple[tuple[str, str], ...] = (
@@ -84,12 +97,30 @@ _ICS_SUFFIXES: tuple[tuple[str, str], ...] = (
 
 # salesSummaryItems.<field>: 2 cols each (value, percentage)
 _SSI_FIELDS = (
-    "unit_sales", "catering_sales", "drink_sales", "misc_sales",
-    "net_subway_sales", "gas", "electric", "telephone", "garbage",
-    "insurance", "rent", "laundry", "misc", "repair_maintenance",
-    "operating_expenses", "labor_and_taxes", "cost_of_goods", "royalty",
-    "faf", "local_advertising", "total_expenses", "balance",
-    "financial_strength", "loans",
+    "unit_sales",
+    "catering_sales",
+    "drink_sales",
+    "misc_sales",
+    "net_subway_sales",
+    "gas",
+    "electric",
+    "telephone",
+    "garbage",
+    "insurance",
+    "rent",
+    "laundry",
+    "misc",
+    "repair_maintenance",
+    "operating_expenses",
+    "labor_and_taxes",
+    "cost_of_goods",
+    "royalty",
+    "faf",
+    "local_advertising",
+    "total_expenses",
+    "balance",
+    "financial_strength",
+    "loans",
 )
 _SSI_SUFFIXES: tuple[tuple[str, str], ...] = (
     ("value", "NUMERIC(12,4)"),
@@ -98,8 +129,14 @@ _SSI_SUFFIXES: tuple[tuple[str, str], ...] = (
 
 # unitsSummaryItems.<field>: 2 cols each (quantity, percentage)
 _USI_FIELDS = (
-    "footlong", "six_inch", "three_inch_and_muffin", "salads", "pizza",
-    "other_units", "total_units", "drinks",
+    "footlong",
+    "six_inch",
+    "three_inch_and_muffin",
+    "salads",
+    "pizza",
+    "other_units",
+    "total_units",
+    "drinks",
 )
 _USI_SUFFIXES: tuple[tuple[str, str], ...] = (
     ("quantity", "NUMERIC(12,4)"),
@@ -115,7 +152,9 @@ _CSI_SUFFIXES: tuple[tuple[str, str], ...] = (
 
 # distributionCosts.<field>: 2 cols each (value_used, actual_percent)
 _DC_FIELDS = (
-    "delivery_fee", "distributor_credits", "annual_ipc_patronage",
+    "delivery_fee",
+    "distributor_credits",
+    "annual_ipc_patronage",
     "distribution_costs",
 )
 _DC_SUFFIXES: tuple[tuple[str, str], ...] = (
@@ -129,9 +168,14 @@ _CBOST_SUBS = (
     ("bread", "bread_daily_figures"),
 )
 _CBOST_DAYS = (
-    ("wed", "wednesday"), ("thu", "thursday"), ("fri", "friday"),
-    ("sat", "saturday"), ("sun", "sunday"), ("mon", "monday"),
-    ("tue", "tuesday"), ("total", "total"),
+    ("wed", "wednesday"),
+    ("thu", "thursday"),
+    ("fri", "friday"),
+    ("sat", "saturday"),
+    ("sun", "sunday"),
+    ("mon", "monday"),
+    ("tue", "tuesday"),
+    ("total", "total"),
 )
 
 
@@ -171,9 +215,7 @@ def column_definitions() -> list[tuple[str, str]]:
     cols: list[tuple[str, str]] = [(name, typ) for (name, _attr, typ) in _TOP_LEVEL_COLS]
     sp = _SECTION_PREFIX
     cols.extend(_section_columns(sp["adjusted_cost_of_goods"], _ACG_FIELDS, _ACG_SUFFIXES))
-    cols.extend(
-        _section_columns(sp["inventory_categories_summary"], _ICS_FIELDS, _ICS_SUFFIXES)
-    )
+    cols.extend(_section_columns(sp["inventory_categories_summary"], _ICS_FIELDS, _ICS_SUFFIXES))
     cols.extend(_section_columns(sp["sales_summary_items"], _SSI_FIELDS, _SSI_SUFFIXES))
     cols.extend(_section_columns(sp["units_summary_items"], _USI_FIELDS, _USI_SUFFIXES))
     cols.extend(_section_columns(sp["catering_summary_items"], _CSI_FIELDS, _CSI_SUFFIXES))
@@ -213,38 +255,40 @@ def generate_ddl() -> str:
     ]
     for name, typ in cols:
         lines.append(f"    {name.ljust(width)}  {typ},")
-    lines.extend([
-        "    ingested_at        TIMESTAMPTZ NOT NULL DEFAULT now(),",
-        "    PRIMARY KEY (restaurant_number, week_end_date)",
-        ");",
-        "",
-        "CREATE INDEX IF NOT EXISTS idx_stg_wisr_weekly_week_end",
-        "    ON stg_wisr_weekly (week_end_date);",
-        "",
-        "CREATE TABLE IF NOT EXISTS stg_wisr_inventory_items (",
-        "    restaurant_number    TEXT NOT NULL REFERENCES ref_stores(store_number),",
-        "    week_end_date        DATE NOT NULL,",
-        "    item_name            TEXT NOT NULL,",
-        "    open_qty             NUMERIC(12,4),",
-        "    delivered_qty        NUMERIC(12,4),",
-        "    left_qty             NUMERIC(12,4),",
-        "    used_qty             NUMERIC(12,4),",
-        "    pos_difference       NUMERIC(12,4),",
-        "    recorded_waste       NUMERIC(12,4),",
-        "    cost                 NUMERIC(12,4),",
-        "    value_used           NUMERIC(12,4),",
-        "    value_difference     NUMERIC(12,4),",
-        "    actual_percentage    NUMERIC(10,6),",
-        "    expected_percentage  NUMERIC(10,6),",
-        "    diff_percentage      NUMERIC(10,6),",
-        "    ingested_at          TIMESTAMPTZ NOT NULL DEFAULT now(),",
-        "    PRIMARY KEY (restaurant_number, week_end_date, item_name)",
-        ");",
-        "",
-        "CREATE INDEX IF NOT EXISTS idx_stg_wisr_inventory_items_week_end",
-        "    ON stg_wisr_inventory_items (week_end_date);",
-        "",
-    ])
+    lines.extend(
+        [
+            "    ingested_at        TIMESTAMPTZ NOT NULL DEFAULT now(),",
+            "    PRIMARY KEY (restaurant_number, week_end_date)",
+            ");",
+            "",
+            "CREATE INDEX IF NOT EXISTS idx_stg_wisr_weekly_week_end",
+            "    ON stg_wisr_weekly (week_end_date);",
+            "",
+            "CREATE TABLE IF NOT EXISTS stg_wisr_inventory_items (",
+            "    restaurant_number    TEXT NOT NULL REFERENCES ref_stores(store_number),",
+            "    week_end_date        DATE NOT NULL,",
+            "    item_name            TEXT NOT NULL,",
+            "    open_qty             NUMERIC(12,4),",
+            "    delivered_qty        NUMERIC(12,4),",
+            "    left_qty             NUMERIC(12,4),",
+            "    used_qty             NUMERIC(12,4),",
+            "    pos_difference       NUMERIC(12,4),",
+            "    recorded_waste       NUMERIC(12,4),",
+            "    cost                 NUMERIC(12,4),",
+            "    value_used           NUMERIC(12,4),",
+            "    value_difference     NUMERIC(12,4),",
+            "    actual_percentage    NUMERIC(10,6),",
+            "    expected_percentage  NUMERIC(10,6),",
+            "    diff_percentage      NUMERIC(10,6),",
+            "    ingested_at          TIMESTAMPTZ NOT NULL DEFAULT now(),",
+            "    PRIMARY KEY (restaurant_number, week_end_date, item_name)",
+            ");",
+            "",
+            "CREATE INDEX IF NOT EXISTS idx_stg_wisr_inventory_items_week_end",
+            "    ON stg_wisr_inventory_items (week_end_date);",
+            "",
+        ]
+    )
     return "\n".join(lines)
 
 
@@ -263,19 +307,34 @@ def flatten_weekly(row: WisrRow, week_end: date) -> dict[str, Any]:
         out[db_col] = getattr(row, model_attr)
 
     _emit_qvp_section(
-        out, "acg", row.adjusted_cost_of_goods, _ACG_FIELDS,
+        out,
+        "acg",
+        row.adjusted_cost_of_goods,
+        _ACG_FIELDS,
     )
     _emit_ics_section(
-        out, "ics", row.inventory_categories_summary, _ICS_FIELDS,
+        out,
+        "ics",
+        row.inventory_categories_summary,
+        _ICS_FIELDS,
     )
     _emit_value_pct_section(
-        out, "ssi", row.sales_summary_items, _SSI_FIELDS,
+        out,
+        "ssi",
+        row.sales_summary_items,
+        _SSI_FIELDS,
     )
     _emit_qty_pct_section(
-        out, "usi", row.units_summary_items, _USI_FIELDS,
+        out,
+        "usi",
+        row.units_summary_items,
+        _USI_FIELDS,
     )
     _emit_qty_value_section(
-        out, "csi", row.catering_summary_items, _CSI_FIELDS,
+        out,
+        "csi",
+        row.catering_summary_items,
+        _CSI_FIELDS,
     )
     _emit_dc_section(out, "dc", row.distribution_costs, _DC_FIELDS)
 
@@ -377,10 +436,7 @@ def _active_store_numbers() -> list[str]:
     engine = get_engine()
     with engine.connect() as conn:
         rows = conn.execute(
-            text(
-                "SELECT store_number FROM ref_stores "
-                "WHERE is_active = true ORDER BY store_number"
-            )
+            text("SELECT store_number FROM ref_stores WHERE is_active = true ORDER BY store_number")
         ).all()
     return [str(r[0]) for r in rows]
 
@@ -389,10 +445,7 @@ def _store_raw(week_end: date, payload: Any) -> None:
     engine = get_engine()
     with engine.begin() as conn:
         conn.execute(
-            text(
-                "INSERT INTO raw_wisr (week_end_date, payload) "
-                "VALUES (:we, CAST(:p AS JSONB))"
-            ),
+            text("INSERT INTO raw_wisr (week_end_date, payload) VALUES (:we, CAST(:p AS JSONB))"),
             {"we": week_end, "p": json.dumps(payload)},
         )
 

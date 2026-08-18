@@ -81,10 +81,7 @@ def _active_store_numbers() -> list[str]:
     engine = get_engine()
     with engine.connect() as conn:
         rows = conn.execute(
-            text(
-                "SELECT store_number FROM ref_stores "
-                "WHERE is_active = true ORDER BY store_number"
-            )
+            text("SELECT store_number FROM ref_stores WHERE is_active = true ORDER BY store_number")
         ).all()
     return [str(r[0]) for r in rows]
 

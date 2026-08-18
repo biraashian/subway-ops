@@ -41,6 +41,4 @@ def render_sidebar() -> None:
 
     if settings.alert_email:
         st.sidebar.markdown("---")
-        st.sidebar.caption(
-            f"Found a bug or have feedback? Email **{settings.alert_email}**."
-        )
+        st.sidebar.caption(f"Found a bug or have feedback? Email **{settings.alert_email}**.")

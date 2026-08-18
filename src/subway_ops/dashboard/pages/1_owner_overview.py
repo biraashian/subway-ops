@@ -86,9 +86,7 @@ def _format_pct(value: object) -> str:
     return "—" if f is None else f"{f * 100:.1f}%"
 
 
-def _build_display_df(
-    df: pd.DataFrame, compliance: pd.DataFrame | None
-) -> pd.DataFrame:
+def _build_display_df(df: pd.DataFrame, compliance: pd.DataFrame | None) -> pd.DataFrame:
     """Add status emoji columns and pretty-print pct/money for the grid."""
     out = df.copy()
     out["food_cost"] = out["food_cost_actual_pct"].apply(_format_pct)
@@ -150,10 +148,7 @@ def _render_kpi_row(df: pd.DataFrame) -> None:
     with col2:
         kpi_card(label="Total transactions", value=f"{total_txns:,}")
     with col3:
-        in_target = (
-            None if weighted_food is None
-            else weighted_food <= Decimal("0.22")
-        )
+        in_target = None if weighted_food is None else weighted_food <= Decimal("0.22")
         kpi_card(
             label="Portfolio food cost %",
             value=_format_pct(weighted_food) if weighted_food is not None else "—",
@@ -230,7 +225,8 @@ def _render_grid(
         key="owner_overview_grid",
     )
     csv_download_button(
-        display, filename=f"owner_overview_{week_end_label}.csv",
+        display,
+        filename=f"owner_overview_{week_end_label}.csv",
         key="owner_overview_grid_csv",
     )
 
@@ -261,7 +257,8 @@ def _render_trend(stores: tuple[str, ...]) -> None:
     )
     st.altair_chart(chart, width="stretch")
     csv_download_button(
-        trend, filename=f"portfolio_trend_{TREND_WEEKS}w.csv",
+        trend,
+        filename=f"portfolio_trend_{TREND_WEEKS}w.csv",
         key="owner_overview_trend_csv",
     )
 

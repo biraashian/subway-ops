@@ -115,10 +115,19 @@ def test_wisr_inventory_items_shape(seeded_store: None) -> None:
     if df.empty:
         pytest.skip("Live DB has no WISR rows for the test (store, week).")
     expected = {
-        "item_name", "open_qty", "delivered_qty", "left_qty", "used_qty",
-        "pos_difference", "recorded_waste", "cost",
-        "value_used", "value_difference",
-        "actual_percentage", "expected_percentage", "diff_percentage",
+        "item_name",
+        "open_qty",
+        "delivered_qty",
+        "left_qty",
+        "used_qty",
+        "pos_difference",
+        "recorded_waste",
+        "cost",
+        "value_used",
+        "value_difference",
+        "actual_percentage",
+        "expected_percentage",
+        "diff_percentage",
     }
     assert expected.issubset(set(df.columns))
 

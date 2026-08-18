@@ -363,9 +363,7 @@ def parse_html(html: str, *, report_date: date) -> ParsedReport:
         return ParsedReport(
             report_date=report_date,
             source_format="html",
-            unparsed_rows=(
-                UnparsedRow(reason="no <table> in body", raw=html[:200]),
-            ),
+            unparsed_rows=(UnparsedRow(reason="no <table> in body", raw=html[:200]),),
         )
     biggest = max(tables, key=lambda t: len(t.find_all("tr")))
     return _parse_html_table(biggest, report_date=report_date)
@@ -377,11 +375,7 @@ def _parse_html_table(table: Tag, *, report_date: date) -> ParsedReport:
     for tr in trs:
         if not isinstance(tr, Tag):
             continue
-        cells = [
-            c.get_text(strip=True)
-            for c in tr.find_all(["th", "td"])
-            if isinstance(c, Tag)
-        ]
+        cells = [c.get_text(strip=True) for c in tr.find_all(["th", "td"]) if isinstance(c, Tag)]
         text_rows.append(cells)
 
     header_idx, header_map = _find_header_row(text_rows)
@@ -442,9 +436,7 @@ def parse_pdf(data: bytes, *, report_date: date) -> ParsedReport:
         return ParsedReport(
             report_date=report_date,
             source_format="pdf",
-            unparsed_rows=(
-                UnparsedRow(reason="empty pdf text extraction", raw=""),
-            ),
+            unparsed_rows=(UnparsedRow(reason="empty pdf text extraction", raw=""),),
         )
     header_idx, header_map = _find_header_row(full_text_lines)
     if header_idx is None or not header_map:
@@ -572,7 +564,5 @@ def parse_email_payload(
     return ParsedReport(
         report_date=report_date,
         source_format="",
-        unparsed_rows=(
-            UnparsedRow(reason="no usable payload (no CSV/PDF/HTML)", raw=""),
-        ),
+        unparsed_rows=(UnparsedRow(reason="no usable payload (no CSV/PDF/HTML)", raw=""),),
     )

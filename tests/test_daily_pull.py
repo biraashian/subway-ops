@@ -106,6 +106,7 @@ def test_total_rows_sums_per_ingest_counts() -> None:
     def make(_value_iter: object) -> Callable[..., int]:
         def fn(*_a: date) -> int:
             return next(return_values)
+
         return fn
 
     daily = {n: make(None) for n in DAILY_INGEST_NAMES}

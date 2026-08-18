@@ -5,6 +5,64 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0037 — When a terminated person clocks in again, what happens to `termination_date`?
+Task: T-0006 (halted) · Blocks: REQ-005/AC-024 · Raised: 2026-08-18
+
+**Specified.** AC-022 — "WHEN a person is terminated, the roster service SHALL
+set `termination_date` and `is_active = false`." AC-024 — "IF a terminated person
+clocks in again, THEN the roster service SHALL reactivate the **same** person row
+and SHALL NOT create a new one." codex 06 "Leaving" agrees on the shape — "A
+returning employee is the same `ref_employees` row reactivated, not a new one" —
+and says nothing about the two columns. §6's edge row reads "Terminated person
+clocks in again | Same person reactivated | AC-024", which settles *which row*
+and not *what the row then says*.
+
+**The gap.** "Reactivate" unambiguously means `is_active = true`. It does not say
+whether `termination_date` is cleared. Both readings are defensible and I can
+argue either, which is the signal this is not mine to settle:
+
+* Clearing it reads AC-024 as the inverse of AC-022, and leaves a coherent row.
+* Keeping it preserves the fact that the person once left, at the cost of a row
+  that says `is_active = true` **and** `termination_date = 2025-03-01`
+  simultaneously — which any consumer filtering on `termination_date IS NULL`
+  will read as still-terminated.
+
+**Why it is worth stopping for.** `ref_employees` has one `termination_date`
+column and no history table, so whichever is chosen is the only record of the
+event. codex 07's retention rule for the I-9 is a *later-of*: three years from
+hire, or one year from termination. That rule reads `termination_date`. And
+codex 00 — "corrections are new rows with a reason" — argues against silently
+overwriting a fact, though a rehire is arguably a new event rather than a
+correction.
+
+Nothing sets `is_active = false` today (AC-022 is schema-only in T-0004), so
+this is not yet reachable in production. It becomes reachable the moment
+termination is implemented, and by then the derivation will have been running
+nightly.
+
+Options:
+  A) **Clear both** — `is_active = true`, `termination_date = NULL`. The inverse
+     of AC-022, coherent row, simplest consumer story. Loses the previous
+     termination date; acceptable for the I-9 rule specifically, because the
+     later-of clock only matters while someone is gone, and a subsequent
+     departure writes a fresh date.
+  B) **`is_active = true` only** — keep `termination_date`. Preserves the fact,
+     but ships a self-contradicting row and quietly breaks any query that uses
+     `termination_date IS NULL` as the activity test.
+  C) **A, plus record the reactivation** in `ops_employee_identity_log`. Most
+     faithful to codex 00's "new rows with a reason". Costs migration `022`: the
+     log's `action` CHECK is `('merge','split')` and would need `'reactivate'`,
+     and the columns are shaped for identity repair rather than lifecycle.
+  D) **Employment spells** — a `ref_employee_spells` table, one row per stint.
+     Correct modelling for anyone who leaves and returns more than once, and far
+     beyond what any AC in this spec asks for.
+Burst recommends: **A**, with **C** as the follow-up if the audit trail is
+wanted — A is what AC-024 most plainly means and leaves no contradictory state,
+and C can be added later without changing A's behaviour. **D** is the honest
+long-term answer and should not be bought on the strength of one AC.
+[recommendation, not a decision]
+Status: OPEN
+
 ### B-0034 — A week with no shifts returns a confident `$0` even when no wage row exists anywhere
 Task: T-0007 (audit RED, rework) · Blocks: REQ-003/CON-005, INV-007 · Raised: 2026-08-17
 

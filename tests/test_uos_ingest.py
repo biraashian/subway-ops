@@ -59,12 +59,8 @@ def _patch_db(
     """Stub out every DB-touching helper inside ``ingest``."""
     insert_raw = MagicMock()
     upsert = MagicMock(return_value=0)
-    monkeypatch.setattr(
-        ingest_mod, "_existing_message_ids", MagicMock(return_value=existing)
-    )
-    monkeypatch.setattr(
-        ingest_mod, "_known_store_numbers", MagicMock(return_value=stores)
-    )
+    monkeypatch.setattr(ingest_mod, "_existing_message_ids", MagicMock(return_value=existing))
+    monkeypatch.setattr(ingest_mod, "_known_store_numbers", MagicMock(return_value=stores))
     monkeypatch.setattr(ingest_mod, "_insert_raw_email", insert_raw)
     monkeypatch.setattr(ingest_mod, "upsert_rows", upsert)
     return {"insert_raw": insert_raw, "upsert": upsert}

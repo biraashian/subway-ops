@@ -28,9 +28,7 @@ from subway_ops.ingest.inventory_movement import (
     plan_batches,
 )
 
-FIXTURE_PATH = (
-    Path(__file__).resolve().parent / "fixtures" / "recorded" / "inventory_movement.json"
-)
+FIXTURE_PATH = Path(__file__).resolve().parent / "fixtures" / "recorded" / "inventory_movement.json"
 
 
 # ---------------------------------------------------------------------------
@@ -106,14 +104,10 @@ def seeded_store_4092(applied_migrations: None) -> Iterator[None]:
         """
     )
     execute_sql("DELETE FROM stg_inventory_movement WHERE restaurant_number = '4092'")
-    execute_sql(
-        "DELETE FROM stg_inventory_movement_totals WHERE restaurant_number = '4092'"
-    )
+    execute_sql("DELETE FROM stg_inventory_movement_totals WHERE restaurant_number = '4092'")
     yield
     execute_sql("DELETE FROM stg_inventory_movement WHERE restaurant_number = '4092'")
-    execute_sql(
-        "DELETE FROM stg_inventory_movement_totals WHERE restaurant_number = '4092'"
-    )
+    execute_sql("DELETE FROM stg_inventory_movement_totals WHERE restaurant_number = '4092'")
 
 
 def _mock_client(payload: dict[str, Any]) -> MagicMock:
@@ -160,17 +154,14 @@ def test_ingest_writes_items_and_totals(
         "SELECT count(*) FROM stg_inventory_movement WHERE restaurant_number = '4092'"
     )
     totals = execute_sql(
-        "SELECT count(*) FROM stg_inventory_movement_totals "
-        "WHERE restaurant_number = '4092'"
+        "SELECT count(*) FROM stg_inventory_movement_totals WHERE restaurant_number = '4092'"
     )
     assert items[0][0] == expected_items
     assert totals[0][0] == expected_totals
 
 
 @requires_db_and_fixture
-def test_ingest_is_idempotent(
-    fixture_payload: dict[str, Any], seeded_store_4092: None
-) -> None:
+def test_ingest_is_idempotent(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
     client = _mock_client(fixture_payload)
     first = ingest(date(2026, 5, 5), date(2026, 5, 11), ["4092"], client=client)
     second = ingest(date(2026, 5, 5), date(2026, 5, 11), ["4092"], client=client)

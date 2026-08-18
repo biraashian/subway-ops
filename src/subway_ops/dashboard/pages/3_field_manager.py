@@ -206,9 +206,7 @@ def _store_grid(fm: str, week_end: pd.Timestamp | None) -> None:
         width="stretch",
         hide_index=True,
     )
-    csv_download_button(
-        df, filename=f"fm_{fm}_stores.csv", key="fm_stores_csv"
-    )
+    csv_download_button(df, filename=f"fm_{fm}_stores.csv", key="fm_stores_csv")
 
 
 def _trend(df: pd.DataFrame, *, y: str, title: str, target: float) -> alt.Chart:

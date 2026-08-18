@@ -28,9 +28,7 @@ from subway_ops.ingest.timeclock import (
     plan_batches,
 )
 
-FIXTURE_PATH = (
-    Path(__file__).resolve().parent / "fixtures" / "recorded" / "daily_timeclock.json"
-)
+FIXTURE_PATH = Path(__file__).resolve().parent / "fixtures" / "recorded" / "daily_timeclock.json"
 
 
 # ---------------------------------------------------------------------------
@@ -116,10 +114,7 @@ def _mock_client(payload: dict[str, Any]) -> MagicMock:
 
 
 def _expected_rows(payload: dict[str, Any]) -> int:
-    return len({
-        (e["restaurantNumber"], e["clerkId"], e["clockIn"])
-        for e in payload["data"]
-    })
+    return len({(e["restaurantNumber"], e["clerkId"], e["clockIn"]) for e in payload["data"]})
 
 
 @requires_db_and_fixture
@@ -135,22 +130,16 @@ def test_ingest_writes_timeclock_rows(
     expected = _expected_rows(fixture_payload)
     assert written == expected > 0
 
-    rows = execute_sql(
-        "SELECT count(*) FROM stg_timeclock WHERE restaurant_number = '4092'"
-    )
+    rows = execute_sql("SELECT count(*) FROM stg_timeclock WHERE restaurant_number = '4092'")
     assert rows[0][0] == expected
 
 
 @requires_db_and_fixture
-def test_ingest_is_idempotent(
-    fixture_payload: dict[str, Any], seeded_store_4092: None
-) -> None:
+def test_ingest_is_idempotent(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
     client = _mock_client(fixture_payload)
     first = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)
     second = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)
     assert first == second
 
-    rows = execute_sql(
-        "SELECT count(*) FROM stg_timeclock WHERE restaurant_number = '4092'"
-    )
+    rows = execute_sql("SELECT count(*) FROM stg_timeclock WHERE restaurant_number = '4092'")
     assert rows[0][0] == _expected_rows(fixture_payload)

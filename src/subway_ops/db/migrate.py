@@ -80,8 +80,7 @@ def apply_migrations(migrations_dir: Path = MIGRATIONS_DIR) -> list[str]:
             conn.execute(text(sql_text))
             conn.execute(
                 text(
-                    "INSERT INTO ops_migrations (filename, checksum) "
-                    "VALUES (:filename, :checksum)"
+                    "INSERT INTO ops_migrations (filename, checksum) VALUES (:filename, :checksum)"
                 ),
                 {"filename": path.name, "checksum": digest},
             )

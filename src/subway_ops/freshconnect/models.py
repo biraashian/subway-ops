@@ -622,9 +622,7 @@ class WisrRow(_FCModel):
     factor: Decimal
     average_ticket: Decimal = Field(alias="averageTicket")
     inventory_items: list[WisrInventoryItem] = Field(alias="inventoryItems")
-    cash_bread_over_short_totals: CashBreadOverShortTotals = Field(
-        alias="cashBreadOverShortTotals"
-    )
+    cash_bread_over_short_totals: CashBreadOverShortTotals = Field(alias="cashBreadOverShortTotals")
 
 
 class WisrResponse(_FCModel):
@@ -643,12 +641,8 @@ class ControlSheetSummary(_FCModel):
     cost_of_good_percentage: Percentage = Field(alias="costOfGoodPercentage")
     cost_of_units_percentage: Percentage = Field(alias="costOfUnitsPercentage")
     drink_cost_percentage: Percentage = Field(alias="drinkCostPercentage")
-    adjusted_cost_of_goods_percentage: Percentage = Field(
-        alias="adjustedCostOfGoodsPercentage"
-    )
-    adjusted_cost_of_units_percentage: Percentage = Field(
-        alias="adjustedCostOfUnitsPercentage"
-    )
+    adjusted_cost_of_goods_percentage: Percentage = Field(alias="adjustedCostOfGoodsPercentage")
+    adjusted_cost_of_units_percentage: Percentage = Field(alias="adjustedCostOfUnitsPercentage")
     misc_cost_percentage: Percentage = Field(alias="miscCostPercentage")
     productivity: Decimal
     factor: Decimal

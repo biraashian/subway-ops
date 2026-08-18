@@ -116,9 +116,8 @@ def _diff_rows(
             deletes.append((str(row["restaurant_number"]), row["week_end_date"]))
             continue
 
-        amount_changed = (
-            not new_actual_null
-            and (old_actual_null or float(new_actual) != float(old_actual))
+        amount_changed = not new_actual_null and (
+            old_actual_null or float(new_actual) != float(old_actual)
         )
         note_changed = (str(new_note or "") != str(old_note or "")) and not new_actual_null
 
@@ -127,8 +126,7 @@ def _diff_rows(
                 {
                     "restaurant_number": str(row["restaurant_number"]),
                     "week_end_date": row["week_end_date"],
-                    "actual_bank_deposit": float(new_actual)
-                    if not new_actual_null else None,
+                    "actual_bank_deposit": float(new_actual) if not new_actual_null else None,
                     "note": None if pd.isna(new_note) else new_note,
                 }
             )
@@ -208,9 +206,14 @@ def main() -> None:
         hide_index=True,
         num_rows="fixed",
         disabled=[
-            "restaurant_number", "store_name", "week_end_date",
-            "pos_deposit_in_bank", "variance", "status",
-            "entered_by", "entered_at",
+            "restaurant_number",
+            "store_name",
+            "week_end_date",
+            "pos_deposit_in_bank",
+            "variance",
+            "status",
+            "entered_by",
+            "entered_at",
         ],
         column_config={
             "restaurant_number": st.column_config.TextColumn("Store #", width="small"),
@@ -220,12 +223,12 @@ def main() -> None:
                 "POS deposit", format="$%.2f", width="small"
             ),
             "actual_bank_deposit": st.column_config.NumberColumn(
-                "Actual deposit", format="$%.2f", width="small",
+                "Actual deposit",
+                format="$%.2f",
+                width="small",
                 help="Operator-entered. Clear the cell to remove an entry.",
             ),
-            "variance": st.column_config.NumberColumn(
-                "Variance", format="$%.2f", width="small"
-            ),
+            "variance": st.column_config.NumberColumn("Variance", format="$%.2f", width="small"),
             "status": st.column_config.TextColumn("Status", width="small"),
             "note": st.column_config.TextColumn("Note", width="medium"),
             "entered_by": st.column_config.TextColumn("Last edited by", width="small"),
@@ -235,9 +238,7 @@ def main() -> None:
         },
         key=EDITOR_KEY,
     )
-    csv_download_button(
-        edited, filename="reconciliation.csv", key="recon_csv"
-    )
+    csv_download_button(edited, filename="reconciliation.csv", key="recon_csv")
 
     allow_delete = st.checkbox(
         "Confirm deletions (required to remove a previously-entered amount)",

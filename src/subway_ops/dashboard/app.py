@@ -67,8 +67,7 @@ def main() -> None:
 
     st.title("Subway Operations")
     st.write(
-        f"Welcome, **{st.session_state['display_name']}** "
-        f"(role `{st.session_state['user_role']}`)."
+        f"Welcome, **{st.session_state['display_name']}** (role `{st.session_state['user_role']}`)."
     )
     st.write(
         f"You can see **{len(st.session_state['assigned_stores'])}** stores: "

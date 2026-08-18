@@ -191,12 +191,8 @@ class DigestData:
     def __post_init__(self) -> None:
         # ``frozen=True`` blocks normal attribute assignment; use
         # ``object.__setattr__`` to back-fill the derived counts.
-        object.__setattr__(
-            self, "flagged_count", self.recon.counts_by_status.get("flagged", 0)
-        )
-        object.__setattr__(
-            self, "escalated_count", self.recon.counts_by_status.get("escalated", 0)
-        )
+        object.__setattr__(self, "flagged_count", self.recon.counts_by_status.get("flagged", 0))
+        object.__setattr__(self, "escalated_count", self.recon.counts_by_status.get("escalated", 0))
 
 
 # ---------------------------------------------------------------------------
@@ -314,9 +310,7 @@ def _money_delta_color(curr: Decimal | None, prior: Decimal | None) -> str:
     return COLOR_NEUTRAL_BG
 
 
-def _pct_delta_color(
-    curr: Decimal | None, prior: Decimal | None, target: Decimal
-) -> str:
+def _pct_delta_color(curr: Decimal | None, prior: Decimal | None, target: Decimal) -> str:
     """Cost-style delta: lower is better. Color flips when crossing target."""
     if curr is None or prior is None:
         return ""
@@ -463,8 +457,7 @@ def _render_targets(data: DigestData) -> str:
             + "</tr>"
         )
     return (
-        _section_header("Targets")
-        + f'<table role="presentation" cellpadding="0" cellspacing="0" '
+        _section_header("Targets") + f'<table role="presentation" cellpadding="0" cellspacing="0" '
         f'style="border-collapse:collapse;width:100%;max-width:{EMAIL_WIDTH_PX}px;">'
         + "<tr>"
         + _th("Metric")
@@ -491,12 +484,10 @@ def _render_recon(data: DigestData) -> str:
         fg = "#ffffff" if status in ("clean", "escalated") else "#1f2937"
         chips.append(
             f'<span style="display:inline-block;padding:4px 10px;margin-right:6px;'
-            f'border-radius:12px;background:{color};color:{fg};'
+            f"border-radius:12px;background:{color};color:{fg};"
             f'font-size:13px;font-weight:600;">{status} {n}</span>'
         )
-    chip_row = (
-        '<div style="margin:8px 0 12px 0;">' + "".join(chips) + "</div>"
-    )
+    chip_row = '<div style="margin:8px 0 12px 0;">' + "".join(chips) + "</div>"
     if not data.recon.escalated_cases:
         body = (
             '<p style="color:#374151;font-size:14px;margin:8px 0;">'
@@ -564,8 +555,7 @@ def _render_store_row(s: StoreRow) -> str:
 def _render_store_table(stores: tuple[StoreRow, ...]) -> str:
     if not stores:
         return (
-            '<p style="color:#6b7280;font-size:14px;margin:8px 0;">'
-            "No store data for this week.</p>"
+            '<p style="color:#6b7280;font-size:14px;margin:8px 0;">No store data for this week.</p>'
         )
     return (
         f'<table role="presentation" cellpadding="0" cellspacing="0" '
@@ -589,12 +579,8 @@ def _render_fm_rollups(data: DigestData) -> str:
         return ""
     parts: list[str] = [_section_header("Field manager rollups")]
     for fm in data.fm_rollups:
-        food_color = _bucket_color(
-            _bucket_pct(fm.food_cost_pct, TARGET_FOOD_COST_PORTFOLIO)
-        )
-        labor_color = _bucket_color(
-            _bucket_pct(fm.labor_cost_pct, TARGET_LABOR_COST_PORTFOLIO)
-        )
+        food_color = _bucket_color(_bucket_pct(fm.food_cost_pct, TARGET_FOOD_COST_PORTFOLIO))
+        labor_color = _bucket_color(_bucket_pct(fm.labor_cost_pct, TARGET_LABOR_COST_PORTFOLIO))
         parts.append(
             f'<h3 style="font-size:16px;margin:16px 0 4px 0;color:#111827;">'
             f"{html.escape(fm.field_manager_name)} "
@@ -638,11 +624,7 @@ def _render_compliance(data: DigestData) -> str:
         color = _bucket_color(bucket)
         pct_text = _fmt_pct(c.compliance_pct)
         # Tint the row when compliance is below the green threshold.
-        row_style = (
-            ' style="background:#fef2f2;"'
-            if bucket in ("near", "off")
-            else ""
-        )
+        row_style = ' style="background:#fef2f2;"' if bucket in ("near", "off") else ""
         rows_html.append(
             f"<tr{row_style}>"
             + _td(html.escape(c.store_number))
@@ -728,9 +710,7 @@ def render_digest(data: DigestData) -> tuple[str, str]:
     body = (
         "<!doctype html><html><head>"
         '<meta charset="utf-8">'
-        f"<title>{html.escape(subject)}</title>"
-        + head_style
-        + "</head><body>"
+        f"<title>{html.escape(subject)}</title>" + head_style + "</head><body>"
         f'<div style="max-width:{EMAIL_WIDTH_PX}px;margin:0 auto;padding:16px;">'
         + _render_header(data)
         + _render_portfolio(data)
@@ -975,9 +955,7 @@ def _collect_digest_data(week_end: date) -> DigestData:
                 labor_cost_pct=r.portfolio_labor_cost_pct,
                 is_food_cost_in_portfolio_target=r.is_food_cost_in_portfolio_target,
                 is_labor_cost_in_portfolio_target=r.is_labor_cost_in_portfolio_target,
-                stores=tuple(
-                    s for s in stores if s.field_manager_name == fm_name
-                ),
+                stores=tuple(s for s in stores if s.field_manager_name == fm_name),
             )
         )
 

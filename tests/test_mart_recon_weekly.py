@@ -58,18 +58,15 @@ def applied_migrations() -> None:
 def _wipe() -> None:
     params = {"s": TEST_STORE, "w": WEEK_END}
     execute_sql(
-        "DELETE FROM mart_recon_weekly WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM mart_recon_weekly WHERE restaurant_number = :s AND week_end_date = :w",
         params,
     )
     execute_sql(
-        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s AND week_end_date = :w",
         params,
     )
     execute_sql(
-        "DELETE FROM stg_controlsheet_weekly WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM stg_controlsheet_weekly WHERE restaurant_number = :s AND week_end_date = :w",
         params,
     )
 

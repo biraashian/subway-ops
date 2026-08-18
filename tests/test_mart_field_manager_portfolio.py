@@ -52,13 +52,11 @@ def applied_migrations() -> None:
 
 def _wipe() -> None:
     execute_sql(
-        "DELETE FROM mart_field_manager_portfolio "
-        "WHERE field_manager_name = :fm",
+        "DELETE FROM mart_field_manager_portfolio WHERE field_manager_name = :fm",
         {"fm": FM_NAME},
     )
     execute_sql(
-        "DELETE FROM mart_store_weekly "
-        "WHERE restaurant_number IN ('T1','T2','T3')",
+        "DELETE FROM mart_store_weekly WHERE restaurant_number IN ('T1','T2','T3')",
     )
     execute_sql("DELETE FROM ref_stores WHERE store_number IN ('T1','T2','T3')")
     execute_sql("DELETE FROM ref_field_managers WHERE name = :fm", {"fm": FM_NAME})
