@@ -28,3 +28,4 @@ this file only points at it.
 | 2026-08-13 | T-0004 | **merged** — audit green; post-merge clean; baseline rotated; declaration retired (D-028 §3); board's stale T-0003 row repaired | `main` | test_logs/T-0004/T-0004-post-merge.md |
 | 2026-08-17 | /audit T-0005 | RED — B-0031: a committed worktree symlink would replace main's fixtures with a dangling link on merge; code itself clean | `forge/T-0005` | bench/BENCH.md |
 | 2026-08-17 | /bench | B-0031 → B+A, B-0030 → C, B-0029 → A; D-033…D-035; T-0014, T-0015 minted; T-0005 → rework | `main` | DECISIONS.md · bench/BENCH.md |
+| 2026-08-17 | T-0005 | built (rework) — D-033 folded: symlink untracked, ignore rule widened; merge-safety proven against a clone; 568 passed, pre-merge 0 | `forge/T-0005` | journal/T-0005.md · test_logs/T-0005/ |
