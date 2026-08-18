@@ -5,7 +5,7 @@
 ```yaml
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
-version:        1.4.0
+version:        1.5.0
 status:         tasked
 owner:          amitoj
 inherits:       codex@2026-08-11
@@ -21,7 +21,8 @@ bound_by:
   - D-020                      # wages are hand-kept; FreshConnect has none
 open_questions: 0              # Q-007/Q-008 decided 2026-08-13 (B-0020, B-0021);
                                # Q-009/Q-010 decided 2026-08-17 (B-0032, B-0033);
-                               # Q-011 decided 2026-08-17 (B-0034)
+                               # Q-011 decided 2026-08-17 (B-0034);
+                               # Q-012 decided 2026-08-18 (B-0037)
                                # AC-018 amended 2026-08-13 by D-029 (B-0025)
 l1_plan:        design/PLAN-SPEC-PPL-001.md
 build_sheet:    T-0003 … T-0009 (7 tasks)
@@ -240,7 +241,11 @@ Serves **US-005** · Governed by **codex/06-PEOPLE "Leaving" (6.3A)**, **codex/0
     them from scheduling, active rosters and recognition, and SHALL continue to
     include their historical hours in past-period aggregates.
   - `AC-024` — IF a terminated person clocks in again, THEN the roster service
-    SHALL reactivate the **same** person row and SHALL NOT create a new one.
+    SHALL reactivate the **same** person row — setting `is_active = true` and
+    **clearing `termination_date`** (D-041) — and SHALL NOT create a new one.
+    Clearing the date is deliberate: it keeps `termination_date IS NULL` a
+    truthful test for "currently employed". The accepted cost is that the
+    previous departure date is overwritten and not recoverable from the row.
   - `AC-025` — WHILE a person is terminated, the roster service SHALL serve
     their record read-only to the roles permitted by codex 07.
 ---
@@ -351,7 +356,7 @@ inline.
 | Wage row back-dated before an existing row | Both stand; resolution is by date | AC-012 |
 | Two wage rows for the same effective date | PK rejects the second | §5 PK |
 | Person works 25h at each of two stores | 50h; 10h at 1.5× | AC-009, AC-016 |
-| Terminated person clocks in again | Same person reactivated | AC-024 |
+| Terminated person clocks in again | Same person reactivated: `is_active=true`, `termination_date` cleared | AC-024, D-041 |
 | Derivation re-run over the same window | No new rows | INV-002 |
 | Crew member requests their own wage | Refused — office/owner only | AC-013 |
 | `observed_name` not in `LAST, FIRST` form | Used verbatim | AC-027 |
@@ -430,6 +435,14 @@ are named in each task file.
   codex 02's stated shape was amended to match.
 
 **Still open:**
+
+- `Q-012` — **On rehire, is `termination_date` cleared?** Raised by T-0006's
+  build, which halted rather than choosing. AC-024 said "reactivate the same
+  row" and named no columns; codex 06 "Leaving" confirms the row identity and is
+  equally silent. **DECIDED 2026-08-18 → A (B-0037):** clear it, as the inverse
+  of AC-022. Recorded as D-041. Option C (log the reactivation) was declined by
+  Burst on the grounds that `ops_employee_identity_log` is shaped for identity
+  repair, not lifecycle.
 
 - `Q-011` — **What does a week with no shifts cost?** Raised by the second
   `/audit` of T-0007. `cost_week` consulted the wage table only for dates

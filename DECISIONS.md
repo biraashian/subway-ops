@@ -858,3 +858,38 @@ both reference the correct column name.
 - **Reopen if:** it never needs reopening — **C is the real fix.** T-0011's
   containerised Postgres (D-025) removes the shared resource entirely, and this
   decision becomes dead weight describing a hazard that can no longer occur.
+
+## D-041 — Reactivation clears the termination (was B-0037)
+- **Decision:** when a terminated person clocks in again, the derivation sets
+  `is_active = true` **and** clears `termination_date` on the same
+  `ref_employees` row. Decided 2026-08-18 (B-0037 → A). AC-024 amended;
+  SPEC-PPL-001 → v1.5.0.
+- **Reasoning:** AC-024 reads as the inverse of AC-022, which is the pair of
+  fields termination sets. Clearing both leaves a coherent row and keeps
+  `termination_date IS NULL` a truthful test for "currently employed" — option B
+  would have shipped a row saying `is_active = true` beside
+  `termination_date = 2025-03-01`, which every consumer filtering on the date
+  would read as still-terminated.
+- **What this gives up, stated plainly:** `ref_employees` has one
+  `termination_date` and no history table, so the previous departure date is
+  overwritten and the fact that this person once left is not recoverable from
+  the row. Accepted because codex 07's I-9 rule — retain for three years from
+  hire or one year from termination, whichever is later — only runs its clock
+  while someone is gone, and a subsequent departure writes a fresh date.
+- **Option C declined, and this part is Burst's call rather than the founder's.**
+  C (log the reactivation in `ops_employee_identity_log`) was offered back with
+  "if you want the audit trail". Declined because that table is shaped for
+  identity *repair* — its `action` CHECK is `merge`/`split` and its columns are
+  `from_employee_id`, `to_employee_id`, `assignment_id` — and a lifecycle event
+  fits none of them without overloading a table whose purpose is different. The
+  event is already visible in the `derive_roster` structlog line and in
+  `ops_job_runs`. Migration `022` for an occurrence that cannot yet happen —
+  nothing sets `is_active = false` today — is speculative.
+- **Reopen if:** anyone needs to answer "has this person left before, and when".
+  That is option D's question (a `ref_employee_spells` table, one row per
+  stint), and it should be bought as D. Routing it through the identity log
+  would make D harder to reach later, not easier.
+- **Note for whoever implements AC-022:** termination is still unbuilt — AC-022
+  landed as schema in T-0004 and no code writes it. The moment it exists, this
+  decision becomes reachable, and the derivation will already have been running
+  nightly.

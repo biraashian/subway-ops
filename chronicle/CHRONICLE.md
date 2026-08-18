@@ -38,3 +38,4 @@ this file only points at it.
 | 2026-08-17 | T-0007 | built (rework 2) — empty-week rate (D-038), synthetic test stores (D-039); 33 cost tests; pre-merge 0 @ `11433ec` | `forge/T-0007` | journal/T-0007.md · test_logs/T-0007/ |
 | 2026-08-18 | /audit T-0007 | **GREEN** — 8 ACs re-derived from the EARS lines; 58 task tests + 38 independent probes green; D-036/D-038 defects confirmed fixed; fences clean. Note: CON-003's arg list still omits `actor_role` that AC-013 requires | `forge/T-0007` | test_logs/T-0007/T-0007-pre-merge.md |
 | 2026-08-17 | T-0007 | **merged** — audit green (38 independent probes); post-merge clean; baseline rotated. Two audits, two reworks, D-036…D-039 | `main` | test_logs/T-0007/T-0007-post-merge.md |
+| 2026-08-18 | /bench | B-0037 → A; D-041 reactivation clears the termination; option C declined by Burst; SPEC-PPL-001 → v1.5.0; T-0006 unhalted | `main` | DECISIONS.md · specs/SPEC-PPL-001.md |

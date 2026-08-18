@@ -43,7 +43,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 · D-029 · D-030 · D-032 | **merged** | `main` |
 | T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | **merged** | `main` |
 | T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | **merged** | `main` |
-| T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 | **queued — critical path**; last unblocked task in the chain | — |
+| T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 · D-041 | **queued — resume**: AC-024 only; 7 of 8 ACs already built and green | `forge/T-0006-wip` |
 | T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 · D-036…D-039 | **merged** | `main` |
 | T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | queued (needs T-0006/7) | — |
 | T-0009 | Completeness sweep, CLI, daily_pull wiring | AC-018…AC-021 | queued (needs T-0003/6/7) | — |
