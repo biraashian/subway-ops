@@ -34,6 +34,13 @@ MARK = "t0007-cost-selftest"
 CLERK_A = "t0007:clerk-a"
 CLERK_B = "t0007:clerk-b"
 
+#: Synthetic stores, created and dropped by the fixture (D-039, codex 13).
+#: `is_active=false` is the second half of the rule and not decoration: an active
+#: store is one the ingests pick up, so a crashed run would leave this one in
+#: their path as well as in the database.
+STORE_A = "T-PPL-1"
+STORE_B = "T-PPL-2"
+
 
 def _weekly_split(total: Decimal) -> tuple[Decimal, Decimal]:
     """Weekly regular/overtime totals for a single-shift week.
@@ -143,17 +150,35 @@ def _wipe() -> None:
         {"m": MARK},
     )
     execute_sql("DELETE FROM ref_employees WHERE display_name = :m", {"m": MARK})
+    execute_sql(
+        "DELETE FROM ref_stores WHERE store_number IN (:a, :b)",
+        {"a": STORE_A, "b": STORE_B},
+    )
 
 
 @pytest.fixture
 def worker() -> Iterator[tuple[int, list[str]]]:
-    """A person with assignments at up to two real stores, and a clean slate."""
+    """A person assigned to two SYNTHETIC stores, and a clean slate.
+
+    The stores are created here rather than read out of `ref_stores` (D-039).
+    codex 13 says never to point a test at a real store number, and these tests
+    write `stg_timeclock` punches — up to 35 hours inside the current business
+    week — which is precisely the hazard the convention was written after.
+    Teardown removes them, and `is_active=false` means the ingests would ignore
+    them even if a crashed run left one behind.
+    """
     apply_migrations()
     _wipe()
-    stores = [
-        str(r[0])
-        for r in execute_sql("SELECT store_number FROM ref_stores ORDER BY store_number LIMIT 2")
-    ]
+    for store in (STORE_A, STORE_B):
+        execute_sql(
+            """
+            INSERT INTO ref_stores (store_number, store_name, city, state, is_active)
+            VALUES (:n, :n, 'Testville', 'WA', false)
+            ON CONFLICT (store_number) DO NOTHING
+            """,
+            {"n": store},
+        )
+    stores = [STORE_A, STORE_B]
     rows = execute_sql(
         "INSERT INTO ref_employees (display_name) VALUES (:m) RETURNING employee_id",
         {"m": MARK},
@@ -225,8 +250,6 @@ def test_hours_sum_across_assignments_before_overtime(
     ``split_weekly_hours`` takes a person's summed total rather than a shift.
     """
     employee_id, stores = worker
-    if len(stores) < 2:
-        pytest.skip("needs two stores")
     week_start, _ = business_week_of(business_date_now())
     _punch(stores[0], CLERK_A, week_start, after_adj="25.00")
     _punch(stores[1], CLERK_B, week_start + timedelta(days=1), after_adj="25.00")
@@ -563,3 +586,98 @@ def test_overtime_premium_uses_the_rate_of_the_shift_that_crossed_forty(
     assert result.regular_hours == Decimal("40.00")
     assert result.overtime_hours == Decimal("10.00")
     assert result.dollars == Decimal("750.0000")
+
+
+# ===========================================================================
+#  D-038 — an empty week still has to know the rate
+# ===========================================================================
+
+
+@requires_db
+def test_empty_week_with_no_wage_row_is_not_costed(worker: tuple[int, list[str]]) -> None:
+    """D-038 / CON-005 — no shifts AND no wage row means we cannot claim to know.
+
+    Deliberately constructed so the two candidate answers DIFFER. The previous
+    version of this test recorded a wage first, which made `$0 costed` and
+    `None uncosted` indistinguishable — the same blind spot D-036 recorded about
+    `test_rate_is_resolved_for_the_week_not_today`. Here no wage row exists at
+    all, so ratifying the old behaviour would fail this and the new behaviour
+    passes it.
+
+    The $0 the old code returned was arithmetically true — zero hours cost zero
+    at any rate. It was `is_costed=True` that was the lie.
+    """
+    employee_id, _ = worker
+    week_start, _ = business_week_of(business_date_now())
+
+    result = cost_week(employee_id, week_start)
+    assert result.regular_hours == Decimal("0")
+    assert result.is_costed is False, "is_costed asserts the rate is KNOWN"
+    assert result.dollars is None
+    assert result.dollars != Decimal("0"), "the pre-rework answer"
+
+
+@requires_db
+def test_empty_week_with_a_wage_row_costs_zero(worker: tuple[int, list[str]]) -> None:
+    """The other side of D-038 — a known rate and no hours is a real, costed $0."""
+    employee_id, _ = worker
+    week_start, _ = business_week_of(business_date_now())
+    record_wage(
+        employee_id=employee_id,
+        effective_date=week_start - timedelta(days=1),
+        hourly_rate=Decimal("20.0000"),
+        set_by=MARK,
+        actor_role="office",
+    )
+
+    result = cost_week(employee_id, week_start)
+    assert result.is_costed is True
+    assert result.dollars == Decimal("0")
+
+
+@requires_db
+def test_a_nonexistent_employee_is_not_costed() -> None:
+    """The case that made the old behaviour indefensible.
+
+    `employee_id 999999999` is not in `ref_employees`. It has no shifts and no
+    wage row, so under the old code it answered `dollars=Decimal("0")`,
+    `is_costed=True` — a confident price for a person who does not exist.
+
+    No fixture: this must hold with nothing set up, which is the point.
+    """
+    result = cost_week(999999999, business_date_now())
+    assert result.is_costed is False
+    assert result.dollars is None
+
+
+# ===========================================================================
+#  D-039 — the fixture's stores are synthetic
+# ===========================================================================
+
+
+@requires_db
+def test_cost_fixtures_use_a_synthetic_store(worker: tuple[int, list[str]]) -> None:
+    """codex 13 / D-039 — never point a test at a real store number.
+
+    These tests write `stg_timeclock` punches, so a crashed run would otherwise
+    leave phantom hours on a live store inside the open business week — the
+    exact incident codex 13 was written after. Both halves are asserted: the
+    stores are ours, and they are inactive so no ingest would touch them even if
+    teardown never ran.
+    """
+    _, stores = worker
+    assert stores == [STORE_A, STORE_B]
+
+    rows = execute_sql(
+        "SELECT store_number, is_active FROM ref_stores "
+        "WHERE store_number IN (:a, :b) ORDER BY store_number",
+        {"a": STORE_A, "b": STORE_B},
+    )
+    assert len(rows) == 2
+    assert all(row[1] is False for row in rows), "is_active=false, or ingests pick it up"
+
+    real = execute_sql(
+        "SELECT count(*) FROM ref_stores WHERE store_number IN (:a, :b) AND is_active",
+        {"a": STORE_A, "b": STORE_B},
+    )
+    assert real[0][0] == 0

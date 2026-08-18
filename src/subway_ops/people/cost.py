@@ -123,6 +123,13 @@ def cost_week(employee_id: int, week_end: date) -> WeekCost:
       per shift rather than per week: a person hired mid-week has no rate for
       the days before they were hired, and a partial figure would understate
       the week rather than admit it does not know.
+    * **No shifts at all, and no rate in force at `week_finish`.** An empty week
+      still asks (D-038). Zero hours would cost zero at any rate, so the $0 is
+      arithmetically true — but `is_costed` asserts *the rate is known*, and
+      answering `True` for a person with no wage row (or an `employee_id` that
+      does not exist) would make the flag mean "nothing contradicted us"
+      instead. The flag is the only channel that distinction has, so it is kept
+      meaning the stronger thing and the figure abstains.
     * **Any shift with NULL ``hours_after_adj``.** AC-017 treats that shift as
       uncosted; because its hours are unknown, so is the weekly total, and so is
       where the 40-hour line falls for every other shift.
@@ -174,6 +181,20 @@ def cost_week(employee_id: int, week_end: date) -> WeekCost:
 
     if null_shifts:
         return _uncosted("null_hours_present")
+
+    if not shifts:
+        # D-038: an empty week still has to know the rate before it may claim
+        # to be costed. `week_finish` is the only date available — there is no
+        # shift to date the question by — and it is the week's own last day
+        # rather than "today", so a historical empty week stays reproducible.
+        if rate_in_force(employee_id, week_finish) is None:
+            return _uncosted("no_rate_in_force")
+        return WeekCost(
+            regular_hours=Decimal("0"),
+            overtime_hours=Decimal("0"),
+            dollars=Decimal("0"),
+            is_costed=True,
+        )
 
     # One lookup per distinct business date, not per shift.
     rates: dict[date, Decimal | None] = {}
