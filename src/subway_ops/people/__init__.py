@@ -17,15 +17,18 @@ reason, since the overtime boundary is the part most worth testing without one.
 from __future__ import annotations
 
 from subway_ops.people.cost import WeekCost, cost_week
+from subway_ops.people.derive import DeriveResult, derive_roster
 from subway_ops.people.names import derive_display_name, normalize_name
 from subway_ops.people.roles import ROLE_ORDER, effective_role
 from subway_ops.people.wages import rate_in_force, read_wage, record_wage
 
 __all__ = [
     "ROLE_ORDER",
+    "DeriveResult",
     "WeekCost",
     "cost_week",
     "derive_display_name",
+    "derive_roster",
     "effective_role",
     "normalize_name",
     "rate_in_force",
