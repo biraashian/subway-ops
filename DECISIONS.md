@@ -893,3 +893,85 @@ both reference the correct column name.
   landed as schema in T-0004 and no code writes it. The moment it exists, this
   decision becomes reachable, and the derivation will already have been running
   nightly.
+
+## D-042 — The derivation can be scoped to stores, and why that became urgent (was B-0038)
+- **Decision:** `CON-001` becomes
+  `derive_roster(*, since: date | None = None, stores: list[str] | None = None)`.
+  `stores` restricts the scan to the named stores; `None` means all, as today.
+  DB-integration tests pass their synthetic stores, which makes codex 13's
+  isolation rule enforceable rather than aspirational. Decided 2026-08-18
+  (B-0038 (b) → A). A separate test database (option B) remains the standing
+  fix and is already **T-0011** under D-025.
+- **What happened, recorded in full because it is the point:** `derive_roster`
+  with no `since` scans the whole of `stg_timeclock`. T-0006's tests called it
+  25 times with no arguments. Job `ops_job_runs` id **11410** ran the real
+  derivation against production and wrote **405 assignments and 342 persons**
+  across 13 real stores — 20 of those persons orphaned, with no assignment at
+  all. T-0006's own NOTES said "Do NOT run this against production during the
+  build… The first real run is T-0009's concern".
+- **The second-order damage was to the evidence.** `DeriveResult` counts
+  globally, not per test, so six assertions covering AC-001, AC-005, AC-006 and
+  INV-002 passed *only because* that run had already consumed the real pairs.
+  On a clean database they see 406, not 1. The suite's green and its 100%
+  coverage were both contingent on a one-time production side effect —
+  including `test_same_pin_different_name_is_two_persons`, which T-0006's NOTES
+  call the most expensive test to lose.
+- **(a) The rows were deleted**, on explicit founder instruction and after
+  reproducing the audit's measurements independently: 405 assignments, 342
+  persons, and confirmation that nothing referenced them — no wage row, no
+  worklist item, no identity-log entry, no `user_email`, no `merged_into`. A
+  reversible JSON snapshot was taken first. The four people tables are back to
+  the empty state T-0004 created; `stg_timeclock` was not touched. T-0009 will
+  therefore perform and record the first real run as designed, which is the
+  whole reason that task exists.
+- **The general lesson, which is not "be careful":** a function whose default
+  argument means "operate on everything" will eventually be called with no
+  arguments by something that meant "operate on a little". The fix is a
+  parameter that lets the caller say what it meant, not a rule telling callers
+  to remember.
+
+## D-043 — AC-005 resolves against the state after renames, in two passes (was B-0039)
+- **Decision:** `derive_roster` runs **two passes**: first apply every AC-004
+  rename, then resolve every new assignment against the updated table. The
+  `(clerk_id, normalized_name)` index a link is resolved against therefore
+  reflects renames made earlier in the same run. AC-005 states the snapshot
+  explicitly. The query backing the index gains an `ORDER BY` so the
+  `setdefault` that picks a person is deterministic. Decided 2026-08-18
+  (B-0039 → C).
+- **Reasoning:** with a run-start snapshot, a name corrected at store A earlier
+  in a run is invisible to store B's link later in the same run. The result is
+  two assignments carrying an identical `(clerk_id, normalized_name)` pointing
+  at two different persons — a state the linking rule is supposed to make
+  impossible, permanent, and not repaired by re-running, because on the next run
+  both assignments already exist and AC-003 leaves their links alone.
+- **Why two passes rather than the one-line fix (option A):** both remove the
+  split, but the two-pass version is order-independent. Option A's correctness
+  depends on the order rows come back in, which is exactly the property the
+  missing `ORDER BY` had already lost once.
+- **Reachability:** zero occurrences in the live data at the time of the
+  decision. It requires a rename and a first sighting at a second store within
+  one run — rare per night, and **certain over a backfill window**. T-0009's
+  first real run is a backfill window.
+- **Note for T-0008:** the spec now says which snapshot AC-005 means. It did not
+  before, and merge/split would have re-litigated it.
+
+## D-044 — A blank `employee_name` falls back to the last real one, then to the PIN (was B-0040)
+- **Decision:** the derivation carries **the most recent non-blank
+  `employee_name`** for a pair rather than the most recent name outright. A pair
+  that has never had a name gets `display_name = "Clerk <clerk_id> (unnamed)"`,
+  keeps an empty `normalized_name`, and links on that empty key like any other
+  value. Decided 2026-08-18 (B-0040 → C layered over B).
+- **Reasoning:** the build invented three defaults here without flagging any of
+  them — NULL became `""`, `display_name` became `''` on a NOT NULL column, and
+  empty keys were quietly excluded from linking, so AC-005 did not uniformly
+  hold. A blank display name escapes into every roster screen, T-0009's
+  incomplete sweep and T-0008's merge UI, none of which expect it.
+- **Why C and B together:** C removes almost every occurrence, because a single
+  blank punch no longer erases a name the pair has already shown. B gives the
+  remainder something a human can act on — "Clerk 1998 (unnamed)" is a row
+  office can find and rename, where `''` is a row nobody can see. And the
+  special case for empty keys in the linking rule disappears under both, which
+  restores AC-005's uniformity.
+- **Reachability:** 0 of 19,339 real `stg_timeclock` rows are blank today. It
+  becomes reachable the first time the POS emits one, and the derivation runs
+  nightly forever.

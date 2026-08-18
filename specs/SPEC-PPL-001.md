@@ -5,7 +5,7 @@
 ```yaml
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
-version:        1.5.0
+version:        1.6.0
 status:         tasked
 owner:          amitoj
 inherits:       codex@2026-08-11
@@ -22,7 +22,8 @@ bound_by:
 open_questions: 0              # Q-007/Q-008 decided 2026-08-13 (B-0020, B-0021);
                                # Q-009/Q-010 decided 2026-08-17 (B-0032, B-0033);
                                # Q-011 decided 2026-08-17 (B-0034);
-                               # Q-012 decided 2026-08-18 (B-0037)
+                               # Q-012 decided 2026-08-18 (B-0037);
+                               # Q-013/Q-014/Q-015 decided 2026-08-18 (B-0038/39/40)
                                # AC-018 amended 2026-08-13 by D-029 (B-0025)
 l1_plan:        design/PLAN-SPEC-PPL-001.md
 build_sheet:    T-0003 … T-0009 (7 tasks)
@@ -87,8 +88,13 @@ Serves **US-001** · Governed by **codex/06-PEOPLE "the roster builds itself" (6
 - **Acceptance criteria (EARS)**
   - `AC-001` — WHEN the derivation encounters a `(restaurant_number, clerk_id)`
     with no existing assignment, the roster service SHALL create one assignment
-    carrying `clerk_id`, `store_number`, and the most recently seen
-    `employee_name` as `observed_name`.
+    carrying `clerk_id`, `store_number`, and the most recently seen **non-blank**
+    `employee_name` as `observed_name` (D-044). Ties within a business date are
+    broken by `clock_in`, latest first.
+  - `AC-001a` — IF a pair has never carried a non-blank `employee_name`, THEN the
+    roster service SHALL set `display_name` to `Clerk <clerk_id> (unnamed)`,
+    leave `normalized_name` empty, and link on that empty key like any other
+    value (D-044). A blank display name is never written.
   - `AC-002` — WHEN the derivation runs, the roster service SHALL wrap its work
     in `track_job("derive_roster")` and set `meta["rows_written"]`.
   - `AC-003` — IF a `(restaurant_number, clerk_id)` already has an assignment,
@@ -123,7 +129,11 @@ a person.
 - **Acceptance criteria (EARS)**
   - `AC-005` — WHEN a new assignment's `(clerk_id, normalized_name)` equals
     that of an existing assignment, the roster service SHALL link the new
-    assignment to that assignment's person.
+    assignment to that assignment's person. **"Existing" means the state after
+    every rename in this run has been applied** (D-043): the derivation runs two
+    passes, renames first and resolution second, so a name corrected at one
+    store earlier in a run is visible to a link at another store later in it.
+    Resolution SHALL be deterministic when more than one assignment matches.
   - `AC-006` — IF no existing assignment matches on both `clerk_id` and
     `normalized_name`, THEN the roster service SHALL create a new person and
     link the assignment to it.
@@ -277,7 +287,10 @@ Serves **US-003** · Governed by **codex/06-PEOPLE "Identity and login", "Roles"
 
 ## 4 · Interface Contracts
 
-- **CON-001 — `people.derive.derive_roster(*, since: date | None = None) -> DeriveResult`**
+- **CON-001 — `people.derive.derive_roster(*, since: date | None = None, stores: list[str] | None = None) -> DeriveResult`**
+  - `stores` restricts the scan to the named `restaurant_number`s; `None` scans
+    all (D-042). DB-integration tests pass their synthetic stores, which is what
+    makes codex 13's isolation rule enforceable rather than aspirational.
   - Returns frozen `DeriveResult(assignments_created, persons_created, incomplete_opened)`.
   - Errors: FK violation on unknown `restaurant_number`; wrapped by `track_job`.
 - **CON-002 — `people.wages.rate_in_force(employee_id, on: date) -> Decimal | None`**
@@ -358,6 +371,8 @@ inline.
 | Person works 25h at each of two stores | 50h; 10h at 1.5× | AC-009, AC-016 |
 | Terminated person clocks in again | Same person reactivated: `is_active=true`, `termination_date` cleared | AC-024, D-041 |
 | Derivation re-run over the same window | No new rows | INV-002 |
+| Name corrected at store A, same PIN+name first seen at store B, one run | One person — resolution sees the rename (two passes) | AC-005, D-043 |
+| `employee_name` blank or absent | Last non-blank name used; never-named pairs get `Clerk <id> (unnamed)` | AC-001a, D-044 |
 | Crew member requests their own wage | Refused — office/owner only | AC-013 |
 | `observed_name` not in `LAST, FIRST` form | Used verbatim | AC-027 |
 | Office renamed a person, derivation runs again | Manual name retained | AC-028 |
@@ -435,6 +450,25 @@ are named in each task file.
   codex 02's stated shape was amended to match.
 
 **Still open:**
+
+- `Q-013` — **How do DB-integration tests avoid deriving the real roster?**
+  Raised by the `/audit` of T-0006 after the suite ran the real derivation
+  against production — 405 assignments and 342 persons, written by a job the
+  task file had explicitly deferred to T-0009. **DECIDED 2026-08-18 → A
+  (B-0038):** `CON-001` gains a `stores` filter. The rows were deleted on
+  founder instruction so T-0009 performs the first real run as designed.
+  Recorded as D-042.
+
+- `Q-014` — **Does AC-005 resolve against the run-start state or the current
+  one?** **DECIDED 2026-08-18 → C (B-0039):** two passes, renames before
+  resolution, plus a deterministic ordering. Recorded as D-043. A run-start
+  snapshot left two assignments sharing an identity key pointing at two people,
+  permanently.
+
+- `Q-015` — **What happens when `employee_name` is blank?** **DECIDED
+  2026-08-18 → C over B (B-0040):** carry the last non-blank name; a
+  never-named pair becomes `Clerk <id> (unnamed)`. Recorded as D-044. The build
+  had invented three defaults here without flagging them.
 
 - `Q-012` — **On rehire, is `termination_date` cleared?** Raised by T-0006's
   build, which halted rather than choosing. AC-024 said "reactivate the same
