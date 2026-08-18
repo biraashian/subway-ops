@@ -38,7 +38,7 @@ token.b64
 client_secret*.json
 
 # Recorded API fixtures (real responses, never committed)
-tests/fixtures/recorded/
+tests/fixtures/recorded
 
 # OS / editor
 .DS_Store
