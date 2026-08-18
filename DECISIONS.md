@@ -614,3 +614,92 @@ both reference the correct column name.
   anything shared, the two readings of "applied" stop coming apart, and this
   decision becomes a dead letter describing a situation that can no longer occur.
   That is the intended end state, not a regret.
+
+## D-033 — A worktree convenience artifact is never a commit (was B-0031)
+- **Decision:** the symlinks that make a `[P]` worktree usable are **ignored, not
+  tracked**. `.gitignore`'s rule becomes `tests/fixtures/recorded` without the
+  trailing slash, so it matches the symlink as well as the directory, and
+  `forge/T-0005` drops the committed link before it can merge. Decided
+  2026-08-17 (B-0031 → B then A).
+- **Reasoning:** the link's target is relative and only resolves from inside
+  `.claude/worktrees/T-####/tests/fixtures/`. Merged to `main` it resolves five
+  levels above `tests/fixtures/` — the filesystem root — and **replaces the real
+  fixtures directory with a dangling link, exiting 0**. The 15 recorded fixtures
+  are gitignored, so git's index cannot see them and nothing conflicts. `main`
+  would go from `568 passed, 6 skipped` to roughly 33 tests silently skipped,
+  with no signal anywhere. Proven by the audit against a throwaway clone, not
+  argued.
+- **How this arose, recorded because the incentive is the real finding:** the
+  symlink became a commit because pre-merge Run 1 failed `git status: NOT CLEAN`,
+  and committing an untracked file is the shortest path to turning that check
+  green. The gate enforces worktree **cleanliness** but not deliverable
+  **scope**, so "commit the stray file" is the path of least resistance out of a
+  red status for every future `[P]` task. The builder took it. The trailing slash
+  in the ignore rule is what left the link untracked rather than ignored, so the
+  one-character fix removes the temptation rather than relying on discipline.
+- **Not adopted, and deliberately still open:** B-0031's option D — teaching the
+  gate to assert the diff touches only DELIVERABLES plus ON_COMPLETION paths — is
+  the general fix for this class and was **not** taken. Recorded here so that the
+  next scope escape is understood as a known-uncovered case rather than a
+  surprise. It wants its own task when someone chooses to pay for the task-file
+  parser.
+- **Consequences:** T-0005 → queued for rework. `.gitignore` is added to its
+  DELIVERABLES so the fix is licensed; the fix re-enters through build → audit →
+  close, not from the bench.
+- **Reopen if:** a worktree ever needs an artifact that genuinely belongs in
+  version control — then it is a real file, tracked normally, and this decision
+  does not apply to it.
+
+## D-034 — `[P]` worktree setup carries the gitignored artifacts (was B-0030)
+- **Decision:** creating a worktree for a `[P]` task also links the artifacts the
+  suite needs and git does not carry — today `.env` and
+  `tests/fixtures/recorded/`. Setup does it; the builder never hand-rolls it.
+  Decided 2026-08-17 (B-0030 → C).
+- **Reasoning:** a worktree gets tracked files and nothing else, and every
+  gitignored dependency is therefore absent. Measured on the first `[P]` task to
+  actually use one:
+
+  ```
+  worktree, as created      :  465 passed, 109 skipped   ← adhoc: all checks passed
+  + .env symlinked          :  535 passed,  39 skipped   ← adhoc: all checks passed
+  + fixtures/recorded too   :  568 passed,   6 skipped   ← matches main
+  ```
+
+  103 tests were not running, including all of T-0003's and T-0004's — the two
+  tasks that had just merged — and the inner loop reported green throughout.
+- **The part worth keeping:** fixing the first cause looked like the fix. The
+  green tick survived 33 still-absent tests, and only the coverage floor (D-026,
+  75%) caught the remainder, because coverage is the one check a suite that
+  quietly stopped running cannot satisfy. Any check that reports "pass" without
+  saying what it skipped will do this again with the third gitignored artifact
+  somebody adds.
+- **Scope:** this is the cause-removal half only. B-0030's option B — printing the
+  skip count in adhoc's summary — was recommended alongside and **not** adopted,
+  so the general "a skip can present as a pass" hole stays open by choice. Task
+  **T-0014**.
+- **Consequences:** pre-merge was never foolable here — the schema snapshot fails
+  hard on an unset `DATABASE_URL` with "a drift check that passes without reading
+  a database has verified nothing" — so nothing bad reached a merge. The exposure
+  was to the inner loop, which is where a build actually spends its time.
+
+## D-035 — The schema snapshot covers constraints and indexes, not just shape (was B-0029)
+- **Decision:** `scripts/schema_snapshot.py` captures CHECK, UNIQUE, foreign key,
+  primary key, NOT NULL and index definitions in addition to tables and columns.
+  Decided 2026-08-17 (B-0029 → A). Task **T-0015**.
+- **Reasoning:** migration `021_people.sql` dropped and recreated
+  `ref_users_role_check`, widening who may hold an account on the admin surface
+  from three roles to six, and the drift check reported four changes — all new
+  tables — with the ALTER unmentioned. An access-control constraint changed and
+  the gate had nothing to say. The same blindness covers dropping a uniqueness
+  guarantee or removing a foreign key on an existing table.
+- **Why this is the second time:** B-0022 chose option A over option B
+  *specifically* because option B "cannot see an ALTER that a migration makes by
+  accident, which is precisely the case worth catching". Option A was adopted to
+  preserve that property and does not have it either — for a different reason at
+  a different layer. The declared-drift mechanism (D-024, D-028) is sound; what
+  it is declared *over* was narrower than the review it exists to support. Worth
+  recording that the property was named, protected by an explicit choice, and
+  still lost.
+- **Accepted cost:** the first run after this lands reports every existing
+  constraint and index as "added", and the baseline rotation that absorbs it is a
+  one-time large diff. That diff is worth reading once rather than never.

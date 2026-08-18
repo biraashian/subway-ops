@@ -5,6 +5,68 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0031 — A worktree convenience symlink was committed; merging it silently destroys main's recorded fixtures
+Task: T-0005 (audit RED) · Blocks: T-0005 merge, and T-0006…T-0009 behind it · Raised: 2026-08-17
+
+**Specified.** T-0005 DELIVERABLES license five created paths. Rule 4 is BOUNDED
+SURFACE — write only within them.
+
+**Observed.** `forge/T-0005` adds a sixth, a symlink committed in `c387ab9`:
+`tests/fixtures/recorded -> ../../../../../tests/fixtures/recorded`. Its target
+resolves only from inside `.claude/worktrees/T-0005/tests/fixtures/`; five levels
+above `main`'s own `tests/fixtures/` is the filesystem root. Audited by merging
+into a throwaway clone of `main` with a fixture present: merge exits 0, no
+conflict, no warning, and the real fixtures directory is replaced by a dangling
+link. The 15 recorded fixtures are gitignored, so git's index cannot see them and
+nothing conflicts. `main` would drop from `568 passed, 6 skipped` to ~33 tests
+silently skipped.
+
+It became a commit because pre-merge Run 1 failed `git status: NOT CLEAN`, and
+committing an untracked file is the shortest way to green that check. The gate
+enforces cleanliness, not scope. The ignore rule
+`tests/fixtures/recorded/` carries a trailing slash, so it matches the directory
+but not the symlink — which is why the link was untracked rather than ignored.
+
+Nothing else is wrong with the task: four ACs verified by hand, 26/26 tests,
+both FORBIDDEN_ACTIONS clean, ROLE_ORDER exact.
+
+Options: A) drop the symlink from the branch · B) fix the ignore rule (one
+character) · C) worktree setup creates the symlinks (B-0030's C) · D) teach the
+gate a DELIVERABLES scope check.
+Burst recommends: **B then A, with D as its own task.**   [recommendation]
+Status: **DECIDED 2026-08-17 → B + A.** Ignore rule loses its trailing slash so
+it covers the symlink; `forge/T-0005` drops the committed link. Policy recorded
+as **D-033**. `.gitignore` added to T-0005's DELIVERABLES; the fix re-enters
+through build → audit → close. **Option D not adopted** — the gate still does not
+check deliverable scope, and that is now a known-uncovered class rather than a
+surprise.
+
+### B-0030 — An adhoc sweep in a worktree reports green with 109 tests skipped
+Task: T-0005 · Blocks: nothing today · Raised: 2026-08-13
+
+**Observed** on the first `[P]` task to use a worktree. A worktree gets tracked
+files only, so every gitignored artifact the suite needs is absent — `.env`
+first, then `tests/fixtures/recorded/`:
+
+```
+worktree, as created      :  465 passed, 109 skipped   ← adhoc: all checks passed
++ .env symlinked          :  535 passed,  39 skipped   ← adhoc: all checks passed
++ fixtures/recorded too   :  568 passed,   6 skipped   ← matches main
+```
+
+103 tests were not running, including all 14 of T-0003's and all 21 of T-0004's.
+Fixing the first cause moved the number and left a green tick over 33 still-absent
+tests; the coverage floor is what caught the rest. Pre-merge was never foolable —
+the schema snapshot fails hard on an unset `DATABASE_URL`.
+
+Options: A) adhoc asserts `DATABASE_URL` · B) adhoc prints its skip count ·
+C) worktree setup carries the artifacts.
+Burst recommends: **C and B together.**   [recommendation]
+Status: **DECIDED 2026-08-17 → C.** Worktree setup links `.env` and
+`tests/fixtures/recorded/`. Policy recorded as **D-034**. Task **T-0014**.
+**Option B not adopted** — adhoc still will not say what it skipped, so the
+general "a skip presents as a pass" hole stays open by choice.
+
 ### B-0029 — The drift check cannot see a constraint change
 Task: T-0004 (found during build; does not block it) · Blocks: nothing today · Raised: 2026-08-13
 
@@ -51,7 +113,13 @@ harness-hardening found by leaning on the harness, both touch checks that police
 builds, and neither should be done by a task the check is currently gating. Note
 C's specific danger: three separate times now, a check has been believed to cover
 something it did not.   [recommendation, not a decision]
-Status: OPEN
+Status: **DECIDED 2026-08-17 → A.** The snapshot captures CHECK, UNIQUE, FK, PK,
+NOT NULL and index definitions alongside tables and columns. Policy recorded as
+**D-035**. Task **T-0015**. Accepted cost: the first diff after it lands reports
+every existing constraint and index as added, absorbed by a one-time baseline
+rotation. Noted for the record — B-0022 chose option A over B specifically to
+keep the "catch an accidental ALTER" property, and option A did not have it
+either.
 
 ### B-0027 — May T-0003 edit migration `020`, or must a `021` correct it?
 Task: T-0003 (rework) · Blocks: T-0003's rework, and every migration task until D-025 lands · Raised: 2026-08-13
