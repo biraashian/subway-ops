@@ -34,6 +34,17 @@ TARGET_LABOR_COST_PORTFOLIO: Decimal = Decimal("0.25")
 VARIANCE_FLAGGED_USD: Decimal = Decimal("5")
 VARIANCE_ESCALATED_USD: Decimal = Decimal("50")
 
+# Overtime, per person per business week (SPEC-PPL-001 AC-016, decided at
+# B-0017). 1.5x beyond 40 hours is WA and OR statutory, not a house rule, which
+# is why it is a constant here rather than a configurable setting — an
+# environment that could lower it would be an environment that could break the
+# law quietly. The threshold applies to a person's SUMMED hours across every
+# store they worked, never per shift and never per store: someone at 25h in two
+# stores is at 50h and owed 10h of premium, and no single store's view would
+# ever show it (codex 06, codex 08).
+OVERTIME_THRESHOLD_HOURS: Decimal = Decimal("40")
+OVERTIME_MULTIPLIER: Decimal = Decimal("1.5")
+
 
 class Settings(BaseSettings):
     """Typed access to environment configuration.
