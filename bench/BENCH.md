@@ -5,6 +5,187 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0034 — A week with no shifts returns a confident `$0` even when no wage row exists anywhere
+Task: T-0007 (audit RED, rework) · Blocks: REQ-003/CON-005, INV-007 · Raised: 2026-08-17
+
+**Specified.** CON-005 — "`is_costed = False` when the rate is absent **or** any
+shift's `hours_after_adj` is NULL; `dollars` is then `None`, never zero."
+T-0007's own FORBIDDEN_ACTIONS — "do not return `Decimal("0")` when a rate is
+missing — return `None`. A zero flows into a mart and understates labor cost
+invisibly (INV-008)." Neither §6's edge table nor CON-005 says what a week with
+**no shifts at all** costs, so "the rate is absent" has no date to be evaluated
+at.
+
+**Observed.** `cost_week` resolves rates only for the distinct `business_date`s
+that have shifts (`src/subway_ops/people/cost.py:171-179`). With no shifts, the
+wage table is never consulted, and the empty-week path falls through to the
+costed branch. Probed against the live DB, current business week
+2026-08-12 → 2026-08-18:
+
+```
+employee with no wage row and no punches
+  cost_week(...) -> WeekCost(regular_hours=0, overtime_hours=0,
+                             dollars=Decimal('0'), is_costed=True)
+
+employee_id 999999999 — does not exist in ref_employees at all
+  cost_week(...) -> WeekCost(0, 0, dollars=Decimal('0'), is_costed=True)
+```
+
+`is_costed=True` asserts a rate that was never looked up, and `dollars` is the
+`Decimal("0")` the task forbids for a missing rate. **Materiality is low** — the
+figure contributes zero to any aggregate and no hours are excluded, so AC-019's
+`partially_costed` count is unaffected — but the shape is the same one D-036 was
+raised for: an undefined case filled silently, with `is_costed` reading as
+authoritative. The delivered test `test_a_week_with_no_shifts_costs_zero_when_a_rate_exists`
+records a wage first, so the two candidate answers cannot differ inside it —
+the same blind spot D-036 recorded about `test_rate_is_resolved_for_the_week_not_today`.
+
+Options:
+  A) **Ratify as built** — an empty week costs `$0` and is costed, rate or no
+     rate. Zero hours cost zero whatever the rate is, so the number is true; the
+     cost is that `is_costed=True` stops meaning "we know this person's rate"
+     and starts meaning "nothing contradicted us", and a nonexistent employee_id
+     answers confidently.
+  B) **Require a rate even for an empty week** — resolve at `week_finish` when
+     there are no shifts; absent ⇒ `dollars=None`, `is_costed=False`. Restores
+     CON-005's literal reading and keeps the FORBIDDEN_ACTION intact for one
+     extra lookup per shift-less person; abstains where the answer ($0) is
+     knowable.
+  C) **A third state** — `WeekCost` grows `no_activity: bool` (or `dollars=None`
+     with `is_costed=True`) so "worked nothing" is distinguishable from both
+     "costed" and "cannot cost". Most honest, widens CON-005's shape and touches
+     T-0009's consumer.
+Burst recommends: **B** — it is one branch and one test, it keeps
+`is_costed=True ⇒ the rate is known`, and it is the reading CON-005 and the
+task's own FORBIDDEN_ACTIONS already carry. **A** is defensible and costs
+nothing to adopt if the founder prefers the truthful zero.   [recommendation, not a decision]
+Status: **DECIDED 2026-08-17 → B.** An empty week must still resolve a rate, at
+`week_finish`; absent ⇒ `dollars=None`, `is_costed=False`. This keeps
+**`is_costed=True` meaning "the rate is known"** rather than "nothing
+contradicted us", which is the reading CON-005 and the task's own
+FORBIDDEN_ACTIONS already carry. Recorded as **D-038**; CON-005 amended,
+SPEC-PPL-001 → v1.4.0. Accepted cost: the figure abstains on a week whose answer
+($0) is arithmetically knowable — deliberate, because a caller cannot tell a real
+zero from an unpriceable one unless the flag means something.
+
+### B-0036 — Two concurrent runs of the DB-backed suite destroy each other's fixtures
+Task: T-0007 (found while re-running the gate) · Blocks: nothing today; makes any overlapping gate run unreliable · Raised: 2026-08-17
+
+**Observed.** My pre-merge run of `9583f0f` exited 1 with 3 failed and 4 errors
+in `tests/test_people_wages.py`. The `/audit` ran the same gate on the same
+commit and got exit 0. Same code, opposite verdicts — because the two runs
+overlapped.
+
+Reproduced deterministically, two runs of the same file started together:
+
+```
+run A : 3 failed, 21 passed, 2 errors
+run B : 4 failed, 19 passed, 4 errors
+serial: 25 passed
+```
+
+**Cause.** Every DB-backed test file namespaces its rows with a per-FILE
+constant — `MARK = "t0007-wages-selftest"`, `KIND = "t0003_selftest"`,
+`MARK = "t0004-selftest"` — and its fixture teardown deletes *everything*
+carrying that marker. The marker identifies the file, not the run. So a second
+concurrent run of the same file wipes the first run's fixtures out from under it
+mid-test, which is exactly the "a wage row vanishing mid-test" symptom the audit
+saw and could not explain.
+
+This is not specific to T-0007. It is the pattern every DB-backed test file in
+the repo uses, so **the suite is not reentrant against the shared database**.
+
+**Why it matters beyond the flake.** `/audit` re-runs the gate by design, and a
+build may re-run its own. Those two runs going red for reasons unrelated to the
+code is the worst kind of gate noise: it teaches everyone to re-run and shrug,
+which is how a real failure gets waved through. I nearly reported my own red run
+as a code problem.
+
+Teardown is not at fault and no residue was left — after the concurrent runs,
+all three markers and the stray-punch check came back zero.
+
+Options:
+  A) **Namespace per run, not per file** — mix a per-session token (a uuid
+     generated once per pytest session) into every marker, and scope teardown to
+     it. Concurrent runs stop seeing each other. Costs a touch of plumbing in
+     every DB-backed test file and does not stop two runs from competing for the
+     same *real* rows they read (e.g. `ref_stores`).
+  B) **Serialise the gate** — a lockfile so only one `verify.sh` touching the
+     database runs at a time. Cheapest, and honest about there being one shared
+     resource; makes an audit wait behind a build.
+  C) **Wait for T-0011 / D-025** (containerised Postgres per session), which
+     dissolves this along with B-0001's whole class. Correct at the root;
+     T-0011 is founder-paired and unscheduled, and until it lands every
+     overlapping run is a coin flip.
+Burst recommends: **A now, C as the real fix.** A is small, local to the test
+files, and removes the false-red immediately; B makes the gate slower in exactly
+the situation where two people are trying to get work done. C supersedes both and
+this becomes dead weight the day it lands — which is fine, that is what C is for.
+[recommendation, not a decision]
+Status: **DECIDED 2026-08-17 → A.** Every DB-backed test file mixes a per-SESSION
+token into its namespace marker and scopes teardown to it, so two concurrent runs
+stop deleting each other's fixtures. Recorded as **D-040**; task **T-0016**,
+which also carries D-039's synthetic stores because both change the same files
+and splitting them would only manufacture a merge conflict. **C remains the real
+fix** — T-0011's containerised Postgres dissolves this whole class and D-040
+becomes dead weight the day it lands, which is the intended end state.
+
+### B-0035 — T-0007's cost tests write timeclock rows against real, active store numbers, which codex 13 says never to do
+Task: T-0007 (audit RED, rework) · Blocks: codex/13-BUILD/CONVENTIONS.md "Tests and the database" · Raised: 2026-08-17
+
+**Specified.** `codex/13-BUILD/CONVENTIONS.md` — "DB-backed tests currently run
+against **production** (B-0001). Until that is fixed: **Never point a test at a
+real store number.** Use a synthetic identifier and seed it `is_active=false` so
+the ingests cannot pick it up." The chapter states why: both rules exist because
+both were broken, and `test_mart_recon_weekly.py` was hard-deleting store 4092's
+history on every run.
+
+**Observed.** `tests/test_people_cost.py:153-157` takes the two lowest real
+store numbers straight out of `ref_stores` —
+
+```
+SELECT store_number FROM ref_stores ORDER BY store_number LIMIT 2
+-> ('10393', is_active=True), ('17967', is_active=True)
+```
+
+— and nine DB-backed tests then INSERT `stg_timeclock` punches against them, up
+to 35 hours on a single day, dated inside the **current** business week. Rows
+are namespaced by `clerk_id` (`t0007:clerk-a/b`) and removed in fixture
+teardown, and a scan of `stg_timeclock` after the gate found **0** leftovers, so
+nothing durable has been written. The exposure is the crash window: teardown is
+a fixture finalizer, and a killed or crashed run leaves 25–35h phantom punches
+on two live stores in the open week, with no owner and no alarm. Nothing reads
+`stg_timeclock` for a mart today — the labor-dollar mart that will is the very
+next consumer of this task's output.
+
+Every other DB-backed test in the repo inserts its own synthetic store
+(`T1`/`T2`/`T3`, `TEST_STORE`) and deletes it. The people/ chain is the
+exception: `tests/test_people_schema.py:67,227` (T-0004, merged and audited
+green) reads real store numbers too — but only to satisfy an FK on a ref table,
+never to write staging rows. So this is a repo-wide question the founder should
+settle once rather than a T-0007 idiosyncrasy.
+
+Options:
+  A) **Seed synthetic stores in the people fixtures** — `T-PPL-1`/`T-PPL-2`,
+     `is_active=false`, created and dropped by the fixture, matching the
+     `T1`/`T2`/`T3` pattern already in the repo. Small, mechanical, and closes
+     the crash window; also fixes T-0004's tests when someone gets to them.
+  B) **Ratify the read-a-real-store pattern for `people/`** and scope the
+     convention to "never write to a real store's rows" — cheapest, keeps the
+     tests as written, and leaves the exact hazard the convention was written
+     after (staging rows on a live store) one crash away.
+  C) **Wait for T-0011** — D-025's containerised Postgres removes the entire
+     class, so change nothing now. Correct in the end state, but T-0011 is
+     founder-paired and unscheduled, and the labor mart lands before it.
+Burst recommends: **A** — the fix is a fixture, the pattern already exists three
+times in `tests/`, and it is the only option that leaves nothing to remember.
+[recommendation, not a decision]
+Status: **DECIDED 2026-08-17 → A.** The people fixtures seed their own synthetic
+stores (`T-PPL-1`/`T-PPL-2`, `is_active=false`) and drop them, matching the
+`T1`/`T2`/`T3` pattern already used three times in `tests/`. Recorded as
+**D-039**. T-0007's rework fixes its own file; the rest of the repo — including
+T-0004's merged tests, which read real store numbers for an FK — is **T-0016**.
+
 ### B-0032 — Which date inside a business week resolves the wage rate? A mid-week raise re-prices the whole week
 Task: T-0007 (audit RED) · Blocks: REQ-003/AC-012, AC-016 · Raised: 2026-08-17
 

@@ -5,7 +5,7 @@
 ```yaml
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
-version:        1.3.0
+version:        1.4.0
 status:         tasked
 owner:          amitoj
 inherits:       codex@2026-08-11
@@ -21,6 +21,7 @@ bound_by:
   - D-020                      # wages are hand-kept; FreshConnect has none
 open_questions: 0              # Q-007/Q-008 decided 2026-08-13 (B-0020, B-0021);
                                # Q-009/Q-010 decided 2026-08-17 (B-0032, B-0033);
+                               # Q-011 decided 2026-08-17 (B-0034)
                                # AC-018 amended 2026-08-13 by D-029 (B-0025)
 l1_plan:        design/PLAN-SPEC-PPL-001.md
 build_sheet:    T-0003 … T-0009 (7 tasks)
@@ -294,6 +295,11 @@ Serves **US-003** · Governed by **codex/06-PEOPLE "Identity and login", "Roles"
   - Unguarded: a mart path with no human actor (D-037).
   - `is_costed = False` when the rate is absent or any shift's
     `hours_after_adj` is NULL; `dollars` is then `None`, never zero.
+  - **`is_costed = True` asserts that the rate is known** (D-038), not merely
+    that nothing contradicted it. A week with **no shifts at all** therefore
+    still resolves a rate — at `week_finish` — and is `is_costed = False` with
+    `dollars = None` when none is in force, even though zero hours would cost
+    zero at any rate.
   - **Does not allocate the overtime premium across stores** — see NG-007.
 
 ## 5 · Data Model
@@ -332,6 +338,7 @@ inline.
 | Edge case | Expected behavior | Covered by |
 |---|---|---|
 | **Raise effective mid-week, hours worked either side** | Each shift costed at the rate in force on its own `business_date`; the week is never priced at one date's rate | AC-012a, D-036 |
+| **A business week with no shifts at all** | Rate still resolved at `week_finish`; no rate in force ⇒ `dollars=None`, `is_costed=False` — never a confident `$0` | CON-005, D-038 |
 | **Crew or store manager calls a guarded wage entry point** | `PermissionError`; the rate appears nowhere in the message | AC-013, CON-006 |
 | Clerk PIN reused by a different person at another store | Different normalized name ⇒ separate persons | AC-006 |
 | Same person, same PIN and name, several stores | One person, many assignments | AC-005 |
@@ -423,6 +430,14 @@ are named in each task file.
   codex 02's stated shape was amended to match.
 
 **Still open:**
+
+- `Q-011` — **What does a week with no shifts cost?** Raised by the second
+  `/audit` of T-0007. `cost_week` consulted the wage table only for dates
+  carrying shifts, so an empty week returned `Decimal("0")` with
+  `is_costed=True` — including for an `employee_id` that does not exist.
+  **DECIDED 2026-08-17 → B (B-0034):** resolve at `week_finish` even with no
+  shifts; absent rate ⇒ `None` / `False`. Recorded as D-038. The flag now means
+  "the rate is known".
 
 - `Q-009` — **Which date inside a business week resolves the wage rate?**
   Raised by the `/audit` of T-0007, not by the interview: AC-012 defined

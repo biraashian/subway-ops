@@ -774,3 +774,87 @@ both reference the correct column name.
 - **Reopen if:** a surface appears that needs the rate but is neither a mart nor
   a human read — then the two-entry-point split is the wrong shape and A
   (`actor_role` everywhere) becomes the honest answer.
+
+## D-038 — `is_costed = True` means the rate is known (was B-0034)
+- **Decision:** a business week with **no shifts** still resolves a rate, at
+  `week_finish`. If none is in force, `dollars = None` and `is_costed = False`,
+  exactly as for any other uncosted week. Decided 2026-08-17 (B-0034 → B).
+  CON-005 amended; SPEC-PPL-001 → v1.4.0.
+- **Reasoning:** `cost_week` consulted the wage table only for dates that had
+  shifts, so an empty week never looked and fell through to the costed branch —
+  returning `Decimal("0")` with `is_costed = True` for a person with no wage row
+  at all, and for `employee_id 999999999`, which does not exist. That is the
+  `Decimal("0")`-on-a-missing-rate the task's own FORBIDDEN_ACTIONS forbid.
+- **What the flag now means, stated because that is the whole decision:**
+  `is_costed = True` asserts *the rate is known*. It does not mean "nothing
+  contradicted us". A consumer aggregating across people (T-0009's AC-019 count)
+  can therefore read the flag as a claim about knowledge rather than about
+  arithmetic.
+- **Accepted cost:** the figure abstains on a week whose answer — $0 — is
+  arithmetically knowable, because zero hours cost zero at any rate. Option A
+  (ratify the truthful zero) was defensible for exactly that reason and was not
+  taken: a caller cannot distinguish a real zero from an unpriceable one unless
+  the flag means something specific, and the flag is the only channel that
+  distinction has.
+- **How this arose — the same shape twice in one task.** Like D-036, this was an
+  undefined case filled silently, and like D-036 the covering test
+  (`test_a_week_with_no_shifts_costs_zero_when_a_rate_exists`) records a wage
+  first, so the two candidate answers cannot differ inside it. Two independent
+  instances of the same blind spot in one build is a pattern worth naming: a
+  test that establishes the happy precondition before exercising the branch can
+  never discriminate between the answers.
+
+## D-039 — Tests seed their own stores; they never point at a real one (was B-0035)
+- **Decision:** DB-backed fixtures create synthetic stores (`T-PPL-1`,
+  `T-PPL-2`, `is_active = false`) and drop them, rather than reading real store
+  numbers out of `ref_stores`. Decided 2026-08-17 (B-0035 → A). This restates,
+  rather than changes, `codex/13-BUILD/CONVENTIONS.md` — "Never point a test at a
+  real store number" — and records that the convention was being broken.
+- **Reasoning:** `tests/test_people_cost.py` took the two lowest real store
+  numbers (10393 and 17967, both active) and inserted up to 35 hours of
+  `stg_timeclock` punches against them inside the current business week.
+  Teardown worked and left zero residue; the exposure is the crash window,
+  because teardown is a fixture finalizer and a killed run leaves phantom punches
+  on two live stores with no owner and no alarm. That is the precise incident
+  codex 13 was written after — `test_mart_recon_weekly.py` hard-deleting a real
+  store's history on every run for three months.
+- **Scope:** T-0007's rework fixes its own file, since it cannot merge otherwise.
+  The rest of the repo is **T-0016**, including T-0004's merged tests, which read
+  real store numbers to satisfy a foreign key. That use writes nothing to
+  staging and is much less dangerous — but the convention has no "read-only"
+  exemption, and a rule with an undocumented exception is a rule nobody can
+  apply.
+- **Reopen if:** never, on its own terms. D-025/T-0011 makes it moot by giving
+  the suite its own database, at which point this is harmless belt-and-braces.
+
+## D-040 — Test namespaces are per run, not per file (was B-0036)
+- **Decision:** every DB-backed test file mixes a **per-session token** into its
+  namespace marker, and teardown is scoped to that token. Decided 2026-08-17
+  (B-0036 → A). Task **T-0016**, together with D-039 — both change the same
+  files, and separating them would only manufacture a merge conflict.
+- **Reasoning:** markers like `MARK = "t0007-wages-selftest"` and
+  `KIND = "t0003_selftest"` identify the *file*, not the *run*, and teardown
+  deletes everything carrying the marker. Two concurrent runs therefore wipe each
+  other's fixtures mid-test. Reproduced deterministically:
+
+  ```
+  two runs of tests/test_people_wages.py started together
+    run A : 3 failed, 21 passed, 2 errors
+    run B : 4 failed, 19 passed, 4 errors
+  the same file run serially
+            25 passed
+  ```
+
+- **How it surfaced:** a pre-merge run of `9583f0f` exited 1 while `/audit`'s run
+  of the *same commit* exited 0, because the two overlapped. The audit recorded
+  the symptom as "a wage row vanishing mid-test — unexplained".
+- **Why this is worth a decision rather than a shrug:** `/audit` re-runs the gate
+  by design, so the gate can contradict itself for reasons unrelated to the code.
+  A gate that goes red at random teaches everyone to re-run and shrug, which is
+  how a real failure eventually gets waved through. The failure mode is the
+  gate's credibility, not the tests.
+- **Not adopted:** B (a lockfile serialising the gate) — it slows the gate in
+  exactly the situation where two things are trying to make progress.
+- **Reopen if:** it never needs reopening — **C is the real fix.** T-0011's
+  containerised Postgres (D-025) removes the shared resource entirely, and this
+  decision becomes dead weight describing a hazard that can no longer occur.
