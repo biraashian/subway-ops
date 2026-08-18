@@ -5,7 +5,7 @@
 ```yaml
 spec_id:        SPEC-PPL-001
 feature:        Employee roster and wages
-version:        1.2.0
+version:        1.3.0
 status:         tasked
 owner:          amitoj
 inherits:       codex@2026-08-11
@@ -20,6 +20,7 @@ bound_by:
   - codex/08-SCHEDULING-AND-HOURS   # the 40-hour threshold (draft; only the threshold is used)
   - D-020                      # wages are hand-kept; FreshConnect has none
 open_questions: 0              # Q-007/Q-008 decided 2026-08-13 (B-0020, B-0021);
+                               # Q-009/Q-010 decided 2026-08-17 (B-0032, B-0033);
                                # AC-018 amended 2026-08-13 by D-029 (B-0025)
 l1_plan:        design/PLAN-SPEC-PPL-001.md
 build_sheet:    T-0003 … T-0009 (7 tasks)
@@ -153,23 +154,40 @@ Serves **US-002** · Governed by **codex/06-PEOPLE "Wages"**, **D-020** · **Q-0
 - **Invariants**
   - `INV-005` — no `UPDATE` is ever issued against `ref_employee_wages`; a
     correction is a new row.
-  - `INV-006` — a wage rate is readable only by `office` and `owner`.
+  - `INV-006` — a wage rate is readable only by `office` and `owner` **through
+    the library's guarded accessor `read_wage` (CON-006)**. Scoped by D-037:
+    `rate_in_force` is an unguarded internal resolver and `cost_week` exposes
+    the rate by division, so any human-facing surface must call `read_wage` or
+    enforce the role itself. The invariant states what the library actually
+    guarantees rather than more.
   - `INV-007` — an absent rate resolves to `None`, never `Decimal("0")`.
 - **Acceptance criteria (EARS)**
   - `AC-011` — WHEN a wage is recorded, the roster service SHALL insert a new
     row carrying `set_by` and `set_at` and SHALL NOT modify any existing row.
   - `AC-012` — WHEN a rate is requested for a business date, the roster service
     SHALL resolve the rate in force **for that date**, not the current rate.
-  - `AC-013` — IF a caller whose role is not `office` or `owner` requests a
-    wage, THEN the roster service SHALL refuse and SHALL NOT include the rate
-    in any response body.
+  - `AC-012a` — WHEN costing a business week, the roster service SHALL resolve
+    the rate **per shift**, at the rate in force on that shift's own
+    `business_date`, and SHALL NOT price the whole week at a single date's rate
+    (D-036). A raise landing mid-week therefore prices the hours before it at
+    the old rate and the hours after it at the new one.
+  - `AC-013` — IF a caller whose role is not `office` or `owner` calls a
+    **guarded wage entry point** — `record_wage` (CON-003) or `read_wage`
+    (CON-006) — THEN the roster service SHALL refuse and SHALL NOT include the
+    rate in any response body. Amended by D-037: the guard names specific entry
+    points because `rate_in_force` (CON-002) is an internal resolver whose
+    signature carries no actor, and `cost_week` is a mart path from which the
+    rate is recoverable by division regardless.
   - `AC-014` — IF `hourly_rate` is zero or negative, THEN the roster service
     SHALL reject the row.
   - `AC-015` — WHEN costing a shift, the roster service SHALL use
     `stg_timeclock.hours_after_adj` as the hours basis.
   - `AC-016` — WHILE a person's summed hours for a business week exceed 40, the
     roster service SHALL cost the hours beyond 40 at `hourly_rate × 1.5` and
-    the first 40 at `hourly_rate`.
+    the first 40 at `hourly_rate`. Per D-036 the applicable `hourly_rate` is
+    per shift, and the hours beyond 40 are identified as in Q-007 — the hours
+    after the 40th, ordered by `clock_in`. Only Q-007's **ordering** is used
+    here; its store attribution stays fenced out by NG-007.
   - `AC-017` — IF `hours_after_adj` is NULL for a shift, THEN the roster
     service SHALL treat that shift as uncosted and SHALL mark the containing
     aggregate `partially_costed`.
@@ -258,14 +276,22 @@ Serves **US-003** · Governed by **codex/06-PEOPLE "Identity and login", "Roles"
   - Errors: FK violation on unknown `restaurant_number`; wrapped by `track_job`.
 - **CON-002 — `people.wages.rate_in_force(employee_id, on: date) -> Decimal | None`**
   - Returns `None` when no wage row is in force — never `Decimal("0")` (INV-007).
+  - **Unguarded and internal** (D-037): no actor, for marts and `cost_week`.
+    Human-facing reads use CON-006.
 - **CON-003 — `people.wages.record_wage(*, employee_id, effective_date, hourly_rate, set_by) -> None`**
   - `ValueError` on non-positive rate; `PermissionError` if caller role is not
     `office` or `owner`.
 - **CON-004 — `people.identity.merge(source, target, *, by, reason) -> employee_id`**
   and **`split(assignment_id, *, by, reason) -> employee_id`**
   - `ConflictError` when AC-010's overlapping-wage condition holds.
+- **CON-006 — `people.wages.read_wage(employee_id, on: date, *, actor_role: str) -> Decimal | None`**
+  - The guarded human-facing read (D-037). `PermissionError` for any role other
+    than `office` or `owner`; the message never contains the rate (AC-013).
+  - Same resolution as CON-002 otherwise, including `None` for an absent rate.
 - **CON-005 — `people.cost.cost_week(employee_id, week_end: date) -> WeekCost`**
   - Returns frozen `WeekCost(regular_hours, overtime_hours, dollars, is_costed)`.
+  - Costs **per shift** at each shift's own in-force rate (D-036, AC-012a).
+  - Unguarded: a mart path with no human actor (D-037).
   - `is_costed = False` when the rate is absent or any shift's
     `hours_after_adj` is NULL; `dollars` is then `None`, never zero.
   - **Does not allocate the overtime premium across stores** — see NG-007.
@@ -305,6 +331,8 @@ inline.
 
 | Edge case | Expected behavior | Covered by |
 |---|---|---|
+| **Raise effective mid-week, hours worked either side** | Each shift costed at the rate in force on its own `business_date`; the week is never priced at one date's rate | AC-012a, D-036 |
+| **Crew or store manager calls a guarded wage entry point** | `PermissionError`; the rate appears nowhere in the message | AC-013, CON-006 |
 | Clerk PIN reused by a different person at another store | Different normalized name ⇒ separate persons | AC-006 |
 | Same person, same PIN and name, several stores | One person, many assignments | AC-005 |
 | Same person, different PIN per store | Separate persons until office merges | AC-006, AC-007 |
@@ -395,6 +423,22 @@ are named in each task file.
   codex 02's stated shape was amended to match.
 
 **Still open:**
+
+- `Q-009` — **Which date inside a business week resolves the wage rate?**
+  Raised by the `/audit` of T-0007, not by the interview: AC-012 defined
+  resolution for a *date* and nothing said which date stood for a *week*. The
+  build filled it with `week_finish`, overstating a mid-week-raise week by 50%
+  on a live probe. **DECIDED 2026-08-17 → A (B-0032): pro-rate per shift.**
+  Recorded as D-036; AC-012a added. Which rate the premium multiplies follows
+  from Q-007's `clock_in` ordering, so no new question was opened.
+
+- `Q-010` — **Is the wage guard on the write, the read, or both?** Also from the
+  T-0007 audit: AC-013 and INV-006 name a read, and CON-002 gave it no actor to
+  check. **DECIDED 2026-08-17 → C (B-0033): two accessors.** `rate_in_force`
+  stays unguarded and internal; `read_wage` (CON-006) is the guarded
+  human-facing read. `cost_week` stays unguarded because the rate is recoverable
+  from it by division either way, and INV-006 is scoped to say so. Recorded as
+  D-037.
 
 - `Q-007` — **Which store bears the overtime premium when a person crosses 40
   hours across two stores?** Created by Q-005 combined with codex 06's

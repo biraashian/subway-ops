@@ -703,3 +703,74 @@ both reference the correct column name.
 - **Accepted cost:** the first run after this lands reports every existing
   constraint and index as "added", and the baseline rotation that absorbs it is a
   one-time large diff. That diff is worth reading once rather than never.
+
+## D-036 — A week is costed shift by shift, not at one rate (was B-0032)
+- **Decision:** `cost_week` resolves the wage rate **per shift**, at the rate in
+  force on that shift's own `business_date`, and takes the regular/overtime
+  split on the person's summed weekly hours afterwards. Decided 2026-08-17
+  (B-0032 → A). SPEC-PPL-001 → v1.3.0.
+- **Reasoning:** the spec defined rate resolution for a *date* (AC-012) and never
+  said which date represents a *week*. The build filled that silently with
+  `week_finish`, which pays every pre-raise hour at the post-raise rate. Measured
+  on a live probe — a raise effective mid-week, 10h before and 10h after:
+
+  ```
+  cost_week dollars : 600.00000000   (20h all at the new $30)
+  correct           : 400            (10h × $10 + 10h × $30)
+  DELTA             : +200, the week overstated by 50%
+  ```
+
+  It is the one number this whole spec exists to produce, it feeds
+  `mart_store_weekly.labor_cost_pct`, and `is_costed` was `True` throughout, so
+  nothing downstream would have questioned it.
+- **Which rate the premium multiplies — derived, not newly decided.** Q-007
+  (B-0020, already folded into this spec) defines the overtime hours as "the
+  hours after the 40th, wherever worked, **ordered by `clock_in`**". That
+  ordering identifies which shifts contain the premium hours; this decision then
+  prices those shifts at their own rates. NG-007 still fences out the *store
+  allocation* of the premium — only Q-007's ordering is used here, not its
+  attribution, and `CON-005` still returns a per-person weekly figure.
+- **Consequence for `clock_in`:** ordering shifts now matters to a dollar figure,
+  and `stg_timeclock.clock_in` is a naive `TIMESTAMP` (B-0019, decided → migrate
+  before Phase C). Within a single business week the ordering is unambiguous, so
+  this is safe today; B-0019's migration remains the fix and its timing is
+  unchanged.
+- **How this arose:** the builder wrote `rate_in_force(employee_id, week_finish)`
+  without registering that a choice was being made, and the test that appears to
+  cover it (`test_rate_is_resolved_for_the_week_not_today`) records its wage
+  *before* the week opens, so `week_start` and `week_finish` agree and the choice
+  cannot fail. A gap can hide behind a passing test that never distinguishes the
+  two candidate answers.
+- **Options not taken:** pinning to `week_start` (B) is wrong in the
+  non-overstating direction; ratifying `week_finish` (C) is wrong in the
+  overstating one; refusing to cost such a week (D) is never wrong but abstains
+  exactly when a payroll question is most likely to be asked.
+
+## D-037 — Two accessors: an unguarded resolver and a guarded read (was B-0033)
+- **Decision:** `rate_in_force` remains exactly as CON-002 specifies — unguarded,
+  internal, used by marts and by `cost_week`. A new **CON-006
+  `read_wage(employee_id, on, *, actor_role) -> Decimal | None`** is the guarded
+  human-facing accessor, raising `PermissionError` for any role other than
+  `office` or `owner`. AC-013 and INV-006 now name `read_wage` and `record_wage`
+  as the guarded entry points. Decided 2026-08-17 (B-0033 → C).
+- **Reasoning:** AC-013 and INV-006 both describe a *read*, and CON-002's
+  signature carries no role, so the contract forbade the shape the AC required —
+  a contradiction inside a single REQ. Splitting the two uses resolves it without
+  pushing a role parameter into every mart that has no human actor to name.
+- **`cost_week`'s side channel, answered rather than deferred:** `cost_week`
+  stays unguarded. A caller holding both `dollars` and `regular_hours` recovers
+  the rate by division — verified, `600.00000000 / 20.0000 = 30.0000` — so a
+  guard there would be theatre. INV-006 is amended to state what is actually
+  true: the library's guarded accessor is `read_wage`, and a human-facing surface
+  must either go through it or enforce the role itself. An invariant that
+  promises more than it delivers is worse than one scoped honestly.
+- **How this arose, and why it is recorded as process rather than as a slip:**
+  the builder resolved the identical contradiction in **opposite directions in
+  the same file** — adding an unspecified `actor_role` to `record_wage` while
+  declining to add one to `rate_in_force` — noticed the inconsistency, wrote it
+  up in `journal/T-0007.md`, and then decided it rather than benching it. Rule 1
+  makes an ambiguous spec a bench item regardless of how confident the builder
+  is. Writing the reasoning down is necessary and is not a substitute for asking.
+- **Reopen if:** a surface appears that needs the rate but is neither a mart nor
+  a human read — then the two-entry-point split is the wrong shape and A
+  (`actor_role` everywhere) becomes the honest answer.

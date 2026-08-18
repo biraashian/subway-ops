@@ -5,6 +5,150 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0032 — Which date inside a business week resolves the wage rate? A mid-week raise re-prices the whole week
+Task: T-0007 (audit RED) · Blocks: REQ-003/AC-012, AC-016 · Raised: 2026-08-17
+
+**Specified.** AC-012 — "WHEN a rate is requested for a **business date**, the
+roster service SHALL resolve the rate in force for that date." AC-016 costs a
+week at a singular `hourly_rate`. §6's edge table has a row for a back-dated
+wage row, and **no row for a raise that lands inside a week being costed**.
+So the spec says how to resolve a rate for a *date* and never says which date
+represents a *week*.
+
+**Observed.** `cost_week` fills the gap silently with the last day of the week:
+`rate = rate_in_force(employee_id, week_finish)` (`src/subway_ops/people/cost.py:135`).
+Probed against the live DB, week 2026-07-15 → 2026-07-21, raise effective
+Saturday 2026-07-18, 10h worked Wednesday and 10h worked Sunday:
+
+```
+rate at week_start : 10.0000
+rate at week_finish: 30.0000
+cost_week dollars  : 600.00000000   (20h × $30)
+correct            : 400            (10h × $10 + 10h × $30)
+DELTA              : +200           — the week overstated by 50%
+```
+
+Every hour worked before the raise is paid at the post-raise rate. A mid-week
+*cut* understates by the same mechanism. This is the one input wages exist to
+produce, and the error is invisible: `is_costed` is `True` and the figure looks
+authoritative.
+
+Choosing `week_finish` is not called out in the journal, and the test that looks
+like it covers this — `test_rate_is_resolved_for_the_week_not_today` — records
+its wage *before* the week starts, so `week_start` and `week_finish` return the
+same rate and the choice cannot fail. No test distinguishes the two.
+
+Rule 1: a threshold not defined by the governing spec is a HALT and a bench
+item. A correct guess would still be a defect; this one is also wrong.
+
+Options:
+  A) **Pro-rate within the week** — cost each shift at the rate in force on its
+     own `business_date`, then split regular/overtime on the summed hours.
+     Matches how a raise actually works and how WA/OR pay it. Costs a
+     per-shift-date rate resolution and forces a decision on which rate the
+     overtime premium multiplies (the OT hours are no longer at one rate).
+  B) **Pin to `week_start`** — one rate per week, the rate in force when the
+     week opened. Cheapest, preserves AC-016's singular `hourly_rate` exactly,
+     and errs toward the *old* (lower) rate rather than the new one. Still
+     wrong for the post-raise hours, but wrong in the direction that does not
+     overstate cost.
+  C) **Pin to `week_finish`** — as built. Ratify the current behavior.
+  D) **Refuse to cost a week containing a rate change** — `is_costed = False`,
+     `dollars = None`, same machinery as the NULL-hours case. Never wrong,
+     abstains on the weeks a payroll question is most likely to be asked about.
+Burst recommends: **A**, with the overtime premium multiplying the rate in force
+on the shift that crossed 40 — but that second half is itself undefined and
+would need deciding in the same sitting. **D** is the honest interim if A is too
+large for this task: it reuses a path that already exists and cannot produce a
+confidently wrong number.   [recommendation, not a decision]
+Status: **DECIDED 2026-08-17 → A.** Pro-rate within the week: each shift is
+costed at the rate in force on its **own** `business_date`, and the
+regular/overtime split is then taken on the person's summed weekly hours.
+Policy recorded as **D-036**; SPEC-PPL-001 → v1.3.0.
+
+**The sub-question I flagged is answered by an existing decision, not left
+open.** Which rate the overtime premium multiplies follows from Q-007/B-0020,
+already folded into this spec: the overtime hours are "the hours after the 40th,
+wherever worked, **ordered by `clock_in`**". That ordering identifies *which*
+shifts contain the premium hours; option A then prices those shifts at their own
+rates. NG-007 still fences out the *store allocation* of the premium — this uses
+only Q-007's ordering rule, not its attribution, and `CON-005` still returns a
+per-person weekly figure.
+
+### B-0033 — AC-013 guards the write; the read it actually names is unguarded, and CON-002 gives no way to guard it
+Task: T-0007 (audit RED) · Blocks: REQ-003/AC-013, INV-006 · Raised: 2026-08-17
+
+**Specified.** AC-013 — "IF a caller whose role is not `office` or `owner`
+**requests** a wage, THEN the roster service SHALL refuse and SHALL NOT include
+the rate in any response body." INV-006 — "a wage rate is **readable** only by
+`office` and `owner`." Both name a *read*. CON-002 specifies the read as
+`rate_in_force(employee_id, on: date) -> Decimal | None` — **no role
+parameter**, so the contract makes the AC unenforceable at that boundary.
+CON-003's `record_wage(*, employee_id, effective_date, hourly_rate, set_by)`
+likewise carries no role, yet is required to raise `PermissionError`.
+
+**Observed.** The builder resolved the same contradiction in opposite directions
+in the same file: `record_wage` gained an unspecified `actor_role` parameter and
+enforces the guard; `rate_in_force` did not, and is unguarded. Probed:
+
+```
+rate_in_force(employee_id, week_finish)  # no caller identity at all
+-> Decimal('30.0000')
+```
+
+All four tests named against AC-013 exercise `record_wage` and assert
+`match="may not set wages"` — i.e. they verify a *set*, which is not AC-013's
+trigger. **No test exercises a refused read, because no code path can refuse
+one.** As delivered AC-013's stated condition is unimplemented and INV-006 does
+not hold.
+
+The builder saw this and wrote it up in `journal/T-0007.md` ("INV-006 is not
+enforced on the read path, and I did not add it"), reasoning that the contracts
+are unambiguous about what to build. They are not: two clauses of the same REQ
+require a guard that a third forbids the shape of. Rule 1 makes that a bench
+item, not a judgment call, and Gate 2 step 5 makes an ambiguous spec RED-blocked
+rather than a builder's choice.
+
+**A guard on `rate_in_force` alone would not close it.** `cost_week` is
+unguarded and returns both dollars and hours, so any caller recovers the rate by
+division — probed: `600.00000000 / 20.0000 = 30.0000`. Whatever is decided has
+to cover the derived figures, not just the accessor.
+
+Options:
+  A) **Amend CON-002 and CON-003 to carry `actor_role`**, guard both, and decide
+     what `cost_week` (which needs the rate internally) passes. Consistent, and
+     makes INV-006 real — but pushes a role parameter into every future caller
+     including the labor mart, which has no human actor.
+  B) **Enforce INV-006 at the view/API layer only**; scope AC-013 explicitly to
+     `record_wage` and amend INV-006 to say the library is trusted. Honest about
+     where the boundary really is, matches how the dashboard already gates
+     roles, and leaves `cost_week` free for marts — but the invariant then
+     guarantees less than its wording claims and every new surface must remember.
+  C) **Two functions** — an unguarded internal resolver for marts and a guarded
+     `read_wage(..., actor_role)` for humans. Keeps marts clean and makes the
+     guarded path the obvious one for a view, at the cost of a second name.
+  D) **Ratify as built** — the guard is on the write only; amend AC-013 and
+     INV-006 to say so.
+Burst recommends: **C**, then AC-013 and INV-006 amended to name the guarded
+entry point explicitly. B is the cheapest defensible answer; A is the most
+complete and the most invasive. Note that whichever is chosen, `cost_week`'s
+division side channel needs an explicit answer rather than being left to the
+next task.   [recommendation, not a decision]
+Status: **DECIDED 2026-08-17 → C.** Two entry points. `rate_in_force` stays
+exactly as CON-002 specifies — unguarded, internal, for marts and for
+`cost_week`. A new **`read_wage(employee_id, on, *, actor_role)`** is the guarded
+human-facing accessor and is the entry point AC-013 and INV-006 now name.
+Policy recorded as **D-037**; SPEC-PPL-001 → v1.3.0 with CON-006 added.
+
+**`cost_week`'s division side channel is answered rather than deferred:**
+`cost_week` stays unguarded. It is a mart path with no human actor, it needs the
+rate internally, and a caller holding both dollars and hours can always recover
+the rate by division — so a guard there would be theatre. INV-006 is therefore
+amended to say what is actually true: the library's *guarded* accessor is
+`read_wage`, and any human-facing surface must go through it or enforce the role
+itself. An invariant that promises more than it delivers is worse than one
+scoped honestly.
+
 ### B-0031 — A worktree convenience symlink was committed; merging it silently destroys main's recorded fixtures
 Task: T-0005 (audit RED) · Blocks: T-0005 merge, and T-0006…T-0009 behind it · Raised: 2026-08-17
 
