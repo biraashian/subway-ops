@@ -36,3 +36,4 @@ this file only points at it.
 | 2026-08-17 | /audit T-0007 | RED (rework) — B-0034 (empty week returns a confident $0), B-0035 (tests write punches to real stores); rework itself verified clean | `forge/T-0007` | bench/BENCH.md |
 | 2026-08-17 | /bench | B-0034 → B, B-0035 → A, B-0036 → A; D-038…D-040; SPEC-PPL-001 → v1.4.0; T-0016 minted | `main` | DECISIONS.md · specs/SPEC-PPL-001.md |
 | 2026-08-17 | T-0007 | built (rework 2) — empty-week rate (D-038), synthetic test stores (D-039); 33 cost tests; pre-merge 0 @ `11433ec` | `forge/T-0007` | journal/T-0007.md · test_logs/T-0007/ |
+| 2026-08-18 | /audit T-0007 | **GREEN** — 8 ACs re-derived from the EARS lines; 58 task tests + 38 independent probes green; D-036/D-038 defects confirmed fixed; fences clean. Note: CON-003's arg list still omits `actor_role` that AC-013 requires | `forge/T-0007` | test_logs/T-0007/T-0007-pre-merge.md |
