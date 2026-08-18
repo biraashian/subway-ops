@@ -44,7 +44,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | **merged** | `main` |
 | T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | **merged** | `main` |
 | T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 | queued (needs T-0003/4/5) | — |
-| T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 · D-036…D-039 | **queued — rework 2**: empty-week rate (D-038), synthetic stores (D-039) | `forge/T-0007` |
+| T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 · D-036…D-039 | **built, awaiting audit** (rework 2) — pre-merge 0 @ `11433ec` | `forge/T-0007` |
 | T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | queued (needs T-0006/7) | — |
 | T-0009 | Completeness sweep, CLI, daily_pull wiring | AC-018…AC-021 | queued (needs T-0003/6/7) | — |
 | T-0010 | Schema drift becomes declared, not merely detected | D-024 · D-028 | merged | `main` |

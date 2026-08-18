@@ -35,3 +35,4 @@ this file only points at it.
 | 2026-08-17 | /bench | B-0032 → A, B-0033 → C; D-036, D-037; SPEC-PPL-001 → v1.3.0 (AC-012a, CON-006, INV-006 scoped); T-0007 → rework | `main` | DECISIONS.md · specs/SPEC-PPL-001.md |
 | 2026-08-17 | /audit T-0007 | RED (rework) — B-0034 (empty week returns a confident $0), B-0035 (tests write punches to real stores); rework itself verified clean | `forge/T-0007` | bench/BENCH.md |
 | 2026-08-17 | /bench | B-0034 → B, B-0035 → A, B-0036 → A; D-038…D-040; SPEC-PPL-001 → v1.4.0; T-0016 minted | `main` | DECISIONS.md · specs/SPEC-PPL-001.md |
+| 2026-08-17 | T-0007 | built (rework 2) — empty-week rate (D-038), synthetic test stores (D-039); 33 cost tests; pre-merge 0 @ `11433ec` | `forge/T-0007` | journal/T-0007.md · test_logs/T-0007/ |
