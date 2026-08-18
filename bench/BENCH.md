@@ -5,6 +5,241 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0038 — The test suite ran the real derivation against the live database; `derive_roster` has no way to be scoped to synthetic stores
+Task: T-0006 (audit failed) · Blocks: REQ-001/AC-001, AC-005, AC-006, INV-002 — their evidence · Raised: 2026-08-18
+
+**Specified.** T-0006's NOTES: "Do NOT run this against production during the
+build. Use synthetic stores seeded `is_active=false` (codex 13). **The first real
+run is T-0009's concern** and will create roughly 399 assignments and 250-399
+persons." CON-001 is `derive_roster(*, since: date | None = None)` — `since` is
+the only knob, and it narrows by date, not by store.
+
+**Observed.** The first real run has already happened, from inside the test
+suite, on 2026-08-18 at 18:29:18 UTC — twenty minutes before the pre-merge
+sweep. `ops_job_runs` id **11410**, `job_name = 'derive_roster'`, `status =
+success`, `rows_written = 406`. The live database now holds:
+
+```
+real-store assignments in ref_employee_assignments : 405   (13 real store numbers)
+persons reachable from them                        : 322   (employee_id 2266..2587)
+orphan ref_employees rows, no assignment at all     :  20   (employee_id 2588..2607)
+ops_job_runs rows for derive_roster                 : 199 from the build
+```
+
+`derive_roster` is called from exactly one place in the repository —
+`tests/test_people_derive.py`. There is no CLI, no cron entry, no orchestrator
+wiring (T-0009 owns that). So the test suite is what wrote those rows.
+
+The mechanism is that `_observed_pairs(session, since=None)` selects `DISTINCT
+ON (restaurant_number, clerk_id)` over the whole of `stg_timeclock`, and 25 of
+the 27 `derive_roster(` call sites in the test file pass no argument at all.
+Measured directly against the live database:
+
+```
+_observed_pairs(since=None) -> 407 pairs
+  distinct stores in scope: 13 real store numbers + T-PPL-A + T-PPL-B
+```
+
+**Why it is worth stopping for — the pre-merge green is not reproducible.**
+The tests assert absolute counts off a global counter:
+
+```python
+assert result.assignments_created == 1                       # AC-001
+assert (first.assignments_created, first.persons_created) == (2, 2)   # INV-002
+assert result.persons_created == 2                           # AC-006
+```
+
+`DeriveResult` counts everything the run created, not what the test staged.
+Reproduced on three isolated synthetic stores: staging one pair while two
+unrelated pairs also sit unpicked in `stg_timeclock` returns
+`assignments_created = 3`. On a database where the real roster has not already
+been materialised, `test_new_pair_creates_assignment` sees **406**, not 1, and
+`test_rerun_creates_no_new_rows` sees `(407, ~324)`, not `(2, 2)`. Those tests
+pass today only because job 11410 exhausted the real pairs first — a one-time
+side effect against production data, not a property of the code. Six of the
+nineteen tests carry count assertions of this shape, and they cover AC-001,
+AC-005, AC-006 and INV-002 — including
+`test_same_pin_different_name_is_two_persons`, the test T-0006's own NOTES call
+"the most expensive test to lose".
+
+The behaviours themselves are correct — I re-derived AC-001…AC-006, AC-024,
+AC-026, AC-028 and INV-001…INV-004 on isolated synthetic stores and every one
+holds. What fails is the *evidence*: the suite cannot be re-run from a clean
+database and stay green, and it cannot be run at all without writing to the
+business's live roster.
+
+**The gap.** T-0006 mandates synthetic-store isolation, but nothing in the
+governing layers gives the derivation a way to honour it. `derive_roster` reads
+every row of `stg_timeclock` by design (that is what a nightly roster build
+does), the project has one database, and `since` cannot separate synthetic
+punches from real ones because real punches exist on every date. Isolation is
+not something the builder can invent inside T-0006's DELIVERABLES without
+either changing CON-001 or standing up test infrastructure — both above this
+task's line.
+
+Two things need deciding, and the second is the real one:
+
+**(a) What happens to the rows already written?**
+  A) **Keep them.** They are what T-0009's first run would have produced, and
+     re-deriving is idempotent. Costs: the first real run went unobserved, the
+     20 orphan persons stay, and T-0009 loses its acceptance signal (it will
+     report 0 created).
+  B) **Delete the 405 assignments, the 322 persons and the 20 orphans**, so
+     T-0009 performs and records the first real run as designed. Nothing else
+     references these rows yet — no wage row, no worklist item, no mart.
+Burst recommends: **B** — nothing depends on them, and T-0009's whole value is
+that the first materialisation of 250-400 humans is watched.   [recommendation]
+
+**(b) How do the DB-integration tests get isolation?**
+  A) **A store filter on CON-001** — `derive_roster(*, since=None, stores=None)`.
+     Smallest change, testable, and plausibly wanted in production anyway for a
+     single-store re-derive. Costs a spec amendment: CON-001 and REQ-001 both
+     change shape.
+  B) **A separate test database**, with the suite pointed at it by fixture.
+     Correct answer for every DB test in the repo, not just these — and the
+     largest piece of work, `infrastructure`-TYPE, founder-paired.
+  C) **Transactional test fixtures** — run each test in a transaction that is
+     rolled back. Isolates writes without touching CON-001, but `derive_roster`
+     opens its own session via `get_session()`, so this needs the session
+     factory to be injectable, and `track_job` commits on a separate connection
+     regardless.
+  D) **Assert deltas, not absolutes** — have the tests measure before/after
+     counts scoped to the synthetic stores. Cheapest by far, fixes the false
+     green, and leaves the tests still writing the whole real roster on a clean
+     database. Treats the symptom.
+Burst recommends: **A** for T-0006 now, **B** as the standing fix — A is one
+parameter, keeps every existing assertion meaningful, and makes the synthetic-
+store convention actually enforceable rather than aspirational.   [recommendation]
+Status: OPEN
+
+---
+
+### B-0039 — AC-005: is "an existing assignment" the state at run start, or the state at the moment of resolution?
+Task: T-0006 (audit failed) · Blocks: REQ-002/AC-005 · Raised: 2026-08-18
+
+**Specified.** AC-005 — "WHEN a new assignment's `(clerk_id, normalized_name)`
+equals that of an existing assignment, the roster service SHALL link the new
+assignment to that assignment's person." AC-004 — "IF `employee_name` differs
+from the assignment's `observed_name`, THEN the roster service SHALL update
+`observed_name`". Both run in the same pass, and the spec never says which
+snapshot AC-005 compares against.
+
+**Observed.** `derive.py` builds `by_identity` once, from the assignments as
+they stood before the loop, and never updates it when AC-004 rewrites a
+`normalized_name` during the same run. Reproduced on synthetic stores:
+
+```
+run 1:  punch(A, PIN, "bir")                       -> assignment A -> person 2911
+run 2:  punch(A, PIN, "singh, bir")                 (terminal corrects the name)
+        punch(B, PIN, "singh, bir")                 (same human starts at store B)
+
+after run 2:
+  (A, PIN, observed "singh, bir", normalized "singh, bir") -> person 2911
+  (B, PIN, observed "singh, bir", normalized "singh, bir") -> person 2912
+  distinct (clerk_id, normalized_name) keys: 1
+  distinct employee_ids:                     2
+```
+
+Two assignments now agree exactly on the linking key and point at two different
+people. Re-running does not repair it — both assignments exist, so neither
+branch of the loop reconsiders the link (INV-004 forbids it anyway). It is a
+permanent split that only an office merge can close.
+
+**Why it is worth stopping for.** This is the benign direction of B-0014's
+asymmetry — an under-link, repairable by one merge, not a silent fusion — so
+the damage is bounded. But it leaves `ref_employee_assignments` in a state the
+schema's `(clerk_id, normalized_name)` index was added to make impossible, and
+it makes a third store's assignment for the same person link to *whichever* of
+the two rows the planner returns first: `by_identity` is built with
+`setdefault` over a query with no `ORDER BY`. That is a nondeterministic person
+link, which is a worse property than the split itself.
+
+Reachability: a name corrected at one terminal in the same run in which the
+same PIN and corrected name first appear at a second store. Rare per night,
+certain over a backfill window — and T-0009's first real run is exactly a
+backfill window. Currently zero occurrences in the live roster (checked: no
+`(clerk_id, normalized_name)` maps to more than one person).
+
+Options:
+  A) **Resolution-time snapshot** — update `by_identity` when AC-004 rewrites a
+     name, so a rename earlier in the run is visible to a link later in it.
+     Matches the plainest reading of "an existing assignment" and removes the
+     split. One line, plus an ordering guarantee on the `existing` query.
+  B) **Run-start snapshot** — declare the current behaviour correct, on the
+     grounds that a run should see one consistent view of the world. Then the
+     split is expected, self-corrects on no run, and office merges it; AC-005
+     needs a sentence saying so.
+  C) **Two passes** — apply every AC-004 rename first, then resolve every new
+     assignment against the updated table. Order-independent and the easiest to
+     reason about; costs a second loop.
+Burst recommends: **C**, or **A** if the second pass is thought too much for
+one run — either way the nondeterministic `setdefault` needs an `ORDER BY`.
+Whichever is chosen, AC-005 should state the snapshot explicitly; a spec that
+does not say which one it means will be re-litigated at T-0008.   [recommendation]
+Status: OPEN
+
+---
+
+### B-0040 — What is the roster's behaviour when `employee_name` is absent or blank?
+Task: T-0006 (audit failed) · Blocks: REQ-001/AC-001, REQ-002/AC-005, REQ-006/AC-026 · Raised: 2026-08-18
+
+**Specified.** `stg_timeclock.employee_name` is `TEXT` — **nullable** (migration
+008). REQ-001's inputs list it without qualification; AC-001 says the assignment
+carries "the most recently seen `employee_name`"; AC-005 keys on
+`(clerk_id, normalized_name)`; AC-026/AC-027 derive `display_name` from the
+observed name, and `ref_employees.display_name` is `TEXT NOT NULL`. No AC, no
+edge-table row and no codex line says what any of this means when the name is
+missing.
+
+**Observed.** `derive.py` fills the gap three times without a decision behind
+any of them:
+
+1. `"employee_name": r[2] or ""` — NULL becomes the empty string.
+2. `derive_display_name("")` returns `""`, so the person is created with
+   `display_name = ''`. NOT NULL is satisfied and the row is meaningless.
+3. `if normalized:` and `if r[5]:` keep empty normalized names out of the
+   linking map, so two assignments that *do* agree on `(clerk_id, '')` are not
+   linked — AC-005 says they SHALL be.
+
+Reproduced on synthetic stores:
+
+```
+punch(A, PIN, "")  +  punch(B, PIN, "   ")   ->  persons_created = 2
+  assignments: (A, PIN, observed '',    normalized '')  -> person 2914
+               (B, PIN, observed '   ', normalized '')  -> person 2915
+punch(A, PIN, NULL)  ->  person created with display_name = ''
+```
+
+**Why it is worth stopping for.** It is Rule 1 in the small: three defaults
+invented where the spec is silent, each defensible, none licensed. The empty
+`display_name` is the one that escapes — a person with a blank name reaches
+every roster screen, the incomplete sweep (T-0009) and the merge UI (T-0008),
+and none of them will have a reason to expect it.
+
+Not currently reachable: **0** of 19,339 real `stg_timeclock` rows have a NULL
+or blank `employee_name`. It becomes reachable the first time the POS emits one,
+and the derivation runs nightly forever.
+
+Options:
+  A) **Refuse the row** — a pair whose latest name is blank raises a worklist
+     item for office and creates no assignment. Loudest, and consistent with
+     REQ-001's "fails loudly" posture for an unknown store. Costs a dependency
+     on T-0009's worklist path.
+  B) **Fall back to the clerk_id** — `display_name = "Clerk 1998 (unnamed)"`,
+     `normalized_name` still empty, and link on the empty key like any other so
+     AC-005 holds uniformly. Keeps the hours attributable; office renames.
+  C) **Use the most recent non-blank name for the pair** instead of the most
+     recent name outright — a single blank punch then costs nothing, and only a
+     pair that has *never* had a name falls through to A or B.
+  D) **Keep the current behaviour** and write it into the spec: blank names get
+     a blank display name and never link.
+Burst recommends: **C layered over B** — C removes almost every occurrence, B
+gives the remainder a name a human can act on, and the AC-005 carve-out for
+empty keys disappears in both cases.   [recommendation]
+Status: OPEN
+
+---
+
 ### B-0037 — When a terminated person clocks in again, what happens to `termination_date`?
 Task: T-0006 (halted) · Blocks: REQ-005/AC-024 · Raised: 2026-08-18
 
