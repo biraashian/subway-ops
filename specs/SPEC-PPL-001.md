@@ -358,7 +358,7 @@ EARS lines above · §9 fully covered.
 | US-005 | REQ-005 | AC-022 | T-0004 | **merged 2026-08-13** |
 | US-005 | REQ-005 | AC-023, AC-025 | T-0008 | queued |
 | US-005 | REQ-005 | AC-024 | T-0006 | queued |
-| US-003 | REQ-006 | AC-026, AC-027, AC-029, AC-030 | T-0005 | queued |
+| US-003 | REQ-006 | AC-026, AC-027, AC-029, AC-030 | T-0005 | **merged 2026-08-17** |
 | US-003 | REQ-006 | AC-028 | T-0006 | queued |
 | US-003 | REQ-006 | AC-031 | T-0004 | **merged 2026-08-13** |
 
