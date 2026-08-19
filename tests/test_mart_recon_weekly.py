@@ -35,7 +35,7 @@ TEST_STORE = ns("T-RECON-TEST")
 WEEK_END = previous_business_week()[1]
 
 TEST_USER_EMAIL = "test-recon-user@example.com"
-TEST_FM_NAME = ns("TestFM")
+TEST_FM_NAME = "TestFM"
 
 
 requires_db = pytest.mark.skipif(
