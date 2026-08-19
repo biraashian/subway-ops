@@ -54,8 +54,12 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0013 | Append-only check measures against `main`, not the working tree | D-032 | queued (not blocking; run when the PPL chain gives room) | — |
 | T-0014 | Worktree setup carries the gitignored artifacts a `[P]` task needs | D-034 | queued (do before the next `[P]` task) | — |
 | T-0015 | Schema snapshot captures constraints and indexes | D-035 | queued (pairs with T-0013) | — |
+<<<<<<< HEAD
 | T-0016 | DB tests seed their own stores and namespace per run | D-039 · D-040 · D-045 · D-046 | **queued — resume**: conditional TestFM teardown (D-046) + date predicates (D-045); the rest is built and green | `forge/T-0016-wip` |
 | T-0017 | The seven ingest test files stop pointing at a real store | D-045 · D-046 | queued (time with or just before T-0011) | — |
+=======
+| T-0016 | DB tests seed their own stores and namespace per run | D-039 · D-040 | **halted(B-0042)** — markers/stores done and green; shared TestFM teardown is structural | `forge/T-0016-wip` |
+>>>>>>> a428745 (T-0016: HALT on B-0042 (R-503) [WIP])
 
 ## Backlog (written by /stubs)
 (run /stubs once `codex/12-PROMPTS/` exists)
