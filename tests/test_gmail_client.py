@@ -183,12 +183,8 @@ def test_decode_token_b64_rejects_non_object() -> None:
         _decode_token_b64(encoded)
 
 
-def test_load_credentials_prefers_env(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    encoded = base64.b64encode(
-        json.dumps(_fake_token_json()).encode("ascii")
-    ).decode("ascii")
+def test_load_credentials_prefers_env(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    encoded = base64.b64encode(json.dumps(_fake_token_json()).encode("ascii")).decode("ascii")
     # Force the file path to *not* exist so we can confirm the env wins.
     monkeypatch.setattr(gmail_client.settings, "gmail_token_json_b64", encoded)
 
@@ -288,9 +284,7 @@ def _make_mock_service(
 
     if attachment_data is not None:
         attachments = messages.attachments.return_value
-        attachments.get.return_value.execute.return_value = {
-            "data": attachment_data
-        }
+        attachments.get.return_value.execute.return_value = {"data": attachment_data}
     return service
 
 
@@ -314,9 +308,7 @@ def test_search_paginates_until_max_results_reached() -> None:
 def test_search_caps_at_max_results() -> None:
     pages = [
         {
-            "messages": [
-                {"id": f"m{i}", "threadId": f"t{i}"} for i in range(100)
-            ],
+            "messages": [{"id": f"m{i}", "threadId": f"t{i}"} for i in range(100)],
             "nextPageToken": "TOKEN",
         },
     ]

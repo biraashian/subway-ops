@@ -27,19 +27,18 @@ from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
 from subway_ops.people import derive as derive_module
 from subway_ops.people.derive import DeriveResult, derive_roster
+from tests.conftest import ns
 
-STORE_A = "T-PPL-A"
-STORE_B = "T-PPL-B"
-
+STORE_A = ns("T-PPL-A")
+STORE_B = ns("T-PPL-B")
 #: D-042 — every call in this file is scoped to these. Passing nothing means
 #: "every store in stg_timeclock", and this suite previously did that 25 times,
 #: deriving the real roster into production. The parameter exists so a caller
 #: can say what it meant; this constant is the file saying it once.
 STORES = [STORE_A, STORE_B]
-CLERK = "t0006:pin-1998"
-CLERK_OTHER = "t0006:pin-8"
-MARK_PREFIX = "t0006:"
-
+CLERK = ns("t0006:pin-1998")
+CLERK_OTHER = ns("t0006:pin-8")
+MARK_PREFIX = ns("t0006:")
 requires_db = pytest.mark.skipif(
     not settings.database_url, reason="DB integration test: needs DATABASE_URL"
 )

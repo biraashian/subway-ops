@@ -20,8 +20,9 @@ from subway_ops.transform.mart_store_daily import (
     INVENTORY_METRIC,
     refresh,
 )
+from tests.conftest import ns
 
-TEST_STORE = "4092"
+TEST_STORE = ns("4092")
 TEST_DATE = date(2026, 5, 11)
 TEST_WINDOW_END = TEST_DATE  # explicit end for tests so default lookback can't drift
 
@@ -41,13 +42,11 @@ def _wipe() -> None:
     """Remove anything left over from prior runs for our test (store, date)."""
     params = {"store": TEST_STORE, "d": TEST_DATE}
     execute_sql(
-        "DELETE FROM stg_daily_sales WHERE restaurant_number = :store "
-        "AND business_date = :d",
+        "DELETE FROM stg_daily_sales WHERE restaurant_number = :store AND business_date = :d",
         params,
     )
     execute_sql(
-        "DELETE FROM stg_3p_daily WHERE restaurant_number = :store "
-        "AND business_date = :d",
+        "DELETE FROM stg_3p_daily WHERE restaurant_number = :store AND business_date = :d",
         params,
     )
     execute_sql(
@@ -56,13 +55,11 @@ def _wipe() -> None:
         params,
     )
     execute_sql(
-        "DELETE FROM stg_no_sales WHERE restaurant_number = :store "
-        "AND business_date = :d",
+        "DELETE FROM stg_no_sales WHERE restaurant_number = :store AND business_date = :d",
         params,
     )
     execute_sql(
-        "DELETE FROM mart_store_daily WHERE restaurant_number = :store "
-        "AND business_date = :d",
+        "DELETE FROM mart_store_daily WHERE restaurant_number = :store AND business_date = :d",
         params,
     )
 
@@ -102,8 +99,7 @@ def _seed_daily_sales(net_sales: Decimal, txns: int, hours: Decimal) -> None:
           net_sales = EXCLUDED.net_sales, transactions = EXCLUDED.transactions,
           hours_worked = EXCLUDED.hours_worked, units = EXCLUDED.units
         """,
-        {"s": TEST_STORE, "d": TEST_DATE, "ns": net_sales,
-         "u": 50, "t": txns, "h": hours},
+        {"s": TEST_STORE, "d": TEST_DATE, "ns": net_sales, "u": 50, "t": txns, "h": hours},
     )
 
 
@@ -130,8 +126,7 @@ def _seed_inventory_totals(cost: Decimal, waste: Decimal) -> None:
         ON CONFLICT (restaurant_number, business_date, metric_name) DO UPDATE SET
           total_cost = EXCLUDED.total_cost, waste_value = EXCLUDED.waste_value
         """,
-        {"s": TEST_STORE, "d": TEST_DATE, "m": INVENTORY_METRIC,
-         "c": cost, "w": waste},
+        {"s": TEST_STORE, "d": TEST_DATE, "m": INVENTORY_METRIC, "c": cost, "w": waste},
     )
 
 
@@ -207,8 +202,7 @@ def test_refresh_is_idempotent(seeded_store: None) -> None:
     assert first >= 1 and second >= 1
 
     count = execute_sql(
-        "SELECT count(*) FROM mart_store_daily "
-        "WHERE restaurant_number = :s AND business_date = :d",
+        "SELECT count(*) FROM mart_store_daily WHERE restaurant_number = :s AND business_date = :d",
         {"s": TEST_STORE, "d": TEST_DATE},
     )
     assert count[0][0] == 1

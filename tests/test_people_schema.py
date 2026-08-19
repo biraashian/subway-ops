@@ -23,14 +23,14 @@ from subway_ops.calendar import business_date_now
 from subway_ops.config import settings
 from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
+from tests.conftest import SESSION_TOKEN, ns
 
 # Namespaced so teardown deletes exactly what these tests made, and so a stray
 # row is instantly identifiable as test residue rather than a real person.
-MARK = "t0004-selftest"
-CLERK_A = "t0004:clerk-a"
-CLERK_B = "t0004:clerk-b"
-TEST_EMAIL_PREFIX = "t0004-role-"
-
+MARK = ns("t0004-selftest")
+CLERK_A = ns("t0004:clerk-a")
+CLERK_B = ns("t0004:clerk-b")
+TEST_EMAIL_PREFIX = ns("t0004-role-")
 requires_db = pytest.mark.skipif(
     not settings.database_url,
     reason="DB integration test: needs DATABASE_URL",
@@ -52,6 +52,10 @@ def _wipe() -> None:
     )
     execute_sql("DELETE FROM ref_employees WHERE display_name = :m", {"m": MARK})
     execute_sql("DELETE FROM ref_users WHERE email LIKE :p", {"p": f"{TEST_EMAIL_PREFIX}%"})
+    execute_sql(
+        "DELETE FROM ref_stores WHERE store_number LIKE :p",
+        {"p": f"T-PPL-S%{SESSION_TOKEN}%"},
+    )
 
 
 @pytest.fixture
@@ -62,11 +66,33 @@ def clean_people() -> Iterator[None]:
     _wipe()
 
 
+def _synthetic_stores(count: int = 1) -> list[str]:
+    """Create ``count`` synthetic stores for this run. D-039.
+
+    These tests only ever needed a store number to satisfy a foreign key — they
+    never write staging rows against it — which is why reading a real one felt
+    harmless and survived an audit. codex 13 has no read-only exemption, and a
+    rule with an undocumented exception is a rule nobody can apply.
+
+    ``is_active=false`` so the ingests cannot pick these up, and namespaced to
+    the run so two concurrent sessions cannot collide on the primary key.
+    """
+    numbers = [f"T-PPL-S{i}-{SESSION_TOKEN}"[:32] for i in range(count)]
+    for number in numbers:
+        execute_sql(
+            """
+            INSERT INTO ref_stores (store_number, store_name, city, state, is_active)
+            VALUES (:n, :name, 'Testville', 'WA', false)
+            ON CONFLICT (store_number) DO NOTHING
+            """,
+            {"n": number, "name": f"synthetic {number}"},
+        )
+    return numbers
+
+
 def _a_real_store() -> str:
-    """An existing store number, looked up rather than hardcoded."""
-    rows = execute_sql("SELECT store_number FROM ref_stores ORDER BY store_number LIMIT 1")
-    assert rows, "ref_stores is empty; the FK tests cannot run"
-    return str(rows[0][0])
+    """One synthetic store number. Name kept so the call sites read unchanged."""
+    return _synthetic_stores(1)[0]
 
 
 def _make_person() -> int:
@@ -224,9 +250,7 @@ def test_same_clerk_id_at_a_different_store_is_allowed(clean_people: None) -> No
     PAIR, so the same clerk_id at two stores must remain insertable — if it did
     not, the derivation would fail on real data every night.
     """
-    stores = execute_sql("SELECT store_number FROM ref_stores ORDER BY store_number LIMIT 2")
-    if len(stores) < 2:
-        pytest.skip("needs two stores to prove the pair is what is unique")
+    stores = [(s,) for s in _synthetic_stores(2)]
     person = _make_person()
     for row in stores:
         execute_sql(

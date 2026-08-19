@@ -18,10 +18,11 @@ from subway_ops.config import settings
 from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
 from subway_ops.db.worklist import open_item, resolve_item
+from tests.conftest import ns
 
 # Namespaced so teardown can delete exactly what these tests made, and so a
 # stray row is instantly identifiable as test residue rather than real work.
-KIND = "t0003_selftest"
+KIND = ns("t0003_selftest")
 SUBJECT = "t0003:subject-a"
 SUBJECT_B = "t0003:subject-b"
 
@@ -37,8 +38,7 @@ def _wipe() -> None:
 
 def _states(subject: str) -> list[str]:
     rows = execute_sql(
-        "SELECT state FROM ops_worklist_items "
-        "WHERE kind = :k AND subject_ref = :s ORDER BY id",
+        "SELECT state FROM ops_worklist_items WHERE kind = :k AND subject_ref = :s ORDER BY id",
         {"k": KIND, "s": subject},
     )
     return [r[0] for r in rows]
@@ -67,12 +67,8 @@ def test_open_item_creates_row(clean_worklist: None) -> None:
 @requires_db
 def test_open_item_is_idempotent_while_one_is_open(clean_worklist: None) -> None:
     """AC-018 — SHALL NOT open a duplicate while one is already open."""
-    first = open_item(
-        kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="first"
-    )
-    second = open_item(
-        kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="second"
-    )
+    first = open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="first")
+    second = open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="second")
     assert first is not None
     assert second is None, "a live item must suppress a second open"
     assert _states(SUBJECT) == ["open"], "exactly one row, not two"
@@ -83,14 +79,10 @@ def test_open_item_suppressed_while_in_progress(clean_worklist: None) -> None:
     """in_progress is a live state too — the index covers both."""
     open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="x")
     execute_sql(
-        "UPDATE ops_worklist_items SET state = 'in_progress' "
-        "WHERE kind = :k AND subject_ref = :s",
+        "UPDATE ops_worklist_items SET state = 'in_progress' WHERE kind = :k AND subject_ref = :s",
         {"k": KIND, "s": SUBJECT},
     )
-    assert (
-        open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="y")
-        is None
-    )
+    assert open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="y") is None
 
 
 @requires_db
@@ -102,19 +94,14 @@ def test_dismissed_suppresses_a_new_item(clean_worklist: None) -> None:
     cycle, so if `dismissed` did not suppress, office dismissing an item would
     accomplish nothing — T-0009's next run would raise it again the same night.
     """
-    first = open_item(
-        kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="first"
-    )
+    first = open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="first")
     assert first is not None
     execute_sql(
-        "UPDATE ops_worklist_items SET state = 'dismissed' "
-        "WHERE kind = :k AND subject_ref = :s",
+        "UPDATE ops_worklist_items SET state = 'dismissed' WHERE kind = :k AND subject_ref = :s",
         {"k": KIND, "s": SUBJECT},
     )
 
-    again = open_item(
-        kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="the sweep"
-    )
+    again = open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="the sweep")
     assert again is None, "a dismissal a sweep can undo is a button that does nothing"
     assert _states(SUBJECT) == ["dismissed"], "no second row beside the dismissal"
 
@@ -131,8 +118,7 @@ def test_resolve_does_not_clear_a_dismissal(clean_worklist: None) -> None:
     """
     open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="a")
     execute_sql(
-        "UPDATE ops_worklist_items SET state = 'dismissed' "
-        "WHERE kind = :k AND subject_ref = :s",
+        "UPDATE ops_worklist_items SET state = 'dismissed' WHERE kind = :k AND subject_ref = :s",
         {"k": KIND, "s": SUBJECT},
     )
 
@@ -145,9 +131,7 @@ def test_open_item_creates_again_after_resolve(clean_worklist: None) -> None:
     """Resolved is not suppressed forever — a subject can go bad again."""
     open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="first")
     resolve_item(KIND, SUBJECT)
-    reopened = open_item(
-        kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="again"
-    )
+    reopened = open_item(kind=KIND, subject_ref=SUBJECT, assigned_role="office", summary="again")
     assert reopened is not None
     assert _states(SUBJECT) == ["resolved", "open"]
 
@@ -188,8 +172,7 @@ def test_resolve_records_when(clean_worklist: None) -> None:
     assert rows[0][0] is True
 
     cols = execute_sql(
-        "SELECT column_name FROM information_schema.columns "
-        "WHERE table_name = 'ops_worklist_items'"
+        "SELECT column_name FROM information_schema.columns WHERE table_name = 'ops_worklist_items'"
     )
     names = {r[0] for r in cols}
     assert "resolved_at" in names
@@ -208,12 +191,9 @@ def test_due_date_is_optional(clean_worklist: None) -> None:
         summary="with due date",
         due_date=due,
     )
-    open_item(
-        kind=KIND, subject_ref=SUBJECT_B, assigned_role="office", summary="without"
-    )
+    open_item(kind=KIND, subject_ref=SUBJECT_B, assigned_role="office", summary="without")
     rows = execute_sql(
-        "SELECT subject_ref, due_date FROM ops_worklist_items "
-        "WHERE kind = :k ORDER BY subject_ref",
+        "SELECT subject_ref, due_date FROM ops_worklist_items WHERE kind = :k ORDER BY subject_ref",
         {"k": KIND},
     )
     assert rows[0][1] == due

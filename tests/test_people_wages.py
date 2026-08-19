@@ -24,9 +24,9 @@ from subway_ops.people.wages import (
     read_wage,
     record_wage,
 )
+from tests.conftest import ns
 
-MARK = "t0007-wages-selftest"
-
+MARK = ns("t0007-wages-selftest")
 requires_db = pytest.mark.skipif(
     not settings.database_url, reason="DB integration test: needs DATABASE_URL"
 )

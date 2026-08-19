@@ -405,10 +405,14 @@ def test_digest_data_post_init_back_fills_counts() -> None:
         week_end=date(2026, 5, 5),
         week_start=date(2026, 4, 29),
         portfolio=PortfolioSnapshot(
-            net_sales=None, transactions=None,
-            food_cost_pct=None, labor_cost_pct=None,
-            prior_net_sales=None, prior_transactions=None,
-            prior_food_cost_pct=None, prior_labor_cost_pct=None,
+            net_sales=None,
+            transactions=None,
+            food_cost_pct=None,
+            labor_cost_pct=None,
+            prior_net_sales=None,
+            prior_transactions=None,
+            prior_food_cost_pct=None,
+            prior_labor_cost_pct=None,
         ),
         targets=(),
         recon=ReconSummary(
@@ -519,7 +523,7 @@ def test_compliance_section_tints_low_rows_red(
     # Both sub-90% stores get the tint; 92% does not. We can't reliably
     # parse the HTML, but we can check that the red-tint colour appears
     # AT LEAST twice (yellow + red stores) — once would be a regression.
-    tint_count = body.count('background:#fef2f2;')
+    tint_count = body.count("background:#fef2f2;")
     assert tint_count >= 2, tint_count
 
 

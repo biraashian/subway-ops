@@ -113,8 +113,7 @@ def seeded_store_4092(applied_migrations: None) -> Iterator[None]:
     yield
     # Tidy stg row but leave ref rows so re-runs are cheap.
     execute_sql(
-        "DELETE FROM stg_daily_sales WHERE restaurant_number = '4092' "
-        "AND business_date = :d",
+        "DELETE FROM stg_daily_sales WHERE restaurant_number = '4092' AND business_date = :d",
         {"d": date(2026, 5, 11)},
     )
 
@@ -127,9 +126,7 @@ def _mock_client(payload: dict[str, Any]) -> MagicMock:
 
 
 @requires_db_and_fixture
-def test_ingest_writes_stg_rows(
-    fixture_payload: dict[str, Any], seeded_store_4092: None
-) -> None:
+def test_ingest_writes_stg_rows(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
     client = _mock_client(fixture_payload)
     written = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)
     assert written == len(fixture_payload["data"]) > 0
@@ -146,9 +143,7 @@ def test_ingest_writes_stg_rows(
 
 
 @requires_db_and_fixture
-def test_ingest_is_idempotent(
-    fixture_payload: dict[str, Any], seeded_store_4092: None
-) -> None:
+def test_ingest_is_idempotent(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
     client = _mock_client(fixture_payload)
     first = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)
     second = ingest(date(2026, 5, 11), date(2026, 5, 11), ["4092"], client=client)

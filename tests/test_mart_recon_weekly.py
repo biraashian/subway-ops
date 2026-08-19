@@ -21,13 +21,13 @@ from subway_ops.config import (
 from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
 from subway_ops.transform.mart_recon_weekly import refresh
+from tests.conftest import ns
 
 # A synthetic restaurant number that can never collide with a real store.
 # ``_wipe`` hard-DELETEs every row for (TEST_STORE, WEEK_END); pointing these
 # tests at a live store destroys production history on every run. Seeded
 # is_active=false so the ingests' ``_active_store_numbers()`` can't pick it up.
-TEST_STORE = "T-RECON-TEST"
-
+TEST_STORE = ns("T-RECON-TEST")
 # The last closed business week, so the seeded row always lands inside
 # ``refresh(weeks_back=2)``'s window (earliest = last_closed - 7 days). A
 # hardcoded date silently stops being refreshed two weeks after it is written,
@@ -58,18 +58,15 @@ def applied_migrations() -> None:
 def _wipe() -> None:
     params = {"s": TEST_STORE, "w": WEEK_END}
     execute_sql(
-        "DELETE FROM mart_recon_weekly WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM mart_recon_weekly WHERE restaurant_number = :s AND week_end_date = :w",
         params,
     )
     execute_sql(
-        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM ops_variance_entries WHERE restaurant_number = :s AND week_end_date = :w",
         params,
     )
     execute_sql(
-        "DELETE FROM stg_controlsheet_weekly WHERE restaurant_number = :s "
-        "AND week_end_date = :w",
+        "DELETE FROM stg_controlsheet_weekly WHERE restaurant_number = :s AND week_end_date = :w",
         params,
     )
 

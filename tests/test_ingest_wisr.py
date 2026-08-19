@@ -31,9 +31,7 @@ from subway_ops.ingest.wisr import (
     ingest,
 )
 
-FIXTURE_PATH = (
-    Path(__file__).resolve().parent / "fixtures" / "recorded" / "wisr.json"
-)
+FIXTURE_PATH = Path(__file__).resolve().parent / "fixtures" / "recorded" / "wisr.json"
 MIGRATION_PATH = (
     Path(__file__).resolve().parent.parent
     / "src"
@@ -132,19 +130,17 @@ def _mock_client(payload: dict[str, Any]) -> MagicMock:
 def test_ingest_writes_weekly_and_items(
     fixture_payload: dict[str, Any], seeded_store_4092: None
 ) -> None:
-    written = ingest(
-        date(2026, 5, 5), ["4092"], client=_mock_client(fixture_payload)
+    written = ingest(date(2026, 5, 5), ["4092"], client=_mock_client(fixture_payload))
+    expected_items = len(
+        {
+            (row["restaurantNumber"], item["name"])
+            for row in fixture_payload["data"]
+            for item in row["inventoryItems"]
+        }
     )
-    expected_items = len({
-        (row["restaurantNumber"], item["name"])
-        for row in fixture_payload["data"]
-        for item in row["inventoryItems"]
-    })
     assert written == len(fixture_payload["data"]) + expected_items
 
-    weekly = execute_sql(
-        "SELECT count(*) FROM stg_wisr_weekly WHERE restaurant_number = '4092'"
-    )
+    weekly = execute_sql("SELECT count(*) FROM stg_wisr_weekly WHERE restaurant_number = '4092'")
     items = execute_sql(
         "SELECT count(*) FROM stg_wisr_inventory_items WHERE restaurant_number = '4092'"
     )
@@ -153,15 +149,11 @@ def test_ingest_writes_weekly_and_items(
 
 
 @requires_db_and_fixture
-def test_ingest_is_idempotent(
-    fixture_payload: dict[str, Any], seeded_store_4092: None
-) -> None:
+def test_ingest_is_idempotent(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
     client = _mock_client(fixture_payload)
     first = ingest(date(2026, 5, 5), ["4092"], client=client)
     second = ingest(date(2026, 5, 5), ["4092"], client=client)
     assert first == second
 
-    weekly = execute_sql(
-        "SELECT count(*) FROM stg_wisr_weekly WHERE restaurant_number = '4092'"
-    )
+    weekly = execute_sql("SELECT count(*) FROM stg_wisr_weekly WHERE restaurant_number = '4092'")
     assert weekly[0][0] == 1

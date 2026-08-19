@@ -92,9 +92,7 @@ def test_migrate_rejects_modified_migration(fresh_engine: None) -> None:
         apply_migrations()
 
     # Restore so other tests see a clean ledger.
-    real = hashlib.sha256(
-        (Path(MIGRATIONS_DIR) / "001_ref_tables.sql").read_bytes()
-    ).hexdigest()
+    real = hashlib.sha256((Path(MIGRATIONS_DIR) / "001_ref_tables.sql").read_bytes()).hexdigest()
     execute_sql(
         "UPDATE ops_migrations SET checksum = :real WHERE filename = :fn",
         {"real": real, "fn": "001_ref_tables.sql"},

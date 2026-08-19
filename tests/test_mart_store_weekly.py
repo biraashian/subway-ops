@@ -18,8 +18,9 @@ from subway_ops.config import TARGET_FOOD_COST_STORE, TARGET_LABOR_COST_STORE, s
 from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
 from subway_ops.transform.mart_store_weekly import refresh
+from tests.conftest import ns
 
-TEST_STORE = "4092"
+TEST_STORE = ns("4092")
 WEEK_END = date(2026, 5, 5)  # a Tuesday
 
 
@@ -49,8 +50,7 @@ def _wipe() -> None:
         "mart_store_weekly",
     ):
         execute_sql(
-            f"DELETE FROM {tbl} WHERE restaurant_number = :store "
-            "AND week_end_date = :w",
+            f"DELETE FROM {tbl} WHERE restaurant_number = :store AND week_end_date = :w",
             params,
         )
     execute_sql(
@@ -114,11 +114,18 @@ def _seed_controlsheet(
           customer_count = EXCLUDED.customer_count
         """,
         {
-            "s": TEST_STORE, "w": WEEK_END,
-            "ns": net_sales, "cc": customer_count,
-            "p": productivity, "f": factor,
-            "h": hours, "u": units, "co": cash_overshort, "bo": bread_overshort,
-            "d": deposit, "at": avg_ticket,
+            "s": TEST_STORE,
+            "w": WEEK_END,
+            "ns": net_sales,
+            "cc": customer_count,
+            "p": productivity,
+            "f": factor,
+            "h": hours,
+            "u": units,
+            "co": cash_overshort,
+            "bo": bread_overshort,
+            "d": deposit,
+            "at": avg_ticket,
         },
     )
 
@@ -147,9 +154,16 @@ def _seed_wisr(
         ON CONFLICT (restaurant_number, week_end_date) DO UPDATE SET
           ics_cost_of_goods_actual_percentage = EXCLUDED.ics_cost_of_goods_actual_percentage
         """,
-        {"s": TEST_STORE, "w": WEEK_END,
-         "a": actual_pct, "e": expected_pct, "df": diff_pct,
-         "acg": acg_pct, "ti": total_inventory, "dc": distribution_cost},
+        {
+            "s": TEST_STORE,
+            "w": WEEK_END,
+            "a": actual_pct,
+            "e": expected_pct,
+            "df": diff_pct,
+            "acg": acg_pct,
+            "ti": total_inventory,
+            "dc": distribution_cost,
+        },
     )
 
 
@@ -220,12 +234,27 @@ def test_refresh_joins_and_converts_percentages(seeded_store: None) -> None:
     )
     assert len(out) == 1
     (
-        week_start, net_sales, txns, units, hours,
-        cash_os, bread_os, deposit,
-        cust, factor, at, prod,
-        food_actual, food_expected, food_diff, acg_pct,
-        ti, dc, labor,
-        food_ok, labor_ok,
+        week_start,
+        net_sales,
+        txns,
+        units,
+        hours,
+        cash_os,
+        bread_os,
+        deposit,
+        cust,
+        factor,
+        at,
+        prod,
+        food_actual,
+        food_expected,
+        food_diff,
+        acg_pct,
+        ti,
+        dc,
+        labor,
+        food_ok,
+        labor_ok,
     ) = out[0]
 
     assert week_start == WEEK_END - __import__("datetime").timedelta(days=6)

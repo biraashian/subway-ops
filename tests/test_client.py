@@ -77,14 +77,12 @@ def test_get_daily_sales_summary_happy_path() -> None:
         return httpx.Response(200, json={"stores": [{"storeNumber": "4092"}]})
 
     with _make_client(handler) as client:
-        body = client.get_daily_sales_summary(
-            ["4092", "17967"], date(2026, 5, 1), date(2026, 5, 7)
-        )
+        body = client.get_daily_sales_summary(["4092", "17967"], date(2026, 5, 1), date(2026, 5, 7))
 
     assert body == {"stores": [{"storeNumber": "4092"}]}
-    assert "/DailySalesSummary/4092,17967/startDate/2026-05-01/endDate/2026-05-07" in captured[
-        "path"
-    ]
+    assert (
+        "/DailySalesSummary/4092,17967/startDate/2026-05-01/endDate/2026-05-07" in captured["path"]
+    )
 
 
 def test_list_restaurants_returns_string_list() -> None:
@@ -227,9 +225,7 @@ def test_transaction_details_rejects_multi_store_before_http() -> None:
         raise AssertionError("HTTP must not be hit when limits are exceeded")
 
     with _make_client(handler) as client, pytest.raises(ValueError, match="exactly one store"):
-        client.get_transaction_details(
-            "4092,17967", date(2026, 5, 1), date(2026, 5, 7)
-        )
+        client.get_transaction_details("4092,17967", date(2026, 5, 1), date(2026, 5, 7))
 
 
 def test_transaction_details_rejects_window_over_14_days() -> None:
@@ -237,9 +233,7 @@ def test_transaction_details_rejects_window_over_14_days() -> None:
         raise AssertionError("HTTP must not be hit when limits are exceeded")
 
     with _make_client(handler) as client, pytest.raises(ValueError, match="exceeds"):
-        client.get_transaction_details(
-            "4092", date(2026, 5, 1), date(2026, 5, 20)
-        )
+        client.get_transaction_details("4092", date(2026, 5, 1), date(2026, 5, 20))
 
 
 def test_daily_sales_rejects_too_many_stores() -> None:
@@ -257,9 +251,7 @@ def test_daily_sales_rejects_window_over_50_days() -> None:
         raise AssertionError("HTTP must not be hit when limits are exceeded")
 
     with _make_client(handler) as client, pytest.raises(ValueError, match="exceeds"):
-        client.get_daily_sales_summary(
-            ["4092"], date(2026, 1, 1), date(2026, 5, 1)
-        )
+        client.get_daily_sales_summary(["4092"], date(2026, 1, 1), date(2026, 5, 1))
 
 
 def test_end_before_start_raises_value_error() -> None:
@@ -267,9 +259,7 @@ def test_end_before_start_raises_value_error() -> None:
         raise AssertionError("HTTP must not be hit when range is invalid")
 
     with _make_client(handler) as client, pytest.raises(ValueError, match="precedes"):
-        client.get_daily_sales_summary(
-            ["4092"], date(2026, 5, 10), date(2026, 5, 1)
-        )
+        client.get_daily_sales_summary(["4092"], date(2026, 5, 10), date(2026, 5, 1))
 
 
 def test_control_sheet_rejects_too_many_stores() -> None:

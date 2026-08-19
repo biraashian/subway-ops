@@ -25,6 +25,7 @@ from subway_ops.dashboard.data import (
 )
 from subway_ops.db.connection import execute_sql
 from subway_ops.db.migrate import apply_migrations
+from tests.conftest import ns
 
 
 def _load_store_detail_module() -> ModuleType:
@@ -69,7 +70,7 @@ requires_db = pytest.mark.skipif(
     reason="DB integration test: needs DATABASE_URL",
 )
 
-TEST_STORE = "4092"
+TEST_STORE = ns("4092")
 
 
 @pytest.fixture
@@ -115,10 +116,19 @@ def test_wisr_inventory_items_shape(seeded_store: None) -> None:
     if df.empty:
         pytest.skip("Live DB has no WISR rows for the test (store, week).")
     expected = {
-        "item_name", "open_qty", "delivered_qty", "left_qty", "used_qty",
-        "pos_difference", "recorded_waste", "cost",
-        "value_used", "value_difference",
-        "actual_percentage", "expected_percentage", "diff_percentage",
+        "item_name",
+        "open_qty",
+        "delivered_qty",
+        "left_qty",
+        "used_qty",
+        "pos_difference",
+        "recorded_waste",
+        "cost",
+        "value_used",
+        "value_difference",
+        "actual_percentage",
+        "expected_percentage",
+        "diff_percentage",
     }
     assert expected.issubset(set(df.columns))
 

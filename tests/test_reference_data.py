@@ -204,5 +204,3 @@ def test_reseeding_is_idempotent(db_conn: psycopg.Connection) -> None:
     second_stores = seed_stores(db_conn)
     assert first_fm == second_fm
     assert first_stores == second_stores
-
-

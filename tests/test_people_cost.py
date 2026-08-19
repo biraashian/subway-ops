@@ -29,17 +29,17 @@ from subway_ops.people.cost import (
     cost_week,
 )
 from subway_ops.people.wages import record_wage
+from tests.conftest import ns
 
-MARK = "t0007-cost-selftest"
-CLERK_A = "t0007:clerk-a"
-CLERK_B = "t0007:clerk-b"
-
+MARK = ns("t0007-cost-selftest")
+CLERK_A = ns("t0007:clerk-a")
+CLERK_B = ns("t0007:clerk-b")
 #: Synthetic stores, created and dropped by the fixture (D-039, codex 13).
 #: `is_active=false` is the second half of the rule and not decoration: an active
 #: store is one the ingests pick up, so a crashed run would leave this one in
 #: their path as well as in the database.
-STORE_A = "T-PPL-1"
-STORE_B = "T-PPL-2"
+STORE_A = ns("T-PPL-1")
+STORE_B = ns("T-PPL-2")
 
 
 def _weekly_split(total: Decimal) -> tuple[Decimal, Decimal]:
