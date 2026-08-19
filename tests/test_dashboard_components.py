@@ -167,7 +167,9 @@ def test_compliance_emoji_neutral_for_missing(missing: Any) -> None:
 
 
 def _load_fm_page() -> Any:
-    path = Path(__file__).parent.parent / ("src/subway_ops/dashboard/pages/3_field_manager.py")
+    path = Path(__file__).parent.parent / (
+        "src/subway_ops/dashboard/pages/3_field_manager.py"
+    )
     spec = importlib.util.spec_from_file_location("fm_page_under_test", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
@@ -190,14 +192,18 @@ def test_delta_badge_text_missing_value_neutral(fm_page: Any, missing: Any) -> N
 
 
 def test_delta_badge_text_under_target_is_in_target(fm_page: Any) -> None:
-    text, in_target = fm_page.delta_badge_text(Decimal("0.18"), TARGET_FOOD_COST_STORE)
+    text, in_target = fm_page.delta_badge_text(
+        Decimal("0.18"), TARGET_FOOD_COST_STORE
+    )
     assert "-" in text  # negative delta
     assert "pp vs target" in text
     assert in_target is True
 
 
 def test_delta_badge_text_over_target_is_off(fm_page: Any) -> None:
-    text, in_target = fm_page.delta_badge_text(Decimal("0.25"), TARGET_FOOD_COST_STORE)
+    text, in_target = fm_page.delta_badge_text(
+        Decimal("0.25"), TARGET_FOOD_COST_STORE
+    )
     assert text.startswith("+")
     assert in_target is False
 

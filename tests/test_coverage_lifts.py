@@ -83,7 +83,6 @@ def test_cookie_signing_key_falls_back_to_env(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """When secrets.toml is missing entirely, the env var wins."""
-
     # Force st.secrets to raise FileNotFoundError on access.
     class _NoSecrets:
         def __getitem__(self, key: str) -> Any:
@@ -98,7 +97,6 @@ def test_cookie_signing_key_falls_back_to_dev_default(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """When neither source provides a key, return the dev placeholder."""
-
     class _NoSecrets:
         def __getitem__(self, key: str) -> Any:
             raise KeyError(key)

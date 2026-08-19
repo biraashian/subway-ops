@@ -62,7 +62,7 @@ def test_expected_weekly_cells_only_picks_tuesdays() -> None:
     out = expected_weekly_cells(
         [("4092", None)],
         window_start=date(2026, 4, 27),  # Monday
-        window_end=date(2026, 5, 12),  # Tuesday
+        window_end=date(2026, 5, 12),    # Tuesday
     )
     tuesdays = sorted(out["4092"])
     # 2026-04-28, 2026-05-05, 2026-05-12 are Tuesdays in window.
@@ -233,7 +233,9 @@ def test_render_markdown_handles_empty_sample() -> None:
 
 def test_render_markdown_renders_notes() -> None:
     md = render_markdown(
-        _build_report(notes=("ControlSheet table is empty for the audit window.",))
+        _build_report(
+            notes=("ControlSheet table is empty for the audit window.",)
+        )
     )
     assert "## Notes" in md
     assert "ControlSheet table is empty" in md
@@ -242,8 +244,12 @@ def test_render_markdown_renders_notes() -> None:
 def test_render_markdown_clean_state_messages() -> None:
     """Clean coverage → 'no missing cells' banners replace the tables."""
     report = _build_report(
-        daily_coverage=CoverageReport(expected_cells=10, actual_cells=10, missing_cells=()),
-        weekly_coverage=CoverageReport(expected_cells=5, actual_cells=5, missing_cells=()),
+        daily_coverage=CoverageReport(
+            expected_cells=10, actual_cells=10, missing_cells=()
+        ),
+        weekly_coverage=CoverageReport(
+            expected_cells=5, actual_cells=5, missing_cells=()
+        ),
         zero_sales_days=(),
     )
     md = render_markdown(report)
@@ -266,11 +272,21 @@ def _patch_db(
     zero_sales: list[tuple[str, date]] | None = None,
     controlsheet: list[tuple[str, date, str, float | None]] | None = None,
 ) -> None:
-    monkeypatch.setattr(ab, "_fetch_active_stores", lambda: stores or [])
-    monkeypatch.setattr(ab, "_fetch_actual_daily", lambda *_a, **_k: actual_daily or set())
-    monkeypatch.setattr(ab, "_fetch_actual_weekly", lambda *_a, **_k: actual_weekly or set())
-    monkeypatch.setattr(ab, "_fetch_zero_sales_days", lambda *_a, **_k: zero_sales or [])
-    monkeypatch.setattr(ab, "_fetch_controlsheet_pairs", lambda *_a, **_k: controlsheet or [])
+    monkeypatch.setattr(
+        ab, "_fetch_active_stores", lambda: stores or []
+    )
+    monkeypatch.setattr(
+        ab, "_fetch_actual_daily", lambda *_a, **_k: actual_daily or set()
+    )
+    monkeypatch.setattr(
+        ab, "_fetch_actual_weekly", lambda *_a, **_k: actual_weekly or set()
+    )
+    monkeypatch.setattr(
+        ab, "_fetch_zero_sales_days", lambda *_a, **_k: zero_sales or []
+    )
+    monkeypatch.setattr(
+        ab, "_fetch_controlsheet_pairs", lambda *_a, **_k: controlsheet or []
+    )
 
 
 def test_run_audit_assembles_a_full_report(

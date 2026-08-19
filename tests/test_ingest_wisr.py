@@ -112,11 +112,27 @@ def seeded_store_4092(applied_migrations: None) -> Iterator[None]:
         ON CONFLICT (store_number) DO NOTHING
         """
     )
-    execute_sql("DELETE FROM stg_wisr_weekly WHERE restaurant_number = '4092'")
-    execute_sql("DELETE FROM stg_wisr_inventory_items WHERE restaurant_number = '4092'")
+    execute_sql(
+        "DELETE FROM stg_wisr_weekly WHERE restaurant_number = '4092' "
+        "AND week_end_date = :d",  # D-045 — never unscoped
+        {"d": date(2026, 5, 5)},
+    )
+    execute_sql(
+        "DELETE FROM stg_wisr_inventory_items WHERE restaurant_number = '4092' "
+        "AND week_end_date = :d",  # D-045 — never unscoped
+        {"d": date(2026, 5, 5)},
+    )
     yield
-    execute_sql("DELETE FROM stg_wisr_weekly WHERE restaurant_number = '4092'")
-    execute_sql("DELETE FROM stg_wisr_inventory_items WHERE restaurant_number = '4092'")
+    execute_sql(
+        "DELETE FROM stg_wisr_weekly WHERE restaurant_number = '4092' "
+        "AND week_end_date = :d",  # D-045 — never unscoped
+        {"d": date(2026, 5, 5)},
+    )
+    execute_sql(
+        "DELETE FROM stg_wisr_inventory_items WHERE restaurant_number = '4092' "
+        "AND week_end_date = :d",  # D-045 — never unscoped
+        {"d": date(2026, 5, 5)},
+    )
 
 
 def _mock_client(payload: dict[str, Any]) -> MagicMock:

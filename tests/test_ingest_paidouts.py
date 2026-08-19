@@ -118,11 +118,23 @@ def seeded_store_4092(applied_migrations: None) -> Iterator[None]:
     )
     # Start each test from a clean slate for store 4092 so prior live
     # backfills don't bleed into row-count assertions.
-    execute_sql("DELETE FROM stg_no_sales WHERE restaurant_number = '4092'")
-    execute_sql("DELETE FROM stg_paid_outs WHERE restaurant_number = '4092'")
+    execute_sql(
+        "DELETE FROM stg_no_sales WHERE restaurant_number = '4092' AND business_date = :d",
+        {"d": date(2026, 5, 11)},
+    )
+    execute_sql(
+        "DELETE FROM stg_paid_outs WHERE restaurant_number = '4092' AND business_date = :d",
+        {"d": date(2026, 5, 11)},
+    )
     yield
-    execute_sql("DELETE FROM stg_no_sales WHERE restaurant_number = '4092'")
-    execute_sql("DELETE FROM stg_paid_outs WHERE restaurant_number = '4092'")
+    execute_sql(
+        "DELETE FROM stg_no_sales WHERE restaurant_number = '4092' AND business_date = :d",
+        {"d": date(2026, 5, 11)},
+    )
+    execute_sql(
+        "DELETE FROM stg_paid_outs WHERE restaurant_number = '4092' AND business_date = :d",
+        {"d": date(2026, 5, 11)},
+    )
 
 
 def _mock_client(payload: dict[str, Any]) -> MagicMock:

@@ -35,7 +35,9 @@ from subway_ops.ingest.controlsheet import (
     ingest,
 )
 
-FIXTURE_PATH = Path(__file__).resolve().parent / "fixtures" / "recorded" / "control_sheet.json"
+FIXTURE_PATH = (
+    Path(__file__).resolve().parent / "fixtures" / "recorded" / "control_sheet.json"
+)
 MIGRATION_PATH = (
     Path(__file__).resolve().parent.parent
     / "src"
@@ -142,7 +144,9 @@ def _mock_client(payload: dict[str, Any]) -> MagicMock:
 
 
 @requires_db_and_fixture
-def test_ingest_writes_stg_row(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
+def test_ingest_writes_stg_row(
+    fixture_payload: dict[str, Any], seeded_store_4092: None
+) -> None:
     written = ingest(date(2026, 5, 5), ["4092"], client=_mock_client(fixture_payload))
     assert written == 1
 
@@ -164,7 +168,9 @@ def test_ingest_writes_stg_row(fixture_payload: dict[str, Any], seeded_store_409
 
 
 @requires_db_and_fixture
-def test_ingest_is_idempotent(fixture_payload: dict[str, Any], seeded_store_4092: None) -> None:
+def test_ingest_is_idempotent(
+    fixture_payload: dict[str, Any], seeded_store_4092: None
+) -> None:
     client = _mock_client(fixture_payload)
     first = ingest(date(2026, 5, 5), ["4092"], client=client)
     second = ingest(date(2026, 5, 5), ["4092"], client=client)

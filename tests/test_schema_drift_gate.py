@@ -89,7 +89,9 @@ def test_both_directions_reported_together() -> None:
 def _snapshot(tables: dict[str, list[str]]) -> dict[str, Any]:
     return {
         name: {
-            "columns": {col: {"type": "text", "nullable": True} for col in cols},
+            "columns": {
+                col: {"type": "text", "nullable": True} for col in cols
+            },
             "primary_key": [],
         }
         for name, cols in tables.items()
@@ -150,7 +152,9 @@ def test_drift_not_covered_by_declaration_fails(
     assert main(_argv(before, after_added, decl)) == 1
 
 
-def test_declaration_covering_absent_drift_fails(before: Path, tmp_path: Path) -> None:
+def test_declaration_covering_absent_drift_fails(
+    before: Path, tmp_path: Path
+) -> None:
     """A stale declaration reds the gate even though nothing changed."""
     same = _write(tmp_path / "same.json", _snapshot({"ref_stores": ["id"]}))
     decl = tmp_path / "T-0003.txt"
@@ -158,7 +162,9 @@ def test_declaration_covering_absent_drift_fails(before: Path, tmp_path: Path) -
     assert main(_argv(before, same, decl)) == 1
 
 
-def test_missing_declaration_file_fails(before: Path, after_added: Path, tmp_path: Path) -> None:
+def test_missing_declaration_file_fails(
+    before: Path, after_added: Path, tmp_path: Path
+) -> None:
     """Named but absent is a failure, never a silent skip."""
     assert main(_argv(before, after_added, tmp_path / "nope.txt")) == 1
 

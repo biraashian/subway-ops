@@ -49,9 +49,7 @@ def test_run_refresh_calls_daily_with_14_day_window() -> None:
     recon, _ = _spy()
     run_refresh(
         today=today,
-        refresh_daily=daily,
-        refresh_weekly=weekly,
-        refresh_fm=fm,
+        refresh_daily=daily, refresh_weekly=weekly, refresh_fm=fm,
         refresh_recon=recon,
     )
 
@@ -70,9 +68,7 @@ def test_run_refresh_calls_weekly_and_fm_for_each_recent_week() -> None:
     recon, _ = _spy()
     run_refresh(
         today=today,
-        refresh_daily=daily,
-        refresh_weekly=weekly,
-        refresh_fm=fm,
+        refresh_daily=daily, refresh_weekly=weekly, refresh_fm=fm,
         refresh_recon=recon,
     )
 
@@ -113,10 +109,8 @@ def test_run_refresh_calls_recon_with_lookback_weeks_kwarg() -> None:
 
     run_refresh(
         today=date(2026, 5, 13),
-        refresh_daily=daily,
-        refresh_weekly=weekly,
-        refresh_fm=fm,
-        refresh_recon=recon,
+        refresh_daily=daily, refresh_weekly=weekly,
+        refresh_fm=fm, refresh_recon=recon,
     )
     assert len(recon_log) == 1
     _, kwargs = recon_log[0]

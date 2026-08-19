@@ -148,7 +148,9 @@ def test_parse_csv_extracts_canonical_rows() -> None:
     assert report.report_date == REPORT_DATE
     assert report.source_format == "csv"
 
-    by_employee = {(r.restaurant_number, r.employee_name, r.course_name): r for r in report.rows}
+    by_employee = {
+        (r.restaurant_number, r.employee_name, r.course_name): r for r in report.rows
+    }
     alice_food = by_employee[("4092", "Alice Johnson", "Food Safety Basics")]
     assert alice_food.completion_status == STATUS_COMPLETE
     assert alice_food.completed_at == date(2026, 5, 6)
@@ -167,7 +169,9 @@ def test_parse_csv_extracts_canonical_rows() -> None:
 def test_parse_csv_classifies_bad_rows_as_unparsed() -> None:
     report = parse_csv(_csv_bytes(), report_date=REPORT_DATE)
     # The fixture has a row with a blank store cell — that lands in unparsed.
-    assert any("restaurant_number" in u.reason for u in report.unparsed_rows), report.unparsed_rows
+    assert any(
+        "restaurant_number" in u.reason for u in report.unparsed_rows
+    ), report.unparsed_rows
     # The "99999" row with an unrecognised store is a valid ComplianceRow at
     # the parser layer — it's the ingest layer's job to filter to ref_stores.
     assert any(r.restaurant_number == "99999" for r in report.rows)
@@ -184,7 +188,9 @@ def test_parse_csv_handles_no_recognisable_header() -> None:
 def test_parse_csv_strips_utf8_bom() -> None:
     # "﻿" (U+FEFF) prefixed banner row — Windows exports sometimes ship this.
     text = (
-        "﻿Header banner\nStore,Employee,Course,Status,Date\n4092,Test,Course,Complete,05/01/2026\n"
+        "﻿Header banner\n"
+        "Store,Employee,Course,Status,Date\n"
+        "4092,Test,Course,Complete,05/01/2026\n"
     )
     report = parse_csv(text.encode(), report_date=REPORT_DATE)
     assert len(report.rows) == 1
@@ -302,7 +308,9 @@ def test_parse_email_payload_falls_back_to_html_when_csv_yields_zero_rows() -> N
 
 
 def test_parse_email_payload_no_payload_returns_empty_report() -> None:
-    report = parse_email_payload(html_body=None, attachments=[], report_date=REPORT_DATE)
+    report = parse_email_payload(
+        html_body=None, attachments=[], report_date=REPORT_DATE
+    )
     assert report.rows == ()
     assert report.unparsed_rows
     assert "no usable payload" in report.unparsed_rows[0].reason

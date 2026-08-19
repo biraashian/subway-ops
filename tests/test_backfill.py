@@ -55,10 +55,7 @@ def test_tuesdays_in_range_picks_only_tuesdays() -> None:
     # 2026-01-06 is the first Tuesday of 2026.
     out = tuesdays_in_range(date(2026, 1, 1), date(2026, 1, 31))
     assert out == [
-        date(2026, 1, 6),
-        date(2026, 1, 13),
-        date(2026, 1, 20),
-        date(2026, 1, 27),
+        date(2026, 1, 6), date(2026, 1, 13), date(2026, 1, 20), date(2026, 1, 27),
     ]
 
 
@@ -149,9 +146,13 @@ def applied_migrations() -> None:
 @pytest.fixture
 def clean_progress_for_test_endpoint(applied_migrations: None) -> Iterator[None]:
     name = "_bf_test"
-    execute_sql("DELETE FROM ops_backfill_progress WHERE endpoint = :ep", {"ep": name})
+    execute_sql(
+        "DELETE FROM ops_backfill_progress WHERE endpoint = :ep", {"ep": name}
+    )
     yield
-    execute_sql("DELETE FROM ops_backfill_progress WHERE endpoint = :ep", {"ep": name})
+    execute_sql(
+        "DELETE FROM ops_backfill_progress WHERE endpoint = :ep", {"ep": name}
+    )
 
 
 @requires_db

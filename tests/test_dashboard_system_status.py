@@ -16,7 +16,9 @@ import pytest
 
 
 def _load_module() -> Any:
-    path = Path(__file__).parent.parent / ("src/subway_ops/dashboard/pages/5_system_status.py")
+    path = Path(__file__).parent.parent / (
+        "src/subway_ops/dashboard/pages/5_system_status.py"
+    )
     spec = importlib.util.spec_from_file_location("system_status_under_test", path)
     assert spec and spec.loader
     module = importlib.util.module_from_spec(spec)
@@ -74,12 +76,16 @@ def test_rerun_url_explicit_none_workflow_is_none(mod: Any) -> None:
     assert mod._rerun_url("backfill") is None
 
 
-def test_gh_repo_env_var_wins(mod: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_gh_repo_env_var_wins(
+    mod: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setenv("GITHUB_REPOSITORY", "from/env")
     assert mod._gh_repo() == "from/env"
 
 
-def test_gh_repo_fallback_default(mod: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_gh_repo_fallback_default(
+    mod: Any, monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
     # ``st.secrets`` is unavailable in bare mode; the helper must catch
     # the access error and return the working-directory-derived default

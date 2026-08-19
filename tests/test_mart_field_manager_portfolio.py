@@ -59,7 +59,17 @@ def _wipe() -> None:
         "DELETE FROM mart_store_weekly WHERE restaurant_number IN ('T1','T2','T3')",
     )
     execute_sql("DELETE FROM ref_stores WHERE store_number IN ('T1','T2','T3')")
-    execute_sql("DELETE FROM ref_field_managers WHERE name = :fm", {"fm": FM_NAME})
+    execute_sql(
+        # D-046 — see tests/test_mart_recon_weekly.py.
+        """
+        DELETE FROM ref_field_managers
+         WHERE name = :fm
+           AND NOT EXISTS (
+               SELECT 1 FROM ref_stores WHERE field_manager_name = :fm
+           )
+        """,
+        {"fm": FM_NAME},
+    )
 
 
 @pytest.fixture

@@ -106,7 +106,21 @@ def seeded_world(applied_migrations: None) -> Iterator[None]:
     _wipe()
     execute_sql("DELETE FROM ref_users WHERE email = :e", {"e": TEST_USER_EMAIL})
     execute_sql("DELETE FROM ref_stores WHERE store_number = :s", {"s": TEST_STORE})
-    execute_sql("DELETE FROM ref_field_managers WHERE name = :f", {"f": TEST_FM_NAME})
+    execute_sql(
+        # D-046 — conditional, because ``TestFM`` is one row shared by about a
+        # dozen files. Whichever finishes first would otherwise delete a row the
+        # others still reference, which is what failed three pre-merge runs.
+        # The row lingers if another file's store outlives this teardown; it is
+        # inert, and the run that owns the last store clears it.
+        """
+        DELETE FROM ref_field_managers
+         WHERE name = :f
+           AND NOT EXISTS (
+               SELECT 1 FROM ref_stores WHERE field_manager_name = :f
+           )
+        """,
+        {"f": TEST_FM_NAME},
+    )
 
 
 def _seed_pos(amount: Decimal) -> None:

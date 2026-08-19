@@ -32,7 +32,9 @@ from subway_ops.calendar import (
         (23, 30, 16),
     ],
 )
-def test_business_date_now_at_clock_boundaries(hour: int, minute: int, expected_day: int) -> None:
+def test_business_date_now_at_clock_boundaries(
+    hour: int, minute: int, expected_day: int
+) -> None:
     wall = datetime(2025, 4, 16, hour, minute, tzinfo=STORE_TZ)
     assert business_date_now(wall) == date(2025, 4, expected_day)
 
