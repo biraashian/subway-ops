@@ -5,6 +5,152 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0044 — `test_mart_field_manager_portfolio.py` was never namespaced; two concurrent runs still destroy each other
+Task: T-0016 (audit) · Blocks: D-040's AC ("every DB-backed test file") · Raised: 2026-08-19
+
+**Specified.** T-0016 `ACCEPTANCE_CRITERIA.behaviors`, quoting D-040: "every
+DB-backed test file mixes a per-SESSION token into its namespace marker;
+teardown deletes only rows carrying THIS run's token", and "two concurrent runs
+of the full suite both pass".
+
+**Observed.** `tests/test_mart_field_manager_portfolio.py` carries file-scoped
+markers that were left untouched:
+
+```python
+FM_NAME = "TestPortfolioFM"        # not ns()-wrapped
+for sn in ("T1", "T2", "T3"):      # not ns()-wrapped
+...
+execute_sql("DELETE FROM ref_stores WHERE store_number IN ('T1','T2','T3')")
+```
+
+The file WAS opened by this task — it received D-046's conditional field-manager
+teardown — so this is a file the builder edited and did not namespace. The
+journal names only the shared `TestFM` row as the remaining gap; this file uses
+its own `TestPortfolioFM` and is a separate, unrecorded gap.
+
+**Reproduced, 2026-08-19, at `e38f819`:**
+
+```
+serial      : 5 passed in 23.52s
+concurrent  : run A  3 passed, 2 errors  (IntegrityError on the shared T1/T2/T3)
+              run B  1 failed, 4 passed  (test_null_food_pct_does_not_drag_average_to_zero)
+```
+
+That is B-0036's signature unchanged, in a file T-0016 was scoped to fix.
+
+**Also un-namespaced, not reproduced:** `tests/test_backfill.py` uses
+`name = "_bf_test"` with a teardown deleting `ops_backfill_progress WHERE
+endpoint = '_bf_test'`. Two concurrent runs passed when tried, so it is a latent
+hazard rather than a demonstrated failure — but it is the same shape and it is
+not named anywhere in the task's record. The seven ingest files are deliberately
+excluded by D-045 and are not counted here.
+
+Options:
+  A) **Namespace both files in T-0016** — `ns()` on `FM_NAME`, `T1/T2/T3` and
+     `_bf_test`, plus `is_active=false` on the three portfolio stores (they are
+     seeded `true` today, see B-0043). Small, local, closes the AC as written.
+  B) **Narrow the AC to the files T-0016 actually covered** and mint a follow-up
+     for the rest. Honest, but leaves a gate that can still contradict itself,
+     which is the failure D-040 exists to remove.
+  C) **Defer both to T-0017** with the ingest seven and the shared-`TestFM`
+     redesign (B-0042 option C), on the argument that they are one pass.
+Burst recommends: **A** — it is two files and roughly six lines, the machinery
+already exists, and shipping D-040 with a file that still fails concurrently
+spends the decision's whole point. [recommendation, not a decision]
+Status: OPEN
+
+### B-0043 — T-0016 leaks an `is_active = true` synthetic store into production `ref_stores` on every run
+Task: T-0016 (audit) · Blocks: T-0016 merge · Raised: 2026-08-19
+
+**Specified.** T-0016 `FORBIDDEN_ACTIONS`: "do not seed a synthetic store with
+`is_active=true` — the ingests would pick it up, which is the second half of the
+convention and the reason it exists." `codex/13-BUILD/CONVENTIONS.md`: "Use a
+synthetic identifier and seed it `is_active=false`." D-039's AC names
+`is_active=false` explicitly.
+
+**Observed.** Four files that T-0016 moved off real store `4092` seed their new
+synthetic store **active**, and none of them delete it:
+
+```
+tests/test_mart_store_daily.py       tests/test_dashboard_recon_page.py
+tests/test_mart_store_weekly.py      tests/test_dashboard_store_detail.py
+
+  INSERT INTO ref_stores
+    (store_number, ..., field_manager_name, is_active)
+  VALUES (:s, ..., 'TestFM', true)          -- true
+  ON CONFLICT (store_number) DO NOTHING
+```
+
+Their `_wipe()` deletes staging and mart rows scoped by store and date. **Not
+one of the four contains a `DELETE FROM ref_stores`.**
+
+**Why the change made this reachable.** On `main` these files used
+`TEST_STORE = "4092"`, a store that already exists, so `ON CONFLICT DO NOTHING`
+fired and the INSERT was a no-op — nothing was created, so nothing needed
+removing. T-0016 changed the constant to `ns("T-4092")`, which does not exist,
+so the INSERT now succeeds and creates a **new active store that no teardown
+removes**. This is the same shape as B-0042: a real-store violation was holding
+a latent defect shut, and correcting the violation opened it — except this one
+writes to production and was not caught.
+
+**Measured live, 2026-08-19, at `e38f819`:**
+
+```
+before   ref_stores LIKE 'T-%'  →  T-4092-85034129fdd  is_active = true
+$ uv run pytest tests/test_mart_store_daily.py -q   →  4 passed
+after    ref_stores LIKE 'T-%'  →  T-4092-85034129fdd  is_active = true
+                                   T-4092-8915171b18   is_active = true   ← new
+
+$ python -c "from subway_ops.ingest.daily_sales import _active_store_numbers; ..."
+  ingest would call: ['T-4092-85034129fdd', 'T-4092-8915171b18']
+```
+
+The suite passes and leaves the row behind. `_active_store_numbers()` in all
+five ingests is `SELECT store_number FROM ref_stores WHERE is_active = true`, so
+the nightly pull will request these store numbers from the POS API from now on.
+One row accrues per pytest process, forever; the task's own RESUME block
+instructs a human to "clear residue... `ref_stores LIKE 'T-%'`" before running
+the gate, which is the leak being worked around by hand rather than fixed.
+
+**Second-order: it also invalidates D-046's accepted cost.** D-046 accepted that
+`TestFM` "lingers whenever another file's store outlives the deleter" on the
+grounds that "the next run that owns the last referencing store clears it".
+Those leaked stores reference `TestFM` and are never deleted, so the
+`NOT EXISTS` guard is now permanently false and `TestFM` can never be torn down:
+
+```
+ref_stores WHERE field_manager_name = 'TestFM'
+  T-4092-8915171b18 | TestFM | true
+  T-4092-85034129fdd | TestFM | true
+```
+
+The decision is not wrong, but the fact it rests on is no longer true.
+
+**`test_synthetic_stores_are_inactive_and_removed` does not cover this.** It
+exercises `conftest.synthetic_store_factory`, which does seed `false` and does
+drop its stores. The four files hand-roll their own INSERT and never call the
+factory, so the guard passes while the violation stands — a guard reading as
+assurance for code it does not touch.
+
+Options:
+  A) **Flip the four to `is_active=false` and add `DELETE FROM ref_stores` to
+     each teardown.** Four files, two lines each. Requires checking that nothing
+     in those suites depends on the store being active (the mart refreshes are
+     driven off staging rows, not `ref_stores.is_active` — worth confirming, not
+     assuming).
+  B) **A, plus route the four through `conftest.synthetic_store_factory`** so
+     there is one place that knows how a test store is made and unmade, and the
+     existing isolation test actually guards them.
+  C) **Widen `test_synthetic_stores_are_inactive_and_removed`** into a guard that
+     fails if any `test_*.py` inserts `ref_stores` with `is_active` true, so the
+     next hand-rolled fixture cannot reintroduce this.
+Burst recommends: **B + C** — B fixes the four sites and removes the duplicate
+fixture that caused them to drift, C makes the guard cover what its name claims.
+Whichever is chosen, the two rows now live in production `ref_stores`
+(`T-4092-85034129fdd`, `T-4092-8915171b18`) need a founder-approved cleanup;
+the audit did not delete them. [recommendation, not a decision]
+Status: OPEN
+
 ### B-0042 — `TestFM` is a shared row with per-file teardown, and T-0016 unmasked it
 Task: T-0016 (HALTED, R-503) · Blocks: T-0016 · Raised: 2026-08-18
 

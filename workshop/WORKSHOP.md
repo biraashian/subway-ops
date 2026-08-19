@@ -54,7 +54,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0013 | Append-only check measures against `main`, not the working tree | D-032 | queued (not blocking; run when the PPL chain gives room) | — |
 | T-0014 | Worktree setup carries the gitignored artifacts a `[P]` task needs | D-034 | queued (do before the next `[P]` task) | — |
 | T-0015 | Schema snapshot captures constraints and indexes | D-035 | queued (pairs with T-0013) | — |
-| T-0016 | DB tests seed their own stores and namespace per run | D-039 · D-040 · D-045 · D-046 | **queued — resume**: conditional TestFM teardown (D-046) + date predicates (D-045); the rest is built and green | `forge/T-0016-wip` |
+| T-0016 | DB tests seed their own stores and namespace per run | D-039 · D-040 · D-045 · D-046 | **audit failed (B-0043, B-0044)** — leaks an active synthetic store into production `ref_stores` on every run (FORBIDDEN_ACTION); one DB-backed file never namespaced and still fails concurrently; no green pre-merge run on record | `forge/T-0016-wip` |
 | T-0017 | The seven ingest test files stop pointing at a real store | D-045 · D-046 | queued (time with or just before T-0011) | — |
 
 ## Backlog (written by /stubs)
