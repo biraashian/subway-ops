@@ -110,7 +110,15 @@ that the first materialisation of 250-400 humans is watched.   [recommendation]
 Burst recommends: **A** for T-0006 now, **B** as the standing fix — A is one
 parameter, keeps every existing assertion meaningful, and makes the synthetic-
 store convention actually enforceable rather than aspirational.   [recommendation]
-Status: OPEN
+Status: **DECIDED 2026-08-18 → (a) B, (b) A.** (a) The 405 assignments and 342
+persons were **deleted**, on explicit founder instruction, after independently
+reproducing the measurements and confirming nothing referenced them; a reversible
+snapshot was taken first and `stg_timeclock` was untouched. T-0009 performs and
+records the first real run as designed. (b) `CON-001` gains
+`stores: list[str] | None`; the suite scopes all 27 call sites. Policy recorded
+as **D-042**; SPEC-PPL-001 → v1.6.0. A separate test database (option B) remains
+the standing fix — already **T-0011** under D-025, with **T-0016** as the
+interim.
 
 ---
 
@@ -176,7 +184,11 @@ Burst recommends: **C**, or **A** if the second pass is thought too much for
 one run — either way the nondeterministic `setdefault` needs an `ORDER BY`.
 Whichever is chosen, AC-005 should state the snapshot explicitly; a spec that
 does not say which one it means will be re-litigated at T-0008.   [recommendation]
-Status: OPEN
+Status: **DECIDED 2026-08-18 → C.** Two passes: every AC-004 rename is applied
+first, the identity index is rebuilt from the table inside the same transaction,
+and only then is any new assignment resolved. `ORDER BY assignment_id` makes the
+`setdefault` winner deterministic. Policy recorded as **D-043**; AC-005 now
+states which snapshot it means, so T-0008 does not re-litigate it.
 
 ---
 
@@ -236,7 +248,12 @@ Options:
 Burst recommends: **C layered over B** — C removes almost every occurrence, B
 gives the remainder a name a human can act on, and the AC-005 carve-out for
 empty keys disappears in both cases.   [recommendation]
-Status: OPEN
+Status: **DECIDED 2026-08-18 → C layered over B.** The derivation carries the
+most recent **non-blank** `employee_name`; a pair that has never had one gets
+`display_name = "Clerk <clerk_id> (unnamed)"`, keeps an empty `normalized_name`,
+and links on the empty key like any other value. Policy recorded as **D-044**;
+AC-001 amended and AC-001a added. The carve-out that skipped empty keys is gone,
+so AC-005 holds uniformly.
 
 ---
 
