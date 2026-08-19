@@ -5,6 +5,167 @@ items also append to `DECISIONS.md`. Format: see root `CLAUDE.md`.
 
 ---
 
+### B-0042 — `TestFM` is a shared row with per-file teardown, and T-0016 unmasked it
+Task: T-0016 (HALTED, R-503) · Blocks: T-0016 · Raised: 2026-08-18
+
+**Observed.** Three consecutive pre-merge runs failed the same check with the
+same seven errors in `test_mart_recon_weekly.py`:
+
+```
+ForeignKeyViolation: update or delete on table "ref_field_managers" violates
+  constraint "ref_stores_field_manager_name_fkey" on table "ref_stores"
+DETAIL: Key (name)=(TestFM) is still referenced from table ref_stores.
+```
+
+**Cause, and it is T-0016's own change.** About a dozen test files insert a
+shared field manager `TestFM` (`ON CONFLICT (name) DO NOTHING`) and several
+delete it in teardown. Four of them also inserted a store referencing it:
+
+```sql
+INSERT INTO ref_stores (store_number, ..., field_manager_name, ...)
+VALUES ('4092', ..., 'TestFM', true)
+ON CONFLICT (store_number) DO NOTHING
+```
+
+Store `4092` is real — it is Bothell, and its actual field manager is
+**Sokhavy**. So `DO NOTHING` fired every time, **no row ever referenced
+`TestFM`**, and deleting the field manager always succeeded. The dependency was
+masked by the very codex 13 violation T-0016 was fixing.
+
+D-039 replaced `4092` with a synthetic `T-4092-<token>`, which does not exist,
+so the INSERT now succeeds — and a store referencing `TestFM` exists while
+another file's teardown tries to delete it.
+
+This is a correct fix surfacing a latent defect, not a new one. The teardown
+ordering has been wrong since these files were written; nothing could reach it.
+
+**Why this is benched and not pushed through.** R-503: three consecutive
+failures of the same check. Each had a specific diagnosis — leftover rows, then
+a unique index on `email` I had not looked at, then this — and I fixed two of
+them. The third says the shape is wrong, not the attempt. Every remaining option
+touches roughly a dozen files that no part of T-0016 was scoped to change, and
+one of them overlaps B-0041's seven.
+
+Options:
+  A) **Teardown deletes the field manager only if unreferenced** —
+     `DELETE ... WHERE NOT EXISTS (SELECT 1 FROM ref_stores WHERE
+     field_manager_name = :f)`. One line per teardown site, no shared-state
+     redesign, immediately unblocks T-0016. Leaves a `TestFM` row lingering
+     whenever another file's store outlives the deleter, which is untidy but
+     harmless and self-clears.
+  B) **Each file owns its own namespaced field manager** — `TestFM-<token>`
+     per file, email namespaced with it (the email has its own UNIQUE index;
+     namespacing the name alone was failure #2). Correct and consistent with
+     D-040. About a dozen files.
+  C) **One shared fixture owns `TestFM`'s whole lifecycle** — session-scoped in
+     `conftest.py`, created once, deleted at session end, never by an individual
+     file. Removes the ordering problem by removing the per-file teardown.
+     Cleanest long-term shape; touches every file that currently manages it.
+  D) **Revert T-0016's store rename** for those four files, back to real `4092`.
+     Restores the masking and unblocks immediately — and re-introduces the codex
+     13 violation the task exists to remove. Recorded for completeness; I would
+     not take it.
+Burst recommends: **A now to unblock T-0016, C when B-0041's seven files are
+addressed** — they are the same dozen files and the same shared-fixture problem,
+and doing them twice is the only way to make this cost more than it already has.
+[recommendation, not a decision]
+Status: **DECIDED 2026-08-18 → A.** Teardown deletes the shared field manager
+only when nothing references it:
+`DELETE FROM ref_field_managers WHERE name = :f AND NOT EXISTS
+ (SELECT 1 FROM ref_stores WHERE field_manager_name = :f)`.
+One line per teardown site, no shared-state redesign, unblocks T-0016. Accepted
+cost: a `TestFM` row lingers whenever another file's store outlives the deleter —
+harmless, and the next run that owns the last store clears it. Recorded as
+**D-046**; folded into T-0016's DELIVERABLES.
+**C is still the right shape** and is deliberately deferred to sit with B-0041's
+seven files, because they are the same dozen files and the same shared-fixture
+problem. Doing them separately is the only way to pay for this twice.
+
+### B-0041 — Seven ingest test files delete a real store's staging history on every run
+Task: T-0016 (found during build; beyond its DELIVERABLES) · Blocks: nothing today; the deletions are already happening · Raised: 2026-08-18
+
+**Specified.** `codex/13-BUILD/CONVENTIONS.md`: "**Never point a test at a real
+store number.** Use a synthetic identifier and seed it `is_active=false`." The
+chapter states why in the first person — it was written after
+`test_mart_recon_weekly.py` was found hard-deleting a real store's history on
+every run for three months.
+
+**Observed.** Seven ingest test files hardcode real store **`4092` (Bothell,
+`is_active = true`)**, seed `ref_stores` for it, and tear down with deletes that
+are **not scoped by date**:
+
+```
+tests/test_ingest_controlsheet.py        tests/test_ingest_wisr.py
+tests/test_ingest_daily_sales.py         tests/test_ingest_paidouts.py
+tests/test_ingest_timeclock.py           tests/test_ingest_inventory_movement.py
+tests/test_ingest_third_party_daily.py
+
+  DELETE FROM stg_no_sales  WHERE restaurant_number = '4092'
+  DELETE FROM stg_paid_outs WHERE restaurant_number = '4092'
+```
+
+No date predicate. Every run removes **all** of that store's rows in those
+tables.
+
+**What the data looks like now.** 4092 is a real store with real data — it has
+453 rows in `stg_daily_sales`, whose test teardown *is* date-scoped. In the
+tables whose teardown is not scoped, it has none, while all thirteen other
+stores do:
+
+```
+stg_daily_sales   6097 rows   14 stores   4092: 453   (teardown scoped by date)
+stg_timeclock    19339 rows   13 stores   4092:   0   (4092 absent entirely)
+stg_no_sales     54675 rows   13 stores   4092:   0   (unscoped DELETE)
+stg_paid_outs      387 rows   13 stores   4092:   0   (unscoped DELETE)
+```
+
+**Stated carefully: this is consistent with the tests having destroyed Bothell's
+history, and it is not proof.** 4092 may never have had `no_sales` or
+`paid_outs` data — the ingests may simply never have run for it. What *is*
+certain is the mechanism: every execution of these tests deletes every row that
+store has in those tables, and nothing anywhere records that it happened. The
+absence pattern matching exactly the tables with unscoped deletes is why this is
+worth your attention rather than a footnote.
+
+**Why it is a bench item and not a rework note.** It is outside T-0016's
+DELIVERABLES — seven files, each with its own staging tables, fixtures and date
+constants — and the first question is not technical. If the data was lost, that
+is a recovery question about a real store's operating history, not a test
+cleanup.
+
+Note also: T-0016's guard `test_no_db_test_selects_a_real_store_number` does
+**not** catch this. It looks for `SELECT store_number FROM ref_stores`, and
+these files hardcode the literal. The guard has been renamed and its docstring
+now says what it does not cover, so it stops implying more than it enforces.
+
+Options:
+  A) **Fix the seven files** — synthetic store per file, `is_active=false`,
+     namespaced per run like everything else T-0016 touched. Mechanical, roughly
+     triples T-0016's size, and stops the deletions immediately.
+  B) **Scope the deletes by date first** (a one-line change per site), then fix
+     the files properly later. Stops the bleeding today for far less work; leaves
+     seven files still pointing at a real store.
+  C) **Wait for T-0011** (D-025, containerised Postgres) — the whole class
+     disappears when tests stop touching production. Correct in the end state,
+     but T-0011 is founder-paired and unscheduled, and the deletions continue
+     every time the suite runs until it lands.
+Burst recommends: **B now, A with or just before T-0011.** B is minutes of work
+and removes the destructive property; A is the real fix but should not be
+smuggled into a task scoped to something else. Separately, and independent of
+which option you take: **someone should establish whether Bothell's `no_sales`
+and `paid_outs` history ever existed**, because if it did, that is a data-loss
+incident and this bench item is the wrong container for it.
+[recommendation, not a decision]
+Status: **DECIDED 2026-08-18 → B.** Every unscoped
+`DELETE ... WHERE restaurant_number = '4092'` gains a date predicate now, so the
+destructive property is gone today for minutes of work. The seven files still
+point at a real store; that is **T-0017**, timed with or just before T-0011.
+Recorded as **D-045**; the date-scoping is folded into T-0016's DELIVERABLES
+because it is the same test-hygiene surface already open.
+**Separately, and not a code question:** whether Bothell's `stg_no_sales` and
+`stg_paid_outs` history ever existed is unresolved and is on the board under
+"Needs you". If it did, this bench item is the wrong container for it.
+
 ### B-0038 — The test suite ran the real derivation against the live database; `derive_roster` has no way to be scoped to synthetic stores
 Task: T-0006 (audit failed) · Blocks: REQ-001/AC-001, AC-005, AC-006, INV-002 — their evidence · Raised: 2026-08-18
 

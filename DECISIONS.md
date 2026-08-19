@@ -975,3 +975,75 @@ both reference the correct column name.
 - **Reachability:** 0 of 19,339 real `stg_timeclock` rows are blank today. It
   becomes reachable the first time the POS emits one, and the derivation runs
   nightly forever.
+
+## D-045 — A test never deletes an unbounded slice of a real store's data (was B-0041)
+- **Decision:** every teardown of the form
+  `DELETE FROM stg_* WHERE restaurant_number = '<real store>'` gains a **date
+  predicate**, immediately. The seven ingest files continue to point at real
+  store `4092` for now; moving them to synthetic stores is **T-0017**, timed
+  with or just before T-0011. Decided 2026-08-18 (B-0041 → B).
+- **Reasoning:** the destructive property and the convention violation are two
+  different problems wearing one coat, and only one of them is urgent. An
+  unscoped delete removes rows the test never created; a hardcoded store number
+  is untidy but inert. B removes the first in minutes; A removes both and
+  triples an already-twice-expanded task.
+- **What was measured:**
+
+  ```
+  stg_daily_sales   6097 rows  14 stores  4092: 453   (teardown scoped by date)
+  stg_timeclock    19339 rows  13 stores  4092:   0
+  stg_no_sales     54675 rows  13 stores  4092:   0   (unscoped DELETE)
+  stg_paid_outs      387 rows  13 stores  4092:   0   (unscoped DELETE)
+  ```
+
+  Store `4092` is Bothell, `is_active = true`. The tables where its rows are
+  absent are exactly the tables whose teardown had no date predicate.
+- **Stated precisely, because the distinction matters:** this is *consistent
+  with* the tests having destroyed that history and it is *not proof*. The
+  ingests may never have run for that store. What is certain is that every
+  execution of those tests removed every row it had in those tables, and nothing
+  recorded that it happened.
+- **The open question is not a code question.** Whether Bothell's `no_sales` and
+  `paid_outs` history ever existed is on the board under "Needs you". If it did,
+  this is a data-loss incident and needs a different container than a bench item
+  about test hygiene.
+- **How this arose:** found while T-0016 was namespacing test markers, in seven
+  files nothing in that task was scoped to open. This is the incident codex 13
+  was written after — `test_mart_recon_weekly.py` hard-deleting a real store's
+  history on every run for three months — still happening, three chapters later,
+  in a different set of files.
+
+## D-046 — A shared fixture row is deleted only when unreferenced (was B-0042)
+- **Decision:** teardown of the shared `TestFM` field manager becomes
+  conditional:
+
+  ```sql
+  DELETE FROM ref_field_managers
+   WHERE name = :f
+     AND NOT EXISTS (SELECT 1 FROM ref_stores WHERE field_manager_name = :f)
+  ```
+
+  Decided 2026-08-18 (B-0042 → A). Folded into T-0016's DELIVERABLES.
+- **Reasoning:** about a dozen files share one `TestFM` row and several delete
+  it, so whichever finishes first tries to remove a row the others still
+  reference. Making the delete conditional is one line per site and needs no
+  redesign of who owns the fixture.
+- **Accepted cost:** a `TestFM` row lingers whenever another file's store
+  outlives the deleter. It is inert — `is_active` plays no part in field
+  managers, nothing schedules against it — and the next run that owns the last
+  referencing store clears it.
+- **Why the better answer was deferred:** option C (one session-scoped fixture
+  in `conftest.py` owning the whole lifecycle) is the right shape and touches
+  every file that currently manages `TestFM` — the same dozen as D-045's seven
+  plus five. Both should be done in one pass, with T-0017, rather than twice.
+- **How this arose, and it is the part worth keeping:** the ordering bug has
+  been present since these files were written and was **unreachable**. Four of
+  them inserted a store referencing `TestFM` with
+  `ON CONFLICT (store_number) DO NOTHING` against real store `4092` — which
+  exists, and whose real field manager is Sokhavy. The insert therefore always
+  did nothing, **no row ever referenced `TestFM`**, and the delete always
+  succeeded. T-0016 replaced the real store with a synthetic one, the insert
+  became real, and the latent defect opened.
+  **The convention violation was holding the bug shut.** That is worth
+  remembering the next time a cleanup looks purely cosmetic: ask what is
+  currently resting on the thing being corrected.

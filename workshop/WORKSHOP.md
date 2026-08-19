@@ -13,6 +13,7 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | **B-0023** — crew scorecard weights and the payout cap. Gates SPEC-BON | B-0023 | 2026-08-13 |
 | **B-0028** — what cadence? D-031 settled which messages batch, not how often. Keeps codex 11 draft | B-0028 | 2026-08-13 |
 | **T-0011 is founder-paired** — infrastructure type, not built autonomously | D-025 | 2026-08-13 |
+| **Did Bothell (store 4092) ever have `stg_no_sales` / `stg_paid_outs` history?** Seven tests deleted it unscoped on every run. If it existed, this is data loss, not test hygiene | B-0041 · D-045 | 2026-08-18 |
 
 ## Provisioning horizon (external, long-lead)
 | Item | Feeds | Status |
@@ -53,7 +54,8 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0013 | Append-only check measures against `main`, not the working tree | D-032 | queued (not blocking; run when the PPL chain gives room) | — |
 | T-0014 | Worktree setup carries the gitignored artifacts a `[P]` task needs | D-034 | queued (do before the next `[P]` task) | — |
 | T-0015 | Schema snapshot captures constraints and indexes | D-035 | queued (pairs with T-0013) | — |
-| T-0016 | DB tests seed their own stores and namespace per run | D-039 · D-040 | queued (do before two sessions overlap again) | — |
+| T-0016 | DB tests seed their own stores and namespace per run | D-039 · D-040 · D-045 · D-046 | **queued — resume**: conditional TestFM teardown (D-046) + date predicates (D-045); the rest is built and green | `forge/T-0016-wip` |
+| T-0017 | The seven ingest test files stop pointing at a real store | D-045 · D-046 | queued (time with or just before T-0011) | — |
 
 ## Backlog (written by /stubs)
 (run /stubs once `codex/12-PROMPTS/` exists)
