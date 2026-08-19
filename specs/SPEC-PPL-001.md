@@ -403,8 +403,8 @@ EARS lines above · §9 fully covered.
 
 | Story | Requirement | Acceptance | Task | Status |
 |---|---|---|---|---|
-| US-001 | REQ-001 | AC-001…AC-004 | T-0006 | queued |
-| US-003 | REQ-002 | AC-005, AC-006 | T-0006 | queued |
+| US-001 | REQ-001 | AC-001, AC-001a, AC-002…AC-004 | T-0006 | **merged 2026-08-18** |
+| US-003 | REQ-002 | AC-005, AC-006 | T-0006 | **merged 2026-08-18** |
 | US-003 | REQ-002 | AC-007…AC-010 | T-0008 | queued |
 | US-002 | REQ-003 | AC-011, AC-014 | T-0004 (schema), T-0007 (code) | **merged** — T-0004 2026-08-13 (schema), T-0007 2026-08-17 (code) |
 | US-002 | REQ-003 | AC-012, AC-012a, AC-013, AC-015…AC-017 | T-0007 | **merged 2026-08-17** |
@@ -412,9 +412,9 @@ EARS lines above · §9 fully covered.
 | US-004 | REQ-004 | AC-019, AC-021 | T-0009 | queued |
 | US-005 | REQ-005 | AC-022 | T-0004 | **merged 2026-08-13** |
 | US-005 | REQ-005 | AC-023, AC-025 | T-0008 | queued |
-| US-005 | REQ-005 | AC-024 | T-0006 | queued |
+| US-005 | REQ-005 | AC-024 | T-0006 | **merged 2026-08-18** |
 | US-003 | REQ-006 | AC-026, AC-027, AC-029, AC-030 | T-0005 | **merged 2026-08-17** |
-| US-003 | REQ-006 | AC-028 | T-0006 | queued |
+| US-003 | REQ-006 | AC-028 | T-0006 | **merged 2026-08-18** |
 | US-003 | REQ-006 | AC-031 | T-0004 | **merged 2026-08-13** |
 
 Coverage verified both ways: 31 of 31 ACs land in at least one task; every task

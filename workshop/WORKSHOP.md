@@ -43,10 +43,10 @@ Runway floor: 3 · WIP limit (built, awaiting audit): 3
 | T-0003 | ops_worklist_items + worklist helper | SPEC-PPL-001 AC-018, AC-020 · D-029 · D-030 · D-032 | **merged** | `main` |
 | T-0004 | People schema — persons, assignments, wages, identity log | AC-011, AC-014, AC-022, AC-031 | **merged** | `main` |
 | T-0005 `[P]` | Pure helpers — names, roles | AC-026, AC-027, AC-029, AC-030 | **merged** | `main` |
-| T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 · D-041…D-044 | **awaiting your review** — /audit GREEN @ `6bef022`; 24 tests, suite leaves the live DB at 0 rows | `forge/T-0006` |
+| T-0006 | Roster derivation and person resolution | AC-001…AC-006, AC-024, AC-028 · D-041…D-044 | **merged** | `main` |
 | T-0007 | Wages, permission guard, weekly cost with overtime | AC-011…AC-017 · D-036…D-039 | **merged** | `main` |
-| T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | queued (needs T-0006/7) | — |
-| T-0009 | Completeness sweep, CLI, daily_pull wiring | AC-018…AC-021 | queued (needs T-0003/6/7) | — |
+| T-0008 | Identity repair — merge, split, wage-overlap refusal | AC-007…AC-010, AC-023, AC-025 | **queued — unblocked** | — |
+| T-0009 | Completeness sweep, CLI, daily_pull wiring | AC-018…AC-021 | **queued — unblocked**; owns the first real derivation run (D-042) | — |
 | T-0010 | Schema drift becomes declared, not merely detected | D-024 · D-028 | merged | `main` |
 | T-0011 | DB tests on containerised Postgres | D-025 | queued (founder-paired) | — |
 | T-0012 | Format the repo once, re-enable the gate line | D-027 | queued (run when nothing else is in flight) | — |
