@@ -90,8 +90,8 @@ def test_two_concurrent_runs_do_not_delete_each_others_rows() -> None:
         execute_sql("DELETE FROM ops_worklist_items WHERE kind = :k", {"k": theirs})
 
 
-def test_no_db_test_selects_a_real_store_number() -> None:
-    """D-039 / codex 13 — no test reads a store number out of ``ref_stores``.
+def test_no_db_test_borrows_a_store_number_from_ref_stores() -> None:
+    """D-039 / codex 13 — no test READS a store number out of ``ref_stores``.
 
     A grep-style guard rather than a behavioural one, because the failure it
     prevents is a person writing the convenient thing in a file nobody reviews
@@ -102,6 +102,17 @@ def test_no_db_test_selects_a_real_store_number() -> None:
     Reads that are ABOUT ``ref_stores`` — counting rows, checking a join — are
     fine and excluded by the pattern: the rule is against borrowing a real
     store's identity, not against querying the table.
+
+    **What this does NOT cover, said here so the name stops over-promising.**
+    It catches a test that *looks a store up*. It does not catch one that
+    *hardcodes* a real store number, and seven ingest files do exactly that with
+    store `4092` — see **B-0041**, raised while writing this. Extending the
+    guard to recognise real store numbers would fail this suite today, and that
+    is a founder decision about seven files and a possible data-loss incident,
+    not something to settle inside a task scoped to namespacing.
+
+    A guard that covers less than its name suggests is worse than no guard,
+    because it gets read as assurance. Hence the rename.
     """
     borrow = re.compile(r"SELECT\s+store_number\s+FROM\s+ref_stores", re.IGNORECASE | re.DOTALL)
     offenders = [

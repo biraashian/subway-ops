@@ -22,7 +22,7 @@ from subway_ops.transform.mart_store_daily import (
 )
 from tests.conftest import ns
 
-TEST_STORE = ns("4092")
+TEST_STORE = ns("T-4092")
 TEST_DATE = date(2026, 5, 11)
 TEST_WINDOW_END = TEST_DATE  # explicit end for tests so default lookback can't drift
 

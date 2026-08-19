@@ -20,7 +20,7 @@ from subway_ops.db.migrate import apply_migrations
 from subway_ops.transform.mart_store_weekly import refresh
 from tests.conftest import ns
 
-TEST_STORE = ns("4092")
+TEST_STORE = ns("T-4092")
 WEEK_END = date(2026, 5, 5)  # a Tuesday
 
 

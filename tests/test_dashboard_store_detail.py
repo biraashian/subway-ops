@@ -70,7 +70,7 @@ requires_db = pytest.mark.skipif(
     reason="DB integration test: needs DATABASE_URL",
 )
 
-TEST_STORE = ns("4092")
+TEST_STORE = ns("T-4092")
 
 
 @pytest.fixture

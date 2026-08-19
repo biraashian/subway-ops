@@ -157,7 +157,7 @@ requires_db = pytest.mark.skipif(
     not settings.database_url, reason="DB integration test: needs DATABASE_URL"
 )
 
-TEST_STORE = ns("4092")
+TEST_STORE = ns("T-4092")
 WEEK_END = date(2026, 5, 5)
 TEST_USER = "recon-page-test@example.com"
 
