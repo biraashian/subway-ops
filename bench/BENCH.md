@@ -57,7 +57,13 @@ Options:
 Burst recommends: **A** — it is two files and roughly six lines, the machinery
 already exists, and shipping D-040 with a file that still fails concurrently
 spends the decision's whole point. [recommendation, not a decision]
-Status: OPEN
+Status: **DECIDED 2026-08-18 → A.** Namespace both files inside T-0016 —
+`ns()` on `FM_NAME`, `T1`/`T2`/`T3` and `_bf_test`, plus `is_active=false` on the
+three portfolio stores (they are seeded `true` today, which is B-0043's defect in
+a fifth file). No new D-entry: this is **completing D-040**, not deciding
+anything new, and minting a decision number for "do the thing already decided"
+would add noise to the log rather than information. Folded into T-0016's
+DELIVERABLES.
 
 ### B-0043 — T-0016 leaks an `is_active = true` synthetic store into production `ref_stores` on every run
 Task: T-0016 (audit) · Blocks: T-0016 merge · Raised: 2026-08-19
@@ -149,7 +155,19 @@ fixture that caused them to drift, C makes the guard cover what its name claims.
 Whichever is chosen, the two rows now live in production `ref_stores`
 (`T-4092-85034129fdd`, `T-4092-8915171b18`) need a founder-approved cleanup;
 the audit did not delete them. [recommendation, not a decision]
-Status: OPEN
+Status: **DECIDED 2026-08-18 → B + C.** The four files are routed through
+`conftest.synthetic_store_factory`, which already seeds `is_active=false` and
+drops what it made, so there is one place that knows how a test store is created
+and removed. The isolation guard is widened to fail if any `test_*.py` inserts
+`ref_stores` with `is_active` true. Policy recorded as **D-047**; both folded
+into T-0016's DELIVERABLES.
+
+**The two leaked rows have been deleted**, on explicit founder instruction and
+after confirming nothing referenced them — 0 rows in every `stg_*` table, in
+`ref_employee_assignments` and in `mart_store_daily`. The orphaned `TestFM` went
+with them. Verified afterwards: 15 active stores, all real, and
+`_active_store_numbers()` returns no synthetic entry, so the nightly pull is
+clean.
 
 ### B-0042 — `TestFM` is a shared row with per-file teardown, and T-0016 unmasked it
 Task: T-0016 (HALTED, R-503) · Blocks: T-0016 · Raised: 2026-08-18

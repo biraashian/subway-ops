@@ -1047,3 +1047,38 @@ both reference the correct column name.
   **The convention violation was holding the bug shut.** That is worth
   remembering the next time a cleanup looks purely cosmetic: ask what is
   currently resting on the thing being corrected.
+
+## D-047 — A test store is made in one place, and the guard enforces it (was B-0043)
+- **Decision:** any test needing a store goes through
+  `conftest.synthetic_store_factory`, which seeds `is_active=false` and deletes
+  what it created. The isolation guard is widened to fail if any `test_*.py`
+  inserts `ref_stores` with `is_active` true. Decided 2026-08-18 (B-0043 → B+C).
+- **What went wrong:** T-0016 moved four files off real store `4092` and onto a
+  synthetic `T-4092-<token>`. Those files seed `is_active=true` and none of their
+  teardowns deletes a store. On `main` that was inert — `'4092'` exists, so
+  `ON CONFLICT (store_number) DO NOTHING` fired and no row was ever created. The
+  synthetic number does not exist, so the INSERT succeeds and leaves an **active
+  store nobody removes, one per pytest process, forever.**
+- **Why it was more than untidy:** `_active_store_numbers()` in all five ingests
+  is `SELECT store_number FROM ref_stores WHERE is_active = true`. The nightly
+  pull would have requested those store numbers from the POS API. Two rows had
+  already accrued; they were deleted on founder instruction after confirming
+  nothing referenced them, and `_active_store_numbers()` now returns 15 real
+  stores and no synthetic entry.
+- **It also invalidated D-046's accepted cost.** D-046 accepted a lingering
+  `TestFM` on the grounds that "the next run that owns the last referencing store
+  clears it". The leaked stores referenced `TestFM` and were never deleted, so
+  the `NOT EXISTS` guard was permanently false and `TestFM` could never be torn
+  down. A decision's stated cost is only as good as the assumptions underneath
+  it, and one of mine had stopped being true two commits later.
+- **Why B rather than just A:** flipping four flags and adding four deletes fixes
+  the instance. The four files drifted because each rolled its own store fixture
+  next to a shared one that already did it correctly. One factory removes the
+  drift; C makes the guard cover what its name claims rather than passing because
+  it exercises the factory the four files never called.
+- **The pattern, third occurrence in one task:** making a test stop pointing at a
+  real store broke something the violation had been holding shut — first the
+  `TestFM` teardown ordering (D-046), then assertions that passed on ambient
+  data, now this. In every case `ON CONFLICT DO NOTHING` against a real row made
+  a code path dead, and correcting the pointer brought it to life. Expect more of
+  it in T-0017.
